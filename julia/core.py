@@ -79,7 +79,7 @@ class Julia(object):
             api = ctypes.PyDLL('')
 
         # Store the running interpreter reference so we can start using it via
-        # self.jcall
+        # self.call
         self.api = api
 
         # Set the return types of some of the bridge functions in ctypes
@@ -87,20 +87,24 @@ class Julia(object):
         api.jl_eval_string.argtypes = [ctypes.c_char_p]
         api.jl_eval_string.restype = ctypes.c_void_p
 
+        api.jl_exception_occurred.restype = ctypes.c_void_p
         api.jl_call1.restype = ctypes.c_void_p
         api.jl_get_field.restype = ctypes.c_void_p
+        api.jl_typename_str.restype = ctypes.c_char_p
         api.jl_typeof_str.restype = ctypes.c_char_p
         api.jl_unbox_voidpointer.restype = ctypes.py_object
 
+        #api.jl_bytestring_ptr.argtypes = [ctypes.c_void_p]
+        #api.jl_bytestring_ptr.restype = ctypes.c_char_p
+
         if init_julia:
             # python_exe = os.path.basename(sys.executable)
-            self.jcall("1 + 1")
             try:
-                self.jcall('using PyCall')
+                self.call('using PyCall')
             except:
                 raise JuliaError("Julia does not have package PyCall")
             try:
-                self.jcall('pyinitialize(C_NULL)')
+                self.call('pyinitialize(C_NULL)')
             except:
                 raise JuliaError("Failed to initialize PyCall package")
 
@@ -108,14 +112,14 @@ class Julia(object):
         # instance of PyObject. Since this will be needed on every call, we
         # hold it in the Julia object itself so it can survive across
         # reinitializations.
-        api.PyObject = self.jcall('PyObject')
+        api.PyObject = self.call('PyObject')
 
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
         sys._julia_runtime = api
 
-    def jcall(self, src):
+    def call(self, src):
         """Low-level call to execute a snippet of Julia source.
 
         This only raises an exception if Julia itself throws an error, but it
@@ -127,7 +131,9 @@ class Julia(object):
         # ruturn null ptr if error
         ans = self.api.jl_eval_string(bsrc)
         if not ans:
-            raise JuliaError('Exception in Julia: {}'.format(src))
+            #TODO: introspect the julia error object
+            #jexp = self.api.jl_exception_occurred()
+            raise JuliaError('Exception calling julia src: {}'.format(msg))
         return ans
 
     def run(self, src):
@@ -138,13 +144,14 @@ class Julia(object):
         void_p = ctypes.c_void_p
         if src is None:
             return None
-        ans = self.jcall(src)
+        ans = self.call(src)
         res = self.api.jl_call1(void_p(self.api.PyObject),
                                 void_p(ans))
         if not res:
+            #TODO: introspect the julia error object here
             raise JuliaError('ErrorException in Julia PyObject: '
                              '{}'.format(src))
-        boxed_obj = self.api.jl_get_field(void_p(res), 'o')
+        boxed_obj = self.api.jl_get_field(void_p(res), b'o')
         pyobj = self.api.jl_unbox_voidpointer(void_p(boxed_obj))
         # make sure we incref it before returning it,
         # since this is a borrowed reference
