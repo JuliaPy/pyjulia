@@ -13,11 +13,19 @@ def init(ctx):
     pass
 
 
+def clear_exceptions():
+    pass
+
+
 def exception_occured():
     pass
 
 
-def typeof_str():
+def typename(v):
+    pass
+
+
+def typeof():
     pass
 
 

@@ -23,11 +23,6 @@ import sys
 # Classes and funtions
 #-----------------------------------------------------------------------------
 
-
-class JuliaMagicError(Exception):
-    pass
-
-
 class JuliaError(Exception):
     pass
 
@@ -63,20 +58,18 @@ class Julia(object):
             return
 
         if init_julia:
-            if sys.platform == "linux" or sys.platform == "linux2":
-                # *.so extension on Linux
+            if sys.platform.startswith("linux"):
                 jpath = '/usr/lib/julia/libjulia.so'
-            elif sys.platform == "MacOS":
-                # *.dylib extension on OSX
+            elif sys.platform.startswith("darwin"):
                 jpath = '/usr/lib/julia/libjulia.dylib'
+            elif sys.platform.startswith("win"):
+                raise NotImplementedError("Windows is not supported yet")
             else:
-                #TODO: Windows....
-                raise Exception("Windows is not supported yet")
+                raise NotImplementedError("Unsupported operating system")
 
             if not os.path.exists(jpath):
                 raise ValueError("Julia library not found!")
 
-            import pdb; pdb.set_trace()
             api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
             api.jl_init.arg_types = [ctypes.c_char_p]
             api.jl_init(0)
@@ -100,8 +93,7 @@ class Julia(object):
         api.jl_unbox_voidpointer.restype = ctypes.py_object
 
         if init_julia:
-            # print 'Initializing Julia PyCall module...' # dbg
-            python_exe = os.path.basename(sys.executable)
+            # python_exe = os.path.basename(sys.executable)
             self.jcall("1 + 1")
             try:
                 self.jcall('using PyCall')
@@ -131,10 +123,11 @@ class Julia(object):
         management. It should never be used for returning the result of Julia
         expressions, only to execute statements.
         """
-        #TODO: python3 does not like this....
-        ans = self.api.jl_eval_string(str(src))
+        bsrc = bytes(str(src).encode('ascii'))
+        # ruturn null ptr if error
+        ans = self.api.jl_eval_string(bsrc)
         if not ans:
-            raise JuliaMagicError('Exception in Julia: {}'.format(src))
+            raise JuliaError('Exception in Julia: {}'.format(src))
         return ans
 
     def run(self, src):
