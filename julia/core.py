@@ -133,8 +133,25 @@ class Julia(object):
         if not ans:
             #TODO: introspect the julia error object
             #jexp = self.api.jl_exception_occurred()
+            msg = None
             raise JuliaError('Exception calling julia src: {}'.format(msg))
         return ans
+
+    def help(self, name):
+        """
+        return help string..
+        """
+        if name is None:
+            return None
+        self.run('help("{}")'.format(name))
+
+    def methods(self, name):
+        """
+        return methods
+        """
+        if name is None:
+            return None
+        print(self.run("string(methods({}))".format(name)))
 
     def run(self, src):
         """
