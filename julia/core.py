@@ -127,9 +127,9 @@ class Julia(object):
         management. It should never be used for returning the result of Julia
         expressions, only to execute statements.
         """
-        bsrc = bytes(str(src).encode('ascii'))
+        byte_src = bytes(str(src).encode('ascii'))
         # ruturn null ptr if error
-        ans = self.api.jl_eval_string(bsrc)
+        ans = self.api.jl_eval_string(byte_src)
         if not ans:
             #TODO: introspect the julia error object
             #jexp = self.api.jl_exception_occurred()
