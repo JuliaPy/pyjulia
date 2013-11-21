@@ -1,1 +1,1 @@
-from core import Julia
+from .core import Julia
