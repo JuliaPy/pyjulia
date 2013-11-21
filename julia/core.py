@@ -19,9 +19,13 @@ import ctypes.util
 import os
 import sys
 
+from ctypes import c_void_p as void_p
+from ctypes import c_char_p as char_p
+
 #-----------------------------------------------------------------------------
 # Classes and funtions
 #-----------------------------------------------------------------------------
+
 
 class JuliaError(Exception):
     pass
@@ -133,8 +137,9 @@ class Julia(object):
         if not ans:
             #TODO: introspect the julia error object
             #jexp = self.api.jl_exception_occurred()
-            msg = None
-            raise JuliaError('Exception calling julia src: {}'.format(msg))
+            #msgptr = self.api.jl_get_field(jexp, b'msg')
+            #msg = char_p(msgptr).value
+            raise JuliaError('Exception calling julia src: \n{}'.format(src))
         return ans
 
     def help(self, name):
@@ -143,7 +148,7 @@ class Julia(object):
         """
         if name is None:
             return None
-        self.run('help("{}")'.format(name))
+        self.eval('help("{}")'.format(name))
 
     def methods(self, name):
         """
@@ -151,14 +156,31 @@ class Julia(object):
         """
         if name is None:
             return None
-        print(self.run("string(methods({}))".format(name)))
+        print(self.eval("string(methods({}))".format(name)))
 
-    def run(self, src):
+    def put(self, x):
+        pass
+
+    def get(self, x):
+        pass
+
+    def __getattr__(self, attr):
+        if attr is None: return None
+        if attr in ['__name__', '__file__']:
+            return super(Julia, self).__getattr__(attr)
+        name = attr[:-1] if attr[:-1] == "_" else attr
+        #doc = get_doc(name)
+        # convert to ascii for pydoc
+        try:
+            return self.eval(attr)
+        except:
+            raise AttributeError(attr)
+
+    def eval(self, src):
         """
         Execute code in Julia, and pull some of the results back into the
         Python namespace.
         """
-        void_p = ctypes.c_void_p
         if src is None:
             return None
         ans = self.call(src)
