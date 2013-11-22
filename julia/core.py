@@ -18,17 +18,39 @@ import ctypes
 import ctypes.util
 import os
 import sys
+import keyword
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
+from ctypes import py_object
 
 #-----------------------------------------------------------------------------
 # Classes and funtions
 #-----------------------------------------------------------------------------
 
 
-class JuliaError(Exception):
+class JuliaObject(object):
     pass
+
+
+class JuliaError(JuliaObject, Exception):
+    pass
+
+
+class JuliaModule(JuliaObject):
+    pass
+
+
+class JuliaFunction(JuliaObject):
+    pass
+
+
+def ismacro(name):
+    return name.startswith("@")
+
+
+def isoperator(name):
+    return not name[0].isalpha()
 
 
 class Julia(object):
@@ -75,7 +97,7 @@ class Julia(object):
                 raise ValueError("Julia library not found!")
 
             api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
-            api.jl_init.arg_types = [ctypes.c_char_p]
+            api.jl_init.arg_types = [char_p]
             api.jl_init(0)
         else:
             # we're assuming here we're fully inside a running Julia process,
@@ -88,15 +110,15 @@ class Julia(object):
 
         # Set the return types of some of the bridge functions in ctypes
         # terminology
-        api.jl_eval_string.argtypes = [ctypes.c_char_p]
-        api.jl_eval_string.restype = ctypes.c_void_p
+        api.jl_eval_string.argtypes = [char_p]
+        api.jl_eval_string.restype = void_p
 
-        api.jl_exception_occurred.restype = ctypes.c_void_p
-        api.jl_call1.restype = ctypes.c_void_p
-        api.jl_get_field.restype = ctypes.c_void_p
-        api.jl_typename_str.restype = ctypes.c_char_p
-        api.jl_typeof_str.restype = ctypes.c_char_p
-        api.jl_unbox_voidpointer.restype = ctypes.py_object
+        api.jl_exception_occurred.restype = void_p
+        api.jl_call1.restype = void_p
+        api.jl_get_field.restype = void_p
+        api.jl_typename_str.restype = char_p
+        api.jl_typeof_str.restype = char_p
+        api.jl_unbox_voidpointer.restype = py_object
 
         #api.jl_bytestring_ptr.argtypes = [ctypes.c_void_p]
         #api.jl_bytestring_ptr.restype = ctypes.c_char_p
@@ -122,6 +144,23 @@ class Julia(object):
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
         sys._julia_runtime = api
+        basenames = []
+        for name in self.names(self.Base):
+            if ismacro(name):
+                continue
+            if isoperator(name):
+                continue
+            if name.endswith("!"):
+                name = name.rstrip("!") + "_b"
+            if keyword.iskeyword(name):
+                name = "jl".join(name)
+            basenames.append(name)
+        self.basenames = basenames
+
+    def __dir__(self):
+        standard = super(Julia).__dir__()
+        dirs = standard + self.basenames
+        return dirs
 
     def call(self, src):
         """Low-level call to execute a snippet of Julia source.
@@ -165,14 +204,23 @@ class Julia(object):
         pass
 
     def __getattr__(self, attr):
-        if attr is None: return None
+        if attr is None:
+            return None
         if attr in ['__name__', '__file__']:
             return super(Julia, self).__getattr__(attr)
-        name = attr[:-1] if attr[:-1] == "_" else attr
-        #doc = get_doc(name)
-        # convert to ascii for pydoc
+        if attr.startswith("jl"):
+            # attribute is a python builtin, rename
+            julia_name = attr[2:]
+        elif attr.endswith("_b"):
+            # pycall always makes a copy across the interface so
+            # inplace methods are not much use on the python side
+            julia_name = attr.rstrip("_b") + "!"
+        else:
+            julia_name = attr
         try:
-            return self.eval(attr)
+            obj = self.eval(julia_name)
+            setattr(self, attr, obj)
+            return obj
         except:
             raise AttributeError(attr)
 
@@ -184,8 +232,7 @@ class Julia(object):
         if src is None:
             return None
         ans = self.call(src)
-        res = self.api.jl_call1(void_p(self.api.PyObject),
-                                void_p(ans))
+        res = self.api.jl_call1(void_p(self.api.PyObject), void_p(ans))
         if not res:
             #TODO: introspect the julia error object here
             raise JuliaError('ErrorException in Julia PyObject: '
