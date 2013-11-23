@@ -29,9 +29,11 @@ from types import ModuleType, FunctionType
 #-----------------------------------------------------------------------------
 # Classes and funtions
 #-----------------------------------------------------------------------------
-python_version = sys.version_info()
+python_version = sys.version_info
 
-if python_version.major > 3 and python_version.minor > 3:
+if python_version.major == 3 and python_version.minor >= 3:
+    from collections import ChainMap
+
     class ModuleChainedDict(ChainMap, dict):
         pass
 else:
@@ -74,7 +76,6 @@ class MetaJuliaModule(type):
         newfunc.__kwdefaults__ = func.__kwdefaults__
         return newfunc
 
-class Base(metaclass=MetaJuliaModule):
 
 class JuliaObject(object):
     pass
@@ -86,6 +87,7 @@ class JuliaError(JuliaObject, Exception):
 
 class JuliaModule(JuliaObject):
     pass
+
 
 class JuliaFunction(JuliaObject):
     pass
@@ -99,7 +101,7 @@ def isoperator(name):
     return not name[0].isalpha()
 
 
-class Julia(object):
+class Julia(ModuleType):
     """Implements a bridge to the Julia interpreter or library.
     This uses the Julia PyCall module to perform type conversions and allow
     full access to the entire Julia interpreter.
