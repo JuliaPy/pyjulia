@@ -14,7 +14,6 @@ julia = Julia()
 class JuliaImporter(object):
 
     def find_module(self, fullname, path=None):
-        print((fullname, path))
         if path is None:
             pass
         if fullname.startswith("julia"):
@@ -44,7 +43,22 @@ def notascii(name):
 
 
 def isamodule(julia_name):
-    return julia.eval("isa({}, Module)".format(julia_name))
+    try:
+        ret = julia.eval("isa({}, Module)".format(julia_name))
+        return ret
+    except:
+        # try explicitly importing it..
+        try:
+            print("importing {}".format(julia_name))
+            julia.eval("import {}".format(julia_name))
+            ret = julia.eval("isa({}, Module)".format(julia_name))
+            return ret
+        except:
+            pass
+    return False
+
+def isafunction(julia_name):
+    return julia.eval("isa({}, Function)".format(julia_name))
 
 
 class JuliaModuleLoader(object):
@@ -54,13 +68,16 @@ class JuliaModuleLoader(object):
         if isamodule(juliapath):
             mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
             mod.__loader__ = self
-            names = julia.eval("names({})".format(juliapath))
+            # TODO: should we allow non exported functions?
+            # arg 2: export all arg 3: export operators
+            # names(obj, True, False)
+            names = julia.eval("names({}, true, false)".format(juliapath))
             for name in names:
                 if ismacro(name) or isoperator(name) or isprotected(name) or notascii(name):
                     continue
                 attrname = name
                 if name.endswith("!"):
-                    attrname = name.rstrip("!") + "_b"
+                    attrname = name.rstrip("!") + "_bang"
                 if keyword.iskeyword(name):
                     attrname = "jl".join(name)
                 try:
@@ -82,5 +99,16 @@ class JuliaModuleLoader(object):
                     # some names cannot be imported from base
                     pass
             return mod
+        #This is a hack!, figure out a better way to do julia.Base imports
+        if isafunction(juliapath):
+            name = juliapath
+            if isoperator(name) or isprotected(name) or notascii(name):
+                return None
+            if name.endswith("_bang"):
+                name = name.rstrip("_bang") + "!"
+            julia_func = julia.eval(name)
+            # not a module!!
+            sys.modules.setdefault(fullname, julia_func)
+            return julia_func
 
 sys.meta_path.append(JuliaImporter())
