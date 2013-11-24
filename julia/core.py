@@ -19,13 +19,16 @@ import ctypes.util
 import os
 import sys
 import keyword
+import imp
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
 from ctypes import py_object
 
+
 # this is python 3.3 specific
 from types import ModuleType, FunctionType
+
 #-----------------------------------------------------------------------------
 # Classes and funtions
 #-----------------------------------------------------------------------------
@@ -40,7 +43,7 @@ else:
     # http://code.activestate.com/recipes/305268/
     import UserDict
 
-    class ModuleChainedDict(UserDict.DictMixin,dict):
+    class ModuleChainedDict(UserDict.DictMixin, dict):
         """Combine mulitiple mappings for seq lookup.
         For example, to emulate PYthon's normal lookup sequence:"
         import __builtin__
@@ -57,6 +60,34 @@ else:
                 except KeyError:
                     pass
             raise KeyError(key)
+
+
+if python_version.major == 3:
+    from io import StringIO
+
+    class JuliaOutput(list):
+
+        def __enter__(self):
+            self._stdout = sys.stdout
+            sys.stdout = self._stringio = StringIO()
+            return self
+
+        def __exit__(self, *args):
+            self.extend(self._stringio.getvalue().splitlines())
+            sys.stdout = self._stdout
+else:
+    from cStringIO import StringIO
+
+    class JuliaOutput(list):
+
+        def __enter__(self):
+            self._stdout = sys.stdout
+            sys.stdout = self._stringio = StringIO()
+            return self
+
+        def __exit__(self, *args):
+            self.extend(self._stringio.getvalue().splitlines())
+            sys.stdout = self._stdout
 
 
 class MetaJuliaModule(type):
@@ -85,7 +116,7 @@ class JuliaError(JuliaObject, Exception):
     pass
 
 
-class JuliaModule(JuliaObject):
+class JuliaModule(ModuleType):
     pass
 
 
@@ -193,10 +224,13 @@ class Julia(ModuleType):
         # reloads.
         sys._julia_runtime = api
         basenames = []
-        for name in self.names(self.Base):
+        names = self.eval("names(Base)")
+        for name in names:
             if ismacro(name):
                 continue
             if isoperator(name):
+                continue
+            if name.startswith("_"):
                 continue
             if name.endswith("!"):
                 name = name.rstrip("!") + "_b"
@@ -237,19 +271,26 @@ class Julia(ModuleType):
             return None
         self.eval('help("{}")'.format(name))
 
-    def methods(self, name):
-        """
-        return methods
-        """
-        if name is None:
-            return None
-        print(self.eval("string(methods({}))".format(name)))
-
     def put(self, x):
         pass
 
     def get(self, x):
         pass
+
+    def _ismodule(self, julia_name):
+        return self.eval("isa({}, Module)".format(julia_name))
+        #return self.isa(pycallobj, self.Module)
+
+    def _isfunction(self, pycallobj):
+        return self.isa(pycallobj, self.Function)
+
+    def _isimmutabletype(self, pycallobj):
+        return (self.isa(pycallobj, self.DataType) and
+                self.isimmutable(pycallobj))
+
+    def _isdatatype(self, pycallobj):
+        return (self.isa(pycallobj, self.DataType) and not
+                self.isimmutable(pycallobj))
 
     def __getattr__(self, attr):
         if attr is None:
@@ -266,10 +307,34 @@ class Julia(ModuleType):
         else:
             julia_name = attr
         try:
-            obj = self.eval(julia_name)
-            setattr(self, attr, obj)
-            return obj
-        except:
+            #import ipdb; ipdb.set_trace()
+            jobj = self.eval(julia_name)
+            #if self._isfunction(jobj):
+            #    func = JuliaFunction(jobj)
+            #    pyobj = jobj
+            #elif self._isdatatype(jobj):
+            #    pyobj = jobj
+            #elif self._isimmutabletype(jobj):
+            #    pyobj = jobj
+            if self._ismodule(julia_name):
+                names = self.eval("names({})".format(julia_name))
+                #module = JuliaModule(julia_name)
+                module = imp.new_module(julia_name)
+                #for name in dir(jobj):
+                #    try:
+                #        setattr(module, name, getattr(jobj, name))
+                #    except:
+                #        pass
+                for name in names:
+                    mobj = self.eval("{}.{}".format(julia_name, name))
+                    setattr(module, name, mobj)
+                #sys.modules["julia.{}".format(julia_name)] = module
+                return module
+
+            setattr(self, attr, jobj)
+            return jobj
+        except Exception as err:
+            #raise err
             raise AttributeError(attr)
 
     def eval(self, src):
