@@ -138,6 +138,16 @@ class Julia(ModuleType):
     full access to the entire Julia interpreter.
     """
 
+    def find_module(self, fullname, path=None):
+        print("finding module...{}".format(fullname))
+        if fullname.startswith("julia."):
+            return self
+
+    def load_module(self, fullname):
+        print("Trying load load {}:".format(fullname))
+        return None
+
+
     def __init__(self, init_julia=True):
         """Create a Python object that represents a live Julia interpreter.
 

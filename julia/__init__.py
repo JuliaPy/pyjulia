@@ -8,6 +8,7 @@ from .core import Julia, JuliaModule, JuliaError
 julia = Julia()
 
 # monkeypatch julia interpreter into module load path
+#sys.meta_path.append(julia)
 #sys.modules["julia"] = julia
 
 # add custom import behavior for the julia "module"
@@ -16,11 +17,10 @@ class JuliaImporter(object):
     def find_module(self, fullname, path=None):
         if path is None:
             pass
-        if fullname.startswith("julia"):
+        if fullname.startswith("julia."):
             return JuliaModuleLoader()
         else:
            return None
-
 
 def ismacro(name):
     return name.startswith("@")
@@ -112,3 +112,36 @@ class JuliaModuleLoader(object):
             return julia_func
 
 sys.meta_path.append(JuliaImporter())
+
+def base_functions():
+    thismodule = sys.modules[__name__]
+    names = julia.eval("names(Base)")
+    for name in names:
+        if (ismacro(name) or isoperator(name) or isprotected(name)):
+            continue
+        if notascii(name):
+            continue
+        try:
+            # skip modules for now
+            if isamodule(name):
+                continue
+            if name.startswith("_"):
+                continue
+            if not isafunction(name):
+                continue
+            attr_name = name
+            if name.endswith("!"):
+                attr_name = name.rstrip("!") + "_b"
+            if keyword.iskeyword(name):
+                attr_name = "jl".join(name)
+            julia_func = julia.eval(name)
+            setattr(thismodule, attr_name, julia_func)
+        except:
+            pass
+
+def attrs():
+    thismodule = sys.modules[__name__]
+    thismodule.__getattribute__ = lambda x : print("hello %s " % x)
+
+attrs()
+#base_functions()
