@@ -139,9 +139,7 @@ def base_functions():
         except:
             pass
 
-def attrs():
-    thismodule = sys.modules[__name__]
-    thismodule.__getattribute__ = lambda x : print("hello %s " % x)
+base_functions()
 
-attrs()
-#base_functions()
+def eval(src):
+    return julia.eval(src)
