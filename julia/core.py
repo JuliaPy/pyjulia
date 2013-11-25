@@ -347,6 +347,8 @@ class Julia(ModuleType):
             #raise err
             raise AttributeError(attr)
 
+    #TODO: use convert(PyAny, PyObj) for "putting python objects into julia"
+
     def eval(self, src):
         """
         Execute code in Julia, and pull some of the results back into the

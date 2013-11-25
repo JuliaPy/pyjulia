@@ -49,7 +49,6 @@ def isamodule(julia_name):
     except:
         # try explicitly importing it..
         try:
-            print("importing {}".format(julia_name))
             julia.eval("import {}".format(julia_name))
             ret = julia.eval("isa({}, Module)".format(julia_name))
             return ret
