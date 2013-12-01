@@ -132,21 +132,11 @@ def isoperator(name):
     return not name[0].isalpha()
 
 
-class Julia(ModuleType):
+class Julia(object):
     """Implements a bridge to the Julia interpreter or library.
     This uses the Julia PyCall module to perform type conversions and allow
     full access to the entire Julia interpreter.
     """
-
-    def find_module(self, fullname, path=None):
-        print("finding module...{}".format(fullname))
-        if fullname.startswith("julia."):
-            return self
-
-    def load_module(self, fullname):
-        print("Trying load load {}:".format(fullname))
-        return None
-
 
     def __init__(self, init_julia=True):
         """Create a Python object that represents a live Julia interpreter.
@@ -209,9 +199,6 @@ class Julia(ModuleType):
         api.jl_typeof_str.restype = char_p
         api.jl_unbox_voidpointer.restype = py_object
 
-        #api.jl_bytestring_ptr.argtypes = [ctypes.c_void_p]
-        #api.jl_bytestring_ptr.restype = ctypes.c_char_p
-
         if init_julia:
             # python_exe = os.path.basename(sys.executable)
             try:
@@ -233,26 +220,6 @@ class Julia(ModuleType):
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
         sys._julia_runtime = api
-        basenames = []
-        names = self.eval("names(Base)")
-        for name in names:
-            if ismacro(name):
-                continue
-            if isoperator(name):
-                continue
-            if name.startswith("_"):
-                continue
-            if name.endswith("!"):
-                name = name.rstrip("!") + "_b"
-            if keyword.iskeyword(name):
-                name = "jl".join(name)
-            basenames.append(name)
-        self.basenames = basenames
-
-    def __dir__(self):
-        standard = super(Julia).__dir__()
-        dirs = standard + self.basenames
-        return dirs
 
     def call(self, src):
         """Low-level call to execute a snippet of Julia source.
@@ -286,66 +253,6 @@ class Julia(ModuleType):
 
     def get(self, x):
         pass
-
-    def _ismodule(self, julia_name):
-        return self.eval("isa({}, Module)".format(julia_name))
-        #return self.isa(pycallobj, self.Module)
-
-    def _isfunction(self, pycallobj):
-        return self.isa(pycallobj, self.Function)
-
-    def _isimmutabletype(self, pycallobj):
-        return (self.isa(pycallobj, self.DataType) and
-                self.isimmutable(pycallobj))
-
-    def _isdatatype(self, pycallobj):
-        return (self.isa(pycallobj, self.DataType) and not
-                self.isimmutable(pycallobj))
-
-    def __getattr__(self, attr):
-        if attr is None:
-            return None
-        if attr in ['__name__', '__file__']:
-            return super(Julia, self).__getattr__(attr)
-        if attr.startswith("jl"):
-            # attribute is a python builtin, rename
-            julia_name = attr[2:]
-        elif attr.endswith("_b"):
-            # pycall always makes a copy across the interface so
-            # inplace methods are not much use on the python side
-            julia_name = attr.rstrip("_b") + "!"
-        else:
-            julia_name = attr
-        try:
-            #import ipdb; ipdb.set_trace()
-            jobj = self.eval(julia_name)
-            #if self._isfunction(jobj):
-            #    func = JuliaFunction(jobj)
-            #    pyobj = jobj
-            #elif self._isdatatype(jobj):
-            #    pyobj = jobj
-            #elif self._isimmutabletype(jobj):
-            #    pyobj = jobj
-            if self._ismodule(julia_name):
-                names = self.eval("names({})".format(julia_name))
-                #module = JuliaModule(julia_name)
-                module = imp.new_module(julia_name)
-                #for name in dir(jobj):
-                #    try:
-                #        setattr(module, name, getattr(jobj, name))
-                #    except:
-                #        pass
-                for name in names:
-                    mobj = self.eval("{}.{}".format(julia_name, name))
-                    setattr(module, name, mobj)
-                #sys.modules["julia.{}".format(julia_name)] = module
-                return module
-
-            setattr(self, attr, jobj)
-            return jobj
-        except Exception as err:
-            #raise err
-            raise AttributeError(attr)
 
     #TODO: use convert(PyAny, PyObj) for "putting python objects into julia"
 
