@@ -1,15 +1,12 @@
 import sys
-import imp
 import keyword
 
-from .core import Julia, JuliaModule, JuliaError
+from .core import Julia, JuliaModule
+
 
 # initialize julia interpreter
 julia = Julia()
 
-# monkeypatch julia interpreter into module load path
-#sys.meta_path.append(julia)
-#sys.modules["julia"] = julia
 
 # add custom import behavior for the julia "module"
 class JuliaImporter(object):
@@ -19,8 +16,7 @@ class JuliaImporter(object):
             pass
         if fullname.startswith("julia."):
             return JuliaModuleLoader()
-        else:
-           return None
+
 
 def ismacro(name):
     return name.startswith("@")
@@ -56,6 +52,7 @@ def isamodule(julia_name):
             pass
     return False
 
+
 def isafunction(julia_name):
     return julia.eval("isa({}, Function)".format(julia_name))
 
@@ -67,58 +64,53 @@ class JuliaModuleLoader(object):
         if isamodule(juliapath):
             mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
             mod.__loader__ = self
-            # TODO: should we allow non exported functions?
-            # arg 2: export all arg 3: export operators
-            # names(obj, True, False)
-            names = julia.eval("names({}, true, false)".format(juliapath))
+            names = julia.eval("names({}, true, false)"
+                               .format(juliapath))
             for name in names:
-                if ismacro(name) or isoperator(name) or isprotected(name) or notascii(name):
+                if (ismacro(name) or
+                    isoperator(name) or
+                    isprotected(name) or
+                    notascii(name)):
                     continue
                 attrname = name
                 if name.endswith("!"):
-                    attrname = name.rstrip("!") + "_bang"
+                    attrname = name.replace("!", "_bang")
                 if keyword.iskeyword(name):
                     attrname = "jl".join(name)
                 try:
                     module_path = ".".join((juliapath, name))
                     module_obj = julia.eval(module_path)
-                    is_module = julia.eval("isa({}, Module)".format(module_path))
+                    is_module = julia.eval("isa({}, Module)"
+                                           .format(module_path))
                     if is_module:
                         split_path = module_path.split(".")
                         is_base = split_path[-1] == "Base"
                         recur_module = split_path[-1] == split_path[-2]
-                        if is_module and not is_base and not recur_module:
+                        if (is_module and not
+                            is_base and not
+                            recur_module):
                             newpath = ".".join((fullname, name))
                             module_obj = self.load_module(newpath)
-                    is_function = julia.eval("isa({}, Function)".format(module_path))
-                    if is_function:
-                        pass
                     setattr(mod, attrname, module_obj)
                 except Exception:
+                    # TODO:
                     # some names cannot be imported from base
                     pass
             return mod
-        #This is a hack!, figure out a better way to do julia.Base imports
-        if isafunction(juliapath):
-            name = juliapath
-            if isoperator(name) or isprotected(name) or notascii(name):
-                return None
-            if name.endswith("_bang"):
-                name = name.rstrip("_bang") + "!"
-            julia_func = julia.eval(name)
-            # not a module!!
-            sys.modules.setdefault(fullname, julia_func)
-            return julia_func
 
+
+# monkeypatch julia interpreter into module load path
 sys.meta_path.append(JuliaImporter())
+
 
 def base_functions():
     thismodule = sys.modules[__name__]
     names = julia.eval("names(Base)")
     for name in names:
-        if (ismacro(name) or isoperator(name) or isprotected(name)):
-            continue
-        if notascii(name):
+        if (ismacro(name) or
+            isoperator(name) or
+            isprotected(name) or
+            notascii(name)):
             continue
         try:
             # skip modules for now
@@ -130,7 +122,7 @@ def base_functions():
                 continue
             attr_name = name
             if name.endswith("!"):
-                attr_name = name.rstrip("!") + "_b"
+                attr_name = name.replace("!", "_b")
             if keyword.iskeyword(name):
                 attr_name = "jl".join(name)
             julia_func = julia.eval(name)
@@ -138,7 +130,9 @@ def base_functions():
         except:
             pass
 
+
 base_functions()
+
 
 def eval(src):
     return julia.eval(src)
