@@ -74,7 +74,7 @@ class JuliaModuleLoader(object):
                     continue
                 attrname = name
                 if name.endswith("!"):
-                    attrname = name.replace("!", "_bang")
+                    attrname = name.replace("!", "_b")
                 if keyword.iskeyword(name):
                     attrname = "jl".join(name)
                 try:
