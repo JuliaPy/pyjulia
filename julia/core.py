@@ -163,12 +163,48 @@ class Julia(object):
             return
 
         if init_julia:
+            jpath = ''
+            julia_bin_dir = None
+
             if sys.platform.startswith("linux"):
                 jpath = '/usr/lib/julia/libjulia.so'
             elif sys.platform.startswith("darwin"):
                 jpath = '/usr/lib/julia/libjulia.dylib'
             elif sys.platform.startswith("win"):
-                raise NotImplementedError("Windows is not supported yet")
+                lib_file_name = 'libjulia.dll'
+                # try to locate path of julia from environ
+                possible_env_key = ('JULIA_HOME', 'JULIAHOME',
+                                    'JULIA_PATH', 'JULIAPATH',
+                                    'JULIA_ROOT', 'JULIAROOT')
+                for env_key in possible_env_key:
+                    env = os.getenv(env_key)
+                    if env:
+                        # Though the argument of jl_init is named julia_home_dir,
+                        # the actually path in use is
+                        # `julia_home_dir/../lib/julia/sys.ji', rather than
+                        # `julia_home_dir/lib/julia/sys.ji'.
+                        # If users set JULIA_HOME to, say, `D:\julia0.2.0',
+                        # which is totally reasonable, the julia interpreter
+                        # won't start due to wrong path of `sys.ji'.
+                        # So on Windows, if users want their julia interpreter
+                        # being available, they probably have to set JULIA_HOME
+                        # to `D:\julia0.2.0\bin' so that `sys.ji' will be loaded.
+                        jpath = os.path.join(env, lib_file_name)
+                        break
+                else:
+                    # not found in the possible environ keys,
+                    # search for julia in %PATH%
+                    for path in os.getenv('PATH').split(';'):
+                        if 'julia' in path:
+                            jpath = os.path.join(path, lib_file_name)
+                            break
+                # The argument of jl_init seems unreasonable.
+                # If None is given to jl_init, the path of current Python
+                # interpreter will be used, which results in a path like
+                # `C:\Python27\../lib/julia/sys.ji'.
+                # So at least on windows, the argument of jl_init must be
+                # specified.
+                julia_bin_dir = os.path.dirname(jpath)
             else:
                 raise NotImplementedError("Unsupported operating system")
 
@@ -177,7 +213,7 @@ class Julia(object):
 
             api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
             api.jl_init.arg_types = [char_p]
-            api.jl_init(0)
+            api.jl_init(julia_bin_dir)
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
@@ -230,7 +266,7 @@ class Julia(object):
         expressions, only to execute statements.
         """
         byte_src = bytes(str(src).encode('ascii'))
-        # ruturn null ptr if error
+        # return null ptr if error
         ans = self.api.jl_eval_string(byte_src)
         if not ans:
             #TODO: introspect the julia error object
