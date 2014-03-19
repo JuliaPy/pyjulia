@@ -256,6 +256,8 @@ class Julia(object):
         api.jl_eval_string.restype = void_p
 
         api.jl_exception_occurred.restype = void_p
+        api.jl_typeof_str.argtypes = [void_p]
+        api.jl_typeof_str.restype = char_p
         api.jl_call1.restype = void_p
         api.jl_get_field.restype = void_p
         api.jl_typename_str.restype = char_p
@@ -298,12 +300,16 @@ class Julia(object):
         # ruturn null ptr if error
         ans = self.api.jl_eval_string(byte_src)
         if not ans:
-            #TODO: introspect the julia error object
-            #jexp = self.api.jl_exception_occurred()
-            #msgptr = self.api.jl_get_field(jexp, b'msg')
-            #msg = char_p(msgptr).value
-            raise JuliaError('Exception calling julia src: \n{}'.format(src))
+            jexp = self.api.jl_exception_occurred()
+            exception_str = self._unwrap_exception(jexp)
+            raise JuliaError('Exception calling julia src: {}\n{}'
+                .format(exception_str, src))
         return ans
+
+    def _unwrap_exception(self, jl_exc):
+        exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
+        msg = self.api.jl_typeof_str(exception)
+        return char_p(msg).value
 
     def help(self, name):
         """
