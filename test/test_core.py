@@ -5,7 +5,7 @@ from julia import Julia, JuliaError
 
 class JuliaTest(unittest.TestCase):
     def setUp(self):
-        self.julia = Julia(jl_init_path='/Users/felipecruz/Projects/julia/julia-2b6cff733a/bin/')
+        self.julia = Julia()
 
     def tearDown(self):
         self.julia = None
