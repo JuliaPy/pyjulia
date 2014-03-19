@@ -17,46 +17,6 @@ class JuliaImporter(object):
         if fullname.startswith("julia."):
             return JuliaModuleLoader()
 
-
-def ismacro(name):
-    return name.startswith("@")
-
-
-def isoperator(name):
-    return not name[0].isalpha()
-
-
-def isprotected(name):
-    return name.startswith("_")
-
-
-def notascii(name):
-    try:
-        name.encode("ascii")
-        return False
-    except:
-        return True
-
-
-def isamodule(julia_name):
-    try:
-        ret = julia.eval("isa({}, Module)".format(julia_name))
-        return ret
-    except:
-        # try explicitly importing it..
-        try:
-            julia.eval("import {}".format(julia_name))
-            ret = julia.eval("isa({}, Module)".format(julia_name))
-            return ret
-        except:
-            pass
-    return False
-
-
-def isafunction(julia_name):
-    return julia.eval("isa({}, Function)".format(julia_name))
-
-
 class JuliaModuleLoader(object):
 
     def load_module(self, fullname):
@@ -101,38 +61,3 @@ class JuliaModuleLoader(object):
 
 # monkeypatch julia interpreter into module load path
 sys.meta_path.append(JuliaImporter())
-
-
-def base_functions():
-    thismodule = sys.modules[__name__]
-    names = julia.eval("names(Base)")
-    for name in names:
-        if (ismacro(name) or
-            isoperator(name) or
-            isprotected(name) or
-            notascii(name)):
-            continue
-        try:
-            # skip modules for now
-            if isamodule(name):
-                continue
-            if name.startswith("_"):
-                continue
-            if not isafunction(name):
-                continue
-            attr_name = name
-            if name.endswith("!"):
-                attr_name = name.replace("!", "_b")
-            if keyword.iskeyword(name):
-                attr_name = "jl".join(name)
-            julia_func = julia.eval(name)
-            setattr(thismodule, attr_name, julia_func)
-        except:
-            pass
-
-
-base_functions()
-
-
-def eval(src):
-    return julia.eval(src)
