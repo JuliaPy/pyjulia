@@ -1,12 +1,7 @@
 import sys
 import keyword
 
-from .core import Julia, JuliaModule
-
-
-# initialize julia interpreter
-julia = Julia()
-
+from .core import Julia, JuliaModule, JuliaError
 
 # add custom import behavior for the julia "module"
 class JuliaImporter(object):
