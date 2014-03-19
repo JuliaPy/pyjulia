@@ -196,7 +196,7 @@ class Julia(object):
     full access to the entire Julia interpreter.
     """
 
-    def __init__(self, init_julia=True):
+    def __init__(self, init_julia=True, jl_init_path=None):
         """Create a Python object that represents a live Julia interpreter.
 
         Parameters
@@ -235,7 +235,12 @@ class Julia(object):
 
             api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
             api.jl_init.arg_types = [char_p]
-            api.jl_init(0)
+
+            if jl_init_path:
+                api.jl_init(jl_init_path)
+            else:
+                api.jl_init(0)
+
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
