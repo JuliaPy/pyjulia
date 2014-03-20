@@ -156,6 +156,9 @@ class JuliaModuleLoader(object):
                             module_obj = self.load_module(newpath)
                     setattr(mod, attrname, module_obj)
                 except Exception:
+                    if isafunction(self.julia, name, mod_name=juliapath):
+                        func = "{}.{}".format(juliapath, name)
+                        setattr(mod, name, self.julia.eval(func))
                     # TODO:
                     # some names cannot be imported from base
                     pass
@@ -215,8 +218,14 @@ def isamodule(julia, julia_name):
     return False
 
 
-def isafunction(julia, julia_name):
-    return julia.eval("isa({}, Function)".format(julia_name))
+def isafunction(julia, julia_name, mod_name=""):
+    code = "isa({}, Function)".format(julia_name)
+    if mod_name:
+        code = "isa({}.{}, Function)".format(mod_name, julia_name)
+    try:
+        return julia.eval(code)
+    except:
+        return False
 
 
 def base_functions(julia):

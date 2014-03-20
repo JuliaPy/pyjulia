@@ -45,3 +45,7 @@ class JuliaTest(unittest.TestCase):
     def test_import_julia_functions(self):
         import julia.sum as julia_sum
         self.assertEquals(6, julia_sum([1, 2, 3]))
+
+    def test_import_julia_modules(self):
+        import julia.PyCall as pycall
+        self.assertEquals(6, pycall.pyeval('2 * 3'))
