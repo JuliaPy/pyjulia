@@ -57,6 +57,7 @@ def isafunction(julia_name):
     return julia.eval("isa({}, Function)".format(julia_name))
 
 
+#TODO: some names end with bang in middle test!_test
 class JuliaModuleLoader(object):
 
     def load_module(self, fullname):
@@ -124,13 +125,14 @@ def base_functions():
             if name.endswith("!"):
                 attr_name = name.replace("!", "_b")
             if keyword.iskeyword(name):
-                attr_name = "jl".join(name)
+                attr_name = "jl_".join(name)
             julia_func = julia.eval(name)
             setattr(thismodule, attr_name, julia_func)
         except:
             pass
 
 
+# load base functions into julia module namespace
 base_functions()
 
 

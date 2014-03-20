@@ -25,7 +25,6 @@ from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
 from ctypes import py_object
 
-
 # this is python 3.3 specific
 from types import ModuleType, FunctionType
 
@@ -64,30 +63,20 @@ else:
 
 if python_version.major == 3:
     from io import StringIO
-
-    class JuliaOutput(list):
-
-        def __enter__(self):
-            self._stdout = sys.stdout
-            sys.stdout = self._stringio = StringIO()
-            return self
-
-        def __exit__(self, *args):
-            self.extend(self._stringio.getvalue().splitlines())
-            sys.stdout = self._stdout
 else:
     from cStringIO import StringIO
 
-    class JuliaOutput(list):
 
-        def __enter__(self):
-            self._stdout = sys.stdout
-            sys.stdout = self._stringio = StringIO()
-            return self
+class JuliaOutput(list):
 
-        def __exit__(self, *args):
-            self.extend(self._stringio.getvalue().splitlines())
-            sys.stdout = self._stdout
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = self._stringio = StringIO()
+        return self
+
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        sys.stdout = self._stdout
 
 
 class MetaJuliaModule(type):
@@ -126,10 +115,6 @@ class JuliaFunction(JuliaObject):
 
 def ismacro(name):
     return name.startswith("@")
-
-
-def isoperator(name):
-    return not name[0].isalpha()
 
 
 class Julia(object):
