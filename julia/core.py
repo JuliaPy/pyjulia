@@ -198,7 +198,7 @@ def notascii(name):
         return True
 
 
-def isamodule(julia_name):
+def isamodule(julia, julia_name):
     try:
         ret = julia.eval("isa({}, Module)".format(julia_name))
         return ret
@@ -213,12 +213,12 @@ def isamodule(julia_name):
     return False
 
 
-def isafunction(julia_name):
+def isafunction(julia, julia_name):
     return julia.eval("isa({}, Function)".format(julia_name))
 
 
 def base_functions(julia):
-    thismodule = sys.modules[__name__]
+    bases = {}
     names = julia.eval("names(Base)")
     for name in names:
         if (ismacro(name) or
@@ -228,11 +228,11 @@ def base_functions(julia):
             continue
         try:
             # skip modules for now
-            if isamodule(name):
+            if isamodule(julia, name):
                 continue
             if name.startswith("_"):
                 continue
-            if not isafunction(name):
+            if not isafunction(julia, name):
                 continue
             attr_name = name
             if name.endswith("!"):
@@ -240,9 +240,10 @@ def base_functions(julia):
             if keyword.iskeyword(name):
                 attr_name = "jl".join(name)
             julia_func = julia.eval(name)
-            setattr(thismodule, attr_name, julia_func)
+            bases[attr_name] = julia_func
         except:
             pass
+    return bases
 
 class Julia(object):
     """Implements a bridge to the Julia interpreter or library.
@@ -371,6 +372,12 @@ class Julia(object):
         if name is None:
             return None
         self.eval('help("{}")'.format(name))
+
+    def __getattr__(self, name):
+        bases = object.__getattribute__(self, 'bases')
+        if not name in bases:
+            raise AttributeError("Name {} not found".format(name))
+        return bases[name]
 
     def put(self, x):
         pass
