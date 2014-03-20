@@ -340,6 +340,8 @@ class Julia(object):
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
         sys._julia_runtime = api
+
+        self.bases = base_functions(self)
         sys.meta_path.append(JuliaImporter(self))
 
     def call(self, src):
