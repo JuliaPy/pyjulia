@@ -19,7 +19,6 @@ import ctypes.util
 import os
 import sys
 import keyword
-import imp
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -97,6 +96,66 @@ class MetaJuliaModule(type):
         return newfunc
 
 
+# add custom import behavior for the julia "module"
+class JuliaImporter(object):
+    def __init__(self, julia):
+        self.julia = julia
+
+    def find_module(self, fullname, path=None):
+        if path is None:
+            pass
+        if fullname.startswith("julia."):
+            return JuliaModuleLoader(self.julia)
+
+class JuliaModuleLoader(object):
+    def __init__(self, julia):
+        self.julia = julia
+
+    def load_module(self, fullname):
+        juliapath = fullname.lstrip("julia.")
+        if isamodule(self.julia, juliapath):
+            mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
+            mod.__loader__ = self
+            names = self.julia.eval("names({}, true, false)"
+                                    .format(juliapath))
+            for name in names:
+                if (ismacro(name) or
+                    isoperator(name) or
+                    isprotected(name) or
+                    notascii(name)):
+                    continue
+                attrname = name
+                if name.endswith("!"):
+                    attrname = name.replace("!", "_bang")
+                if keyword.iskeyword(name):
+                    attrname = "jl".join(name)
+                try:
+                    module_path = ".".join((juliapath, name))
+                    module_obj = julia.eval(module_path)
+                    is_module = julia.eval("isa({}, Module)"
+                                           .format(module_path))
+                    if is_module:
+                        split_path = module_path.split(".")
+                        is_base = split_path[-1] == "Base"
+                        recur_module = split_path[-1] == split_path[-2]
+                        if (is_module and not
+                            is_base and not
+                            recur_module):
+                            newpath = ".".join((fullname, name))
+                            module_obj = self.load_module(newpath)
+                    setattr(mod, attrname, module_obj)
+                except Exception:
+                    if isafunction(self.julia, name, mod_name=juliapath):
+                        func = "{}.{}".format(juliapath, name)
+                        setattr(mod, name, self.julia.eval(func))
+                    # TODO:
+                    # some names cannot be imported from base
+                    pass
+            return mod
+        elif isafunction(self.julia, juliapath):
+            return getattr(self.julia, juliapath)
+
+
 class JuliaObject(object):
     pass
 
@@ -117,13 +176,82 @@ def ismacro(name):
     return name.startswith("@")
 
 
+def isoperator(name):
+    return not name[0].isalpha()
+
+
+def isprotected(name):
+    return name.startswith("_")
+
+
+def notascii(name):
+    try:
+        name.encode("ascii")
+        return False
+    except:
+        return True
+
+
+def isamodule(julia, julia_name):
+    try:
+        ret = julia.eval("isa({}, Module)".format(julia_name))
+        return ret
+    except:
+        # try explicitly importing it..
+        try:
+            julia.eval("import {}".format(julia_name))
+            ret = julia.eval("isa({}, Module)".format(julia_name))
+            return ret
+        except:
+            pass
+    return False
+
+
+def isafunction(julia, julia_name, mod_name=""):
+    code = "isa({}, Function)".format(julia_name)
+    if mod_name:
+        code = "isa({}.{}, Function)".format(mod_name, julia_name)
+    try:
+        return julia.eval(code)
+    except:
+        return False
+
+
+def base_functions(julia):
+    bases = {}
+    names = julia.eval("names(Base)")
+    for name in names:
+        if (ismacro(name) or
+            isoperator(name) or
+            isprotected(name) or
+            notascii(name)):
+            continue
+        try:
+            # skip modules for now
+            if isamodule(julia, name):
+                continue
+            if name.startswith("_"):
+                continue
+            if not isafunction(julia, name):
+                continue
+            attr_name = name
+            if name.endswith("!"):
+                attr_name = name.replace("!", "_b")
+            if keyword.iskeyword(name):
+                attr_name = "jl".join(name)
+            julia_func = julia.eval(name)
+            bases[attr_name] = julia_func
+        except:
+            pass
+    return bases
+
 class Julia(object):
     """Implements a bridge to the Julia interpreter or library.
     This uses the Julia PyCall module to perform type conversions and allow
     full access to the entire Julia interpreter.
     """
 
-    def __init__(self, init_julia=True):
+    def __init__(self, init_julia=True, jl_init_path=None):
         """Create a Python object that represents a live Julia interpreter.
 
         Parameters
@@ -162,7 +290,12 @@ class Julia(object):
 
             api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
             api.jl_init.arg_types = [char_p]
-            api.jl_init(0)
+
+            if jl_init_path:
+                api.jl_init(jl_init_path)
+            else:
+                api.jl_init(0)
+
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
@@ -178,6 +311,8 @@ class Julia(object):
         api.jl_eval_string.restype = void_p
 
         api.jl_exception_occurred.restype = void_p
+        api.jl_typeof_str.argtypes = [void_p]
+        api.jl_typeof_str.restype = char_p
         api.jl_call1.restype = void_p
         api.jl_get_field.restype = void_p
         api.jl_typename_str.restype = char_p
@@ -206,6 +341,9 @@ class Julia(object):
         # reloads.
         sys._julia_runtime = api
 
+        self.bases = base_functions(self)
+        sys.meta_path.append(JuliaImporter(self))
+
     def call(self, src):
         """Low-level call to execute a snippet of Julia source.
 
@@ -218,12 +356,16 @@ class Julia(object):
         # ruturn null ptr if error
         ans = self.api.jl_eval_string(byte_src)
         if not ans:
-            #TODO: introspect the julia error object
-            #jexp = self.api.jl_exception_occurred()
-            #msgptr = self.api.jl_get_field(jexp, b'msg')
-            #msg = char_p(msgptr).value
-            raise JuliaError('Exception calling julia src: \n{}'.format(src))
+            jexp = self.api.jl_exception_occurred()
+            exception_str = self._unwrap_exception(jexp)
+            raise JuliaError('Exception calling julia src: {}\n{}'
+                .format(exception_str, src))
         return ans
+
+    def _unwrap_exception(self, jl_exc):
+        exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
+        msg = self.api.jl_typeof_str(exception)
+        return char_p(msg).value
 
     def help(self, name):
         """
@@ -232,6 +374,12 @@ class Julia(object):
         if name is None:
             return None
         self.eval('help("{}")'.format(name))
+
+    def __getattr__(self, name):
+        bases = object.__getattribute__(self, 'bases')
+        if not name in bases:
+            raise AttributeError("Name {} not found".format(name))
+        return bases[name]
 
     def put(self, x):
         pass
