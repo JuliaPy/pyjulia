@@ -35,4 +35,12 @@ nosetests.xml
 .project
 .pydevproject
 
+<<<<<<< HEAD
 .ropeproject
+=======
+# PyCharm
+.idea/*
+
+# Test files
+*test.py
+>>>>>>> mad4alcohol/win-support
