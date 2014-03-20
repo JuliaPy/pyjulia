@@ -107,6 +107,60 @@ class MetaJuliaModule(type):
         newfunc.__kwdefaults__ = func.__kwdefaults__
         return newfunc
 
+# add custom import behavior for the julia "module"
+class JuliaImporter(object):
+    def __init__(self, julia):
+        self.julia = julia
+
+    def find_module(self, fullname, path=None):
+        if path is None:
+            pass
+        if fullname.startswith("julia."):
+            return JuliaModuleLoader(self.julia)
+
+class JuliaModuleLoader(object):
+    def __init__(self, julia):
+        self.julia = julia
+
+    def load_module(self, fullname):
+        juliapath = fullname.lstrip("julia.")
+        if isamodule(self.julia, juliapath):
+            mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
+            mod.__loader__ = self
+            names = julia.eval("names({}, true, false)"
+                               .format(juliapath))
+            for name in names:
+                if (ismacro(name) or
+                    isoperator(name) or
+                    isprotected(name) or
+                    notascii(name)):
+                    continue
+                attrname = name
+                if name.endswith("!"):
+                    attrname = name.replace("!", "_bang")
+                if keyword.iskeyword(name):
+                    attrname = "jl".join(name)
+                try:
+                    module_path = ".".join((juliapath, name))
+                    module_obj = julia.eval(module_path)
+                    is_module = julia.eval("isa({}, Module)"
+                                           .format(module_path))
+                    if is_module:
+                        split_path = module_path.split(".")
+                        is_base = split_path[-1] == "Base"
+                        recur_module = split_path[-1] == split_path[-2]
+                        if (is_module and not
+                            is_base and not
+                            recur_module):
+                            newpath = ".".join((fullname, name))
+                            module_obj = self.load_module(newpath)
+                    setattr(mod, attrname, module_obj)
+                except Exception:
+                    # TODO:
+                    # some names cannot be imported from base
+                    pass
+            return mod
+
 
 class JuliaObject(object):
     pass
@@ -285,8 +339,7 @@ class Julia(object):
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
         sys._julia_runtime = api
-
-        base_functions(self)
+        sys.meta_path.append(JuliaImporter(self))
 
     def call(self, src):
         """Low-level call to execute a snippet of Julia source.
