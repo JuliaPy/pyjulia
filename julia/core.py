@@ -127,8 +127,8 @@ class JuliaModuleLoader(object):
         if isamodule(self.julia, juliapath):
             mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
             mod.__loader__ = self
-            names = julia.eval("names({}, true, false)"
-                               .format(juliapath))
+            names = self.julia.eval("names({}, true, false)"
+                                    .format(juliapath))
             for name in names:
                 if (ismacro(name) or
                     isoperator(name) or
