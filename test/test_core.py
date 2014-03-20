@@ -41,3 +41,7 @@ class JuliaTest(unittest.TestCase):
     def test_call_python_with_julia_args(self):
         self.assertEquals(6, sum(julia.eval('(1, 2, 3)')))
         self.assertEquals([1, 4, 9], map(julia.eval('x -> x*x'), [1, 2, 3]))
+
+    def test_import_julia_functions(self):
+        import julia.sum as julia_sum
+        self.assertEquals(6, julia_sum([1, 2, 3]))

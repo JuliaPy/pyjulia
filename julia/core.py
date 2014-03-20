@@ -160,6 +160,8 @@ class JuliaModuleLoader(object):
                     # some names cannot be imported from base
                     pass
             return mod
+        elif isafunction(self.julia, juliapath):
+            return getattr(self.julia, juliapath)
 
 
 class JuliaObject(object):
