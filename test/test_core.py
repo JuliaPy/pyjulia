@@ -38,4 +38,6 @@ class JuliaTest(unittest.TestCase):
         self.assertEqual([11, 11, 11], julia.map(lambda x: x + 1, array.array('I', [10, 10, 10])))
         self.assertEqual(6, julia.foldr(add, 0, [1, 2, 3]))
 
-
+    def test_call_python_with_julia_args(self):
+        self.assertEquals(6, sum(julia.eval('(1, 2, 3)')))
+        self.assertEquals([1, 4, 9], map(julia.eval('x -> x*x'), [1, 2, 3]))
