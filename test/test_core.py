@@ -40,18 +40,20 @@ class JuliaTest(unittest.TestCase):
             return a + b
         self.assertEqual([1, 4, 9],
                          julia.map(lambda x: x * x, [1, 2, 3]))
-        self.assertEqual([11, 11, 11], julia.map(lambda x: x + 1,
-                                                 array.array('I', [10, 10, 10])))
+        self.assertEqual([11, 11, 11],
+                         julia.map(lambda x: x + 1,
+                                   array.array('I', [10, 10, 10])))
         self.assertEqual(6, julia.foldr(add, 0, [1, 2, 3]))
 
     def test_call_python_with_julia_args(self):
-        self.assertEquals(6, sum(julia.eval('(1, 2, 3)')))
-        self.assertEquals([1, 4, 9], map(julia.eval('x -> x*x'), [1, 2, 3]))
+        self.assertEqual(6, sum(julia.eval('(1, 2, 3)')))
+        self.assertEqual([1, 4, 9], map(julia.eval('x -> x*x'), [1, 2, 3]))
 
     def test_import_julia_functions(self):
         import julia.sum as julia_sum
-        self.assertEquals(6, julia_sum([1, 2, 3]))
+        self.assertEqual(6, julia_sum([1, 2, 3]))
 
+    #TODO: this causes a segfault
     def test_import_julia_modules(self):
         import julia.PyCall as pycall
         self.assertEquals(6, pycall.pyeval('2 * 3'))
