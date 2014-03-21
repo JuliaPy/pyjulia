@@ -281,6 +281,9 @@ class Julia(object):
             jpath = ''
             if sys.platform.startswith("linux"):
                 jpath = '/usr/lib/julia/libjulia.so'
+                if not os.path.exists(jpath):
+                    #XXX: TEMPORARY HACK TO WORK ON TRAVIS
+                    jpath = '/usr/lib/x86_64-linux-gnu/julia/libjulia.so'
             elif sys.platform.startswith("darwin"):
                 jpath = '/usr/lib/julia/libjulia.dylib'
             elif sys.platform.startswith("win"):
