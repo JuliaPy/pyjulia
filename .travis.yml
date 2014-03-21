@@ -14,7 +14,7 @@ before_install:
   - sudo apt-get update -qq -y
   - sudo apt-get install libpcre3-dev julia -y
   - sudo apt-get install python-numpy python3-numpy -y
-  - sudo dkpg -L julia
+  - sudo dpkg -L julia
 script:
   - julia -e 'println(JULIA_HOME)'
   - julia -e 'Pkg.clone("PyCall")'
