@@ -19,6 +19,7 @@ import ctypes.util
 import os
 import sys
 import keyword
+import warnings
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -107,7 +108,9 @@ class JuliaImporter(object):
         if fullname.startswith("julia."):
             return JuliaModuleLoader(self.julia)
 
+
 class JuliaModuleLoader(object):
+
     def __init__(self, julia):
         self.julia = julia
 
@@ -116,8 +119,7 @@ class JuliaModuleLoader(object):
         if isamodule(self.julia, juliapath):
             mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
             mod.__loader__ = self
-            names = self.julia.eval("names({}, true, false)"
-                                    .format(juliapath))
+            names = self.julia.eval("names({}, true, false)".format(juliapath))
             for name in names:
                 if (ismacro(name) or
                     isoperator(name) or
@@ -126,21 +128,19 @@ class JuliaModuleLoader(object):
                     continue
                 attrname = name
                 if name.endswith("!"):
-                    attrname = name.replace("!", "_bang")
+                    attrname = name.replace("!", "_b")
                 if keyword.iskeyword(name):
                     attrname = "jl".join(name)
                 try:
                     module_path = ".".join((juliapath, name))
-                    module_obj = julia.eval(module_path)
-                    is_module = julia.eval("isa({}, Module)"
-                                           .format(module_path))
+                    module_obj = self.julia.eval(module_path)
+                    is_module = self.julia.eval("isa({}, Module)"
+                                                .format(module_path))
                     if is_module:
                         split_path = module_path.split(".")
                         is_base = split_path[-1] == "Base"
                         recur_module = split_path[-1] == split_path[-2]
-                        if (is_module and not
-                            is_base and not
-                            recur_module):
+                        if is_module and not is_base and not recur_module:
                             newpath = ".".join((fullname, name))
                             module_obj = self.load_module(newpath)
                     setattr(mod, attrname, module_obj)
@@ -150,6 +150,7 @@ class JuliaModuleLoader(object):
                         setattr(mod, name, self.julia.eval(func))
                     # TODO:
                     # some names cannot be imported from base
+                    warnings.warn("cannot import {}".format(name))
                     pass
             return mod
         elif isafunction(self.julia, juliapath):
@@ -245,6 +246,7 @@ def base_functions(julia):
             pass
     return bases
 
+
 class Julia(object):
     """Implements a bridge to the Julia interpreter or library.
     This uses the Julia PyCall module to perform type conversions and allow
@@ -277,8 +279,6 @@ class Julia(object):
 
         if init_julia:
             jpath = ''
-            julia_bin_dir = None
-
             if sys.platform.startswith("linux"):
                 jpath = '/usr/lib/julia/libjulia.so'
             elif sys.platform.startswith("darwin"):
@@ -292,16 +292,17 @@ class Julia(object):
                 for env_key in possible_env_key:
                     env = os.getenv(env_key)
                     if env:
-                        # Though the argument of jl_init is named julia_home_dir,
-                        # the actually path in use is
+                        # Though the argument of jl_init is named
+                        # julia_home_dir, the actually path in use is
                         # `julia_home_dir/../lib/julia/sys.ji', rather than
                         # `julia_home_dir/lib/julia/sys.ji'.
                         # If users set JULIA_HOME to, say, `D:\julia0.2.0',
                         # which is totally reasonable, the julia interpreter
                         # won't start due to wrong path of `sys.ji'.
                         # So on Windows, if users want their julia interpreter
-                        # being available, they probably have to set JULIA_HOME
-                        # to `D:\julia0.2.0\bin' so that `sys.ji' will be loaded.
+                        # being available, they probably have to set
+                        # JULIA_HOME to `D:\julia0.2.0\bin' so that `sys.ji'
+                        # will be loaded.
                         jpath = os.path.join(env, lib_file_name)
                         break
                 else:
@@ -317,7 +318,7 @@ class Julia(object):
                 # `C:\Python27\../lib/julia/sys.ji'.
                 # So at least on windows, the argument of jl_init must be
                 # specified.
-                julia_bin_dir = os.path.dirname(jpath)
+                jl_init_path = os.path.dirname(jpath)
             else:
                 raise NotImplementedError("Unsupported operating system")
 
@@ -394,7 +395,7 @@ class Julia(object):
             jexp = self.api.jl_exception_occurred()
             exception_str = self._unwrap_exception(jexp)
             raise JuliaError('Exception calling julia src: {}\n{}'
-                .format(exception_str, src))
+                             .format(exception_str, src))
         return ans
 
     def _unwrap_exception(self, jl_exc):
@@ -435,8 +436,8 @@ class Julia(object):
         res = self.api.jl_call1(void_p(self.api.PyObject), void_p(ans))
         if not res:
             #TODO: introspect the julia error object here
-            raise JuliaError('ErrorException in Julia PyObject: '
-                             '{}'.format(src))
+            raise JuliaError("ErrorException in Julia PyObject: "
+                             "{}".format(src))
         boxed_obj = self.api.jl_get_field(void_p(res), b'o')
         pyobj = self.api.jl_unbox_voidpointer(void_p(boxed_obj))
         # make sure we incref it before returning it,

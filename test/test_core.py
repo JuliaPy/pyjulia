@@ -2,7 +2,7 @@ import array
 import math
 import unittest
 
-from julia import Julia, JuliaError
+from .julia import Julia, JuliaError
 
 julia = Julia()
 
