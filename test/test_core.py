@@ -2,11 +2,13 @@ import array
 import math
 import unittest
 
-from .julia import Julia, JuliaError
+from julia import Julia, JuliaError
 
 julia = Julia()
 
+
 class JuliaTest(unittest.TestCase):
+
     def test_call(self):
         julia.call('1 + 1')
         julia.call('sqrt(2.0)')
@@ -26,16 +28,20 @@ class JuliaTest(unittest.TestCase):
             pass
 
     def test_call_julia_function_with_python_args(self):
-        self.assertEqual(['A', 'B', 'C'], julia.map(julia.uppercase,
-                                                    array.array('c', ['a', 'b', 'c'])))
-        self.assertEqual([1.0, 2.0, 3.0], julia.map(julia.floor, [1.1, 2.2, 3.3]))
+        self.assertEqual(['A', 'B', 'C'],
+                         julia.map(julia.uppercase,
+                                   array.array('c', ['a', 'b', 'c'])))
+        self.assertEqual([1.0, 2.0, 3.0],
+                         julia.map(julia.floor, [1.1, 2.2, 3.3]))
         self.assertEqual(1.0, julia.cos(0))
 
     def test_call_julia_with_python_callable(self):
         def add(a, b):
             return a + b
-        self.assertEqual([1, 4, 9], julia.map(lambda x: x*x, [1, 2, 3]))
-        self.assertEqual([11, 11, 11], julia.map(lambda x: x + 1, array.array('I', [10, 10, 10])))
+        self.assertEqual([1, 4, 9],
+                         julia.map(lambda x: x * x, [1, 2, 3]))
+        self.assertEqual([11, 11, 11], julia.map(lambda x: x + 1,
+                                                 array.array('I', [10, 10, 10])))
         self.assertEqual(6, julia.foldr(add, 0, [1, 2, 3]))
 
     def test_call_python_with_julia_args(self):
