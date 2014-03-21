@@ -6,10 +6,6 @@ python:
     - 3.3
 compiler:
   - clang
-env:
-  matrix:
-    - JULIAVERSION="juliareleases" 
-    - JULIAVERSION="julianightlies" 
 notifications:
   email: false
 before_install:
