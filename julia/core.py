@@ -332,7 +332,11 @@ class Julia(object):
             api.jl_init.arg_types = [char_p]
 
             if jl_init_path:
-                api.jl_init(jl_init_path)
+                if python_version.major == 3:  # we need to translate in non-unicode
+                    sys_ji_path_relative = os.path.join("..", "lib", "julia", "sys.ji")
+                    api.jl_init_with_image(jl_init_path.encode(), sys_ji_path_relative.encode())
+                else:    
+                    api.jl_init(jl_init_path)
             else:
                 api.jl_init(0)
         else:
