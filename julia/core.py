@@ -332,7 +332,11 @@ class Julia(object):
             api.jl_init.arg_types = [char_p]
 
             if jl_init_path:
-                api.jl_init(jl_init_path)
+                if python_version.major == 3:  # we need to translate in non-unicode
+                    sys_ji_path_relative = os.path.join("..", "lib", "julia", "sys.ji")
+                    api.jl_init_with_image(jl_init_path.encode('utf8'), sys_ji_path_relative.encode('utf8'))
+                else:    
+                    api.jl_init(jl_init_path)
             else:
                 api.jl_init(0)
         else:
@@ -367,7 +371,8 @@ class Julia(object):
             try:
                 self.call('pyinitialize(C_NULL)')
             except:
-                raise JuliaError("Failed to initialize PyCall package")
+                #raise JuliaError("Failed to initialize PyCall package")
+                print(" Julia error ? Failed to initialize PyCall package")
 
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject. Since this will be needed on every call, we
