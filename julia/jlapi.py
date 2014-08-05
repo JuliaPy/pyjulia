@@ -1,3 +1,11 @@
+import ctypes
+import ctypes.util
+
+from ctypes import c_void_p as void_p
+from ctypes import c_char_p as char_p
+from ctypes import py_object
+
+
 def locate_sysimg():
     #TODO
     pass

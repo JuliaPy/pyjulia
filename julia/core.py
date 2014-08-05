@@ -19,7 +19,7 @@ import ctypes.util
 import os
 import sys
 import keyword
-import warnings
+import commands
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -148,8 +148,7 @@ class JuliaModuleLoader(object):
                     if isafunction(self.julia, name, mod_name=juliapath):
                         func = "{}.{}".format(juliapath, name)
                         setattr(mod, name, self.julia.eval(func))
-                    # TODO:
-                    # some names cannot be imported from base
+                    # TODO:some names cannot be imported from base
                     #warnings.warn("cannot import {}".format(name))
                     pass
             return mod
@@ -278,14 +277,18 @@ class Julia(object):
             return
 
         if init_julia:
+            status, JULIA_HOME =\
+                commands.getstatusoutput('julia -e "print(JULIA_HOME)"', shell=True)
+            if status != 0:
+                raise JuliaError('error starting up the Julia process')
+
             jpath = ''
             if sys.platform.startswith("linux"):
-                jpath = '/usr/lib/julia/libjulia.so'
-                if not os.path.exists(jpath):
-                    #XXX: TEMPORARY HACK TO WORK ON TRAVIS
-                    jpath = '/usr/lib/x86_64-linux-gnu/julia/libjulia.so'
+                jpath = os.path.abspath(
+                    os.path.joinpath(JULIA_HOME, "../lib/libjulia.so"))
             elif sys.platform.startswith("darwin"):
-                jpath = '/usr/lib/julia/libjulia.dylib'
+                jpath = os.path.abspath(
+                    os.path.joinpath(JULIA_HOME, "../lib/libjulia.dylib"))
             elif sys.platform.startswith("win"):
                 lib_file_name = 'libjulia.dll'
                 # try to locate path of julia from environ
@@ -315,51 +318,41 @@ class Julia(object):
                         if 'julia' in path:
                             jpath = os.path.join(path, lib_file_name)
                             break
-                # The argument of jl_init seems unreasonable.
-                # If None is given to jl_init, the path of current Python
-                # interpreter will be used, which results in a path like
-                # `C:\Python27\../lib/julia/sys.ji'.
-                # So at least on windows, the argument of jl_init must be
-                # specified.
-                jl_init_path = os.path.dirname(jpath)
             else:
                 raise NotImplementedError("Unsupported operating system")
 
             if not os.path.exists(jpath):
-                raise ValueError("Julia library not found!")
+                raise JuliaError("Julia library not found! {}".format(jpath))
 
-            api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
-            api.jl_init.arg_types = [char_p]
+            self.api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
+            self.api.jl_init.arg_types = [char_p]
 
-            if jl_init_path:
-                api.jl_init(jl_init_path)
-            else:
-                api.jl_init(0)
+            jl_init_path = os.path.dirname(jpath)
+            self.api.jl_init(jl_init_path)
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
-            api = ctypes.PyDLL('')
+            self.api = ctypes.PyDLL('')
 
-        # Store the running interpreter reference so we can start using it via
-        # self.call
-        self.api = api
+        # Store the running interpreter reference so we can start using it via self.call
+        self.api.jl_.argtypes = [void_p]
+        self.api.jl_.restype = None
 
         # Set the return types of some of the bridge functions in ctypes
         # terminology
-        api.jl_eval_string.argtypes = [char_p]
-        api.jl_eval_string.restype = void_p
+        self.api.jl_eval_string.argtypes = [char_p]
+        self.api.jl_eval_string.restype = void_p
 
-        api.jl_exception_occurred.restype = void_p
-        api.jl_typeof_str.argtypes = [void_p]
-        api.jl_typeof_str.restype = char_p
-        api.jl_call1.restype = void_p
-        api.jl_get_field.restype = void_p
-        api.jl_typename_str.restype = char_p
-        api.jl_typeof_str.restype = char_p
-        api.jl_unbox_voidpointer.restype = py_object
+        self.api.jl_exception_occurred.restype = void_p
+        self.api.jl_typeof_str.argtypes = [void_p]
+        self.api.jl_typeof_str.restype = char_p
+        self.api.jl_call1.restype = void_p
+        self.api.jl_get_field.restype = void_p
+        self.api.jl_typename_str.restype = char_p
+        self.api.jl_typeof_str.restype = char_p
+        self.api.jl_unbox_voidpointer.restype = py_object
 
         if init_julia:
-            # python_exe = os.path.basename(sys.executable)
             try:
                 self.call('using PyCall')
             except:
@@ -373,12 +366,12 @@ class Julia(object):
         # instance of PyObject. Since this will be needed on every call, we
         # hold it in the Julia object itself so it can survive across
         # reinitializations.
-        api.PyObject = self.call('PyObject')
+        self.api.PyObject = self.call('PyObject')
 
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
-        sys._julia_runtime = api
+        sys._julia_runtime = self.api
 
         self.bases = base_functions(self)
         sys.meta_path.append(JuliaImporter(self))
