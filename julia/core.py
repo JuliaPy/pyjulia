@@ -20,6 +20,7 @@ import os
 import sys
 import keyword
 import subprocess
+import warnings
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -102,6 +103,7 @@ class JuliaImporter(object):
     def __init__(self, julia):
         self.julia = julia
 
+    # find_module was deprecated in v3.4
     def find_module(self, fullname, path=None):
         if path is None:
             pass
@@ -114,6 +116,7 @@ class JuliaModuleLoader(object):
     def __init__(self, julia):
         self.julia = julia
 
+    # load module was deprecated in v3.4
     def load_module(self, fullname):
         juliapath = fullname.lstrip("julia.")
         if isamodule(self.julia, juliapath):
@@ -149,7 +152,7 @@ class JuliaModuleLoader(object):
                         func = "{}.{}".format(juliapath, name)
                         setattr(mod, name, self.julia.eval(func))
                     # TODO:some names cannot be imported from base
-                    #warnings.warn("cannot import {}".format(name))
+                    warnings.warn("cannot import {}".format(name))
                     pass
             return mod
         elif isafunction(self.julia, juliapath):
@@ -247,7 +250,8 @@ def base_functions(julia):
 
 
 class Julia(object):
-    """Implements a bridge to the Julia interpreter or library.
+    """
+    Implements a bridge to the Julia interpreter or library.
     This uses the Julia PyCall module to perform type conversions and allow
     full access to the entire Julia interpreter.
     """
@@ -282,7 +286,7 @@ class Julia(object):
                 JULIA_HOME = JULIA_HOME.decode("utf-8")
             except:
                 raise JuliaError('error starting up the Julia process')
-            jpath = ''
+            jpath = ""
             if sys.platform.startswith("linux"):
                 jpath = os.path.abspath(
                     os.path.join(JULIA_HOME, "../lib/libjulia.so"))
@@ -338,8 +342,7 @@ class Julia(object):
         self.api.jl_.argtypes = [void_p]
         self.api.jl_.restype = None
 
-        # Set the return types of some of the bridge functions in ctypes
-        # terminology
+        # Set the return types of some of the bridge functions in ctypes terminology
         self.api.jl_eval_string.argtypes = [char_p]
         self.api.jl_eval_string.restype = void_p
 
@@ -384,8 +387,8 @@ class Julia(object):
         management. It should never be used for returning the result of Julia
         expressions, only to execute statements.
         """
-        byte_src = bytes(str(src).encode('ascii'))
         # return null ptr if error
+        byte_src = bytes(str(src).encode('ascii'))
         ans = self.api.jl_eval_string(byte_src)
         if not ans:
             jexp = self.api.jl_exception_occurred()
