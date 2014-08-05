@@ -279,16 +279,16 @@ class Julia(object):
         if init_julia:
             try:
                 JULIA_HOME = subprocess.check_output(["julia", "-e", "write(STDOUT, JULIA_HOME)"])
-            except ex:
+                JULIA_HOME = JULIA_HOME.decode("utf-8")
+            except:
                 raise JuliaError('error starting up the Julia process')
-
             jpath = ''
             if sys.platform.startswith("linux"):
                 jpath = os.path.abspath(
-                    os.path.joinpath(JULIA_HOME, "../lib/libjulia.so"))
+                    os.path.join(JULIA_HOME, "../lib/libjulia.so"))
             elif sys.platform.startswith("darwin"):
                 jpath = os.path.abspath(
-                    os.path.joinpath(JULIA_HOME, "../lib/libjulia.dylib"))
+                    os.path.join(JULIA_HOME, "../lib/libjulia.dylib"))
             elif sys.platform.startswith("win"):
                 lib_file_name = 'libjulia.dll'
                 # try to locate path of julia from environ
@@ -325,10 +325,10 @@ class Julia(object):
                 raise JuliaError("Julia library not found! {}".format(jpath))
 
             self.api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
+            self.api.jl_init_with_image.arg_types = [char_p, char_p]
             self.api.jl_init.arg_types = [char_p]
 
-            jl_init_path = os.path.dirname(jpath)
-            self.api.jl_init(jl_init_path)
+            self.api.jl_init(JULIA_HOME.encode("utf-8"))
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
