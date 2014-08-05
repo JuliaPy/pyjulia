@@ -19,7 +19,7 @@ import ctypes.util
 import os
 import sys
 import keyword
-import commands
+import subprocess
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -277,9 +277,9 @@ class Julia(object):
             return
 
         if init_julia:
-            status, JULIA_HOME =\
-                commands.getstatusoutput('julia -e "print(JULIA_HOME)"', shell=True)
-            if status != 0:
+            try:
+                JULIA_HOME = subprocess.check_output(["julia", "-e", "write(STDOUT, JULIA_HOME)"])
+            except ex:
                 raise JuliaError('error starting up the Julia process')
 
             jpath = ''
