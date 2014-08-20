@@ -388,12 +388,11 @@ class Julia(object):
         expressions, only to execute statements.
         """
         # return null ptr if error
-        byte_src = bytes(str(src).encode('ascii'))
-        ans = self.api.jl_eval_string(byte_src)
+        ans = self.api.jl_eval_string(src.encode('utf-8'))
         if not ans:
             jexp = self.api.jl_exception_occurred()
-            exception_str = self._unwrap_exception(jexp)
-            raise JuliaError('Exception calling julia src: {}\n{}'
+            exception_str = self._unwrap_exception(jexp).decode('utf-8')
+            raise JuliaError(u'Exception calling julia src: {}\n{}'
                              .format(exception_str, src))
         return ans
 
