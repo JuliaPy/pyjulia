@@ -282,48 +282,11 @@ class Julia(object):
 
         if init_julia:
             try:
-                JULIA_HOME = subprocess.check_output(["julia", "-e", "write(STDOUT, JULIA_HOME)"])
-                JULIA_HOME = JULIA_HOME.decode("utf-8")
+                juliainfo = subprocess.check_output(["julia", "-e", "println(JULIA_HOME); println(Sys.dlpath(dlopen(\"libjulia\")))"]).decode("utf-8").split("\n")
+                JULIA_HOME = juliainfo[0]
+                jpath = juliainfo[1]
             except:
                 raise JuliaError('error starting up the Julia process')
-            jpath = ""
-            if sys.platform.startswith("linux"):
-                jpath = os.path.abspath(
-                    os.path.join(JULIA_HOME, "../lib/libjulia.so"))
-            elif sys.platform.startswith("darwin"):
-                jpath = os.path.abspath(
-                    os.path.join(JULIA_HOME, "../lib/libjulia.dylib"))
-            elif sys.platform.startswith("win"):
-                lib_file_name = 'libjulia.dll'
-                # try to locate path of julia from environ
-                possible_env_key = ('JULIA_HOME', 'JULIAHOME',
-                                    'JULIA_PATH', 'JULIAPATH',
-                                    'JULIA_ROOT', 'JULIAROOT')
-                for env_key in possible_env_key:
-                    env = os.getenv(env_key)
-                    if env:
-                        # Though the argument of jl_init is named
-                        # julia_home_dir, the actually path in use is
-                        # `julia_home_dir/../lib/julia/sys.ji', rather than
-                        # `julia_home_dir/lib/julia/sys.ji'.
-                        # If users set JULIA_HOME to, say, `D:\julia0.2.0',
-                        # which is totally reasonable, the julia interpreter
-                        # won't start due to wrong path of `sys.ji'.
-                        # So on Windows, if users want their julia interpreter
-                        # being available, they probably have to set
-                        # JULIA_HOME to `D:\julia0.2.0\bin' so that `sys.ji'
-                        # will be loaded.
-                        jpath = os.path.join(env, lib_file_name)
-                        break
-                else:
-                    # not found in the possible environ keys,
-                    # search for julia in %PATH%
-                    for path in os.getenv('PATH').split(';'):
-                        if 'julia' in path:
-                            jpath = os.path.join(path, lib_file_name)
-                            break
-            else:
-                raise NotImplementedError("Unsupported operating system")
 
             if not os.path.exists(jpath):
                 raise JuliaError("Julia library not found! {}".format(jpath))
