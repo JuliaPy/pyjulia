@@ -34,39 +34,6 @@ from types import ModuleType, FunctionType
 #-----------------------------------------------------------------------------
 python_version = sys.version_info
 
-if python_version.major == 3 and python_version.minor >= 3:
-    from collections import ChainMap
-
-    class ModuleChainedDict(ChainMap, dict):
-        pass
-else:
-    # http://code.activestate.com/recipes/305268/
-    import UserDict
-
-    class ModuleChainedDict(UserDict.DictMixin, dict):
-        """Combine mulitiple mappings for seq lookup.
-        For example, to emulate PYthon's normal lookup sequence:"
-        import __builtin__
-        pylookup = ChainMap(locals(), globals(), vars(__builtin__))
-        """
-
-        def __init__(self, *maps):
-            self._maps = maps
-
-        def __getitem__(self, key):
-            for mapping in self._maps:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    pass
-            raise KeyError(key)
-
-
-if python_version.major == 3:
-    from io import StringIO
-else:
-    from cStringIO import StringIO
-
 
 class JuliaError(Exception):
     pass
@@ -74,36 +41,6 @@ class JuliaError(Exception):
 
 class JuliaModule(ModuleType):
     pass
-
-
-class JuliaOutput(list):
-
-    def __enter__(self):
-        self._stdout = sys.stdout
-        sys.stdout = self._stringio = StringIO()
-        return self
-
-    def __exit__(self, *args):
-        self.extend(self._stringio.getvalue().splitlines())
-        sys.stdout = self._stdout
-
-
-class MetaJuliaModule(type):
-    def __new__(meta, name, bases, dict):
-        mod = ModuleType(name, dict.get("__doc__"))
-        for key, obj in dict.items():
-            if isinstance(obj, FunctionType):
-                obj = meta.chained_function(meta, obj, mod)
-            mod.__dict__[key] = obj
-        return mod
-
-    def chained_function(meta, func, mod):
-        d = ModuleChainedDict(mod.__dict__, func.__globals__)
-        newfunc = FunctionType(func.__code, d)
-        newfunc.__doc__ = func.__doc__
-        newfunc.__defaults__ = newfunc.__defaults__
-        newfunc.__kwdefaults__ = func.__kwdefaults__
-        return newfunc
 
 
 # add custom import behavior for the julia "module"
