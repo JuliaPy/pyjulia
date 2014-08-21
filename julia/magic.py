@@ -18,16 +18,15 @@ Usage
 #-----------------------------------------------------------------------------
 
 from __future__ import print_function
-
 import sys
 
 from IPython.core.magic import Magics, magics_class, line_cell_magic
-
-from julia import Julia    
+from julia import Julia
 
 #-----------------------------------------------------------------------------
 # Main classes
 #-----------------------------------------------------------------------------
+
 
 @magics_class
 class JuliaMagics(Magics):
@@ -48,7 +47,7 @@ class JuliaMagics(Magics):
         sys.stdout.flush()
         self.julia = Julia(init_julia=True)
         print()
-        
+
     @line_cell_magic
     def julia(self, line, cell=None):
         """
@@ -58,11 +57,12 @@ class JuliaMagics(Magics):
         src = str(line if cell is None else cell)
         return self.julia.eval(src)
 
+
 # Add to the global docstring the class information.
 __doc__ = __doc__.format(
-    JULIAMAGICS_DOC = ' '*8 + JuliaMagics.__doc__,
-    JULIA_DOC = ' '*8 + JuliaMagics.julia.__doc__,
-    )
+    JULIAMAGICS_DOC=' ' * 8 + JuliaMagics.__doc__,
+    JULIA_DOC=' ' * 8 + JuliaMagics.julia.__doc__,
+)
 
 
 #-----------------------------------------------------------------------------
