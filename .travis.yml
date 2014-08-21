@@ -4,6 +4,7 @@ python:
     - 2.7
     - 3.2
     - 3.3
+    - 3.4
 compiler:
   - clang
 notifications:
@@ -16,8 +17,7 @@ before_install:
   - sudo apt-get install python-numpy python3-numpy -y
   - sudo dpkg -L julia
 script:
-  - julia -e 'println(JULIA_HOME)'
-  - julia -e 'Pkg.clone("PyCall")'
+  - julia -e 'Pkg.add("PyCall")'
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
   - julia -e 'using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module'
-  - python -m unittest test.test_core
+  - python -m unittest discover
