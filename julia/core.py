@@ -68,6 +68,10 @@ else:
     from cStringIO import StringIO
 
 
+class JuliaError(Exception):
+    pass
+
+
 class JuliaOutput(list):
 
     def __enter__(self):
@@ -157,22 +161,6 @@ class JuliaModuleLoader(object):
             return mod
         elif isafunction(self.julia, juliapath):
             return getattr(self.julia, juliapath)
-
-
-class JuliaObject(object):
-    pass
-
-
-class JuliaError(JuliaObject, Exception):
-    pass
-
-
-class JuliaModule(ModuleType):
-    pass
-
-
-class JuliaFunction(JuliaObject):
-    pass
 
 
 def ismacro(name):
@@ -373,18 +361,9 @@ class Julia(object):
         self.eval('help("{}")'.format(name))
 
     def __getattr__(self, name):
-        bases = object.__getattribute__(self, 'bases')
-        if not name in bases:
+        if not name in self.bases:
             raise AttributeError("Name {} not found".format(name))
-        return bases[name]
-
-    def put(self, x):
-        pass
-
-    def get(self, x):
-        pass
-
-    #TODO: use convert(PyAny, PyObj) for "putting python objects into julia"
+        return self.bases[name]
 
     def eval(self, src):
         """
@@ -402,6 +381,6 @@ class Julia(object):
         boxed_obj = self.api.jl_get_field(void_p(res), b'o')
         pyobj = self.api.jl_unbox_voidpointer(void_p(boxed_obj))
         # make sure we incref it before returning it,
-        # since this is a borrowed reference
+        # as this is a borrowed reference
         ctypes.pythonapi.Py_IncRef(ctypes.py_object(pyobj))
         return pyobj
