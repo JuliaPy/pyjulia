@@ -274,9 +274,13 @@ class Julia(object):
 
         if init_julia:
             try:
-                juliainfo = subprocess.check_output(["julia", "-e", "println(JULIA_HOME); println(Sys.dlpath(dlopen(\"libjulia\")))"]).decode("utf-8").split("\n")
-                JULIA_HOME = juliainfo[0]
-                jpath = juliainfo[1]
+                juliainfo = subprocess.check_output(
+                    ["julia", "-e",
+                     """
+                     println(JULIA_HOME)
+                     println(Sys.dlpath(dlopen(\"libjulia\")))
+		     """])
+                JULIA_HOME, jpath = juliainfo.decode("utf-8").rstrip().split("\n")
             except:
                 raise JuliaError('error starting up the Julia process')
 
