@@ -72,6 +72,10 @@ class JuliaError(Exception):
     pass
 
 
+class JuliaModule(ModuleType):
+    pass
+
+
 class JuliaOutput(list):
 
     def __enter__(self):
