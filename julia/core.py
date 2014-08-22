@@ -272,7 +272,9 @@ class Julia(object):
         # reloads.
         sys._julia_runtime = self.api
 
-        self.bases = base_functions(self)
+        for name, func in base_functions(self).iteritems():
+            setattr(self, name, func)
+
         sys.meta_path.append(JuliaImporter(self))
 
     def call(self, src):
@@ -304,11 +306,6 @@ class Julia(object):
         if name is None:
             return None
         self.eval('help("{}")'.format(name))
-
-    def __getattr__(self, name):
-        if not name in self.bases:
-            raise AttributeError("Name {} not found".format(name))
-        return self.bases[name]
 
     def eval(self, src):
         """
