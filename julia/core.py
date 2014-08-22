@@ -102,6 +102,8 @@ class JuliaModuleLoader(object):
             return mod
         elif isafunction(self.julia, juliapath):
             return getattr(self.julia, juliapath)
+        else:
+            raise ImportError("{} not found".format(juliapath))
 
 
 def ismacro(name):
