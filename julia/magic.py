@@ -54,7 +54,7 @@ class JuliaMagics(Magics):
         Execute code in Julia, and pull some of the results back into the
         Python namespace.
         """
-        src = str(line if cell is None else cell)
+        src = unicode(line if cell is None else cell)
         return self.julia.eval(src)
 
 
