@@ -1,8 +1,6 @@
 language: python
 python:
     - 2.7
-    - 3.2
-    - 3.3
     - 3.4
 compiler:
   - clang
@@ -14,9 +12,9 @@ before_install:
   - sudo apt-get update -qq -y
   - sudo apt-get install libpcre3-dev julia -y
   - sudo apt-get install python-numpy python3-numpy -y
-  - sudo dpkg -L julia
+  - git config --global user.name "Travis User"
+  - git config --global user.email "travis@example.net"
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
   - julia -e 'Pkg.add("PyCall")'
-  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
-  - julia -e 'using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module'
   - python -m unittest discover
