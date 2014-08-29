@@ -266,7 +266,8 @@ class Julia(object):
             try:
                 self.call('pyinitialize(C_NULL)')
             except:
-                raise JuliaError("Failed to initialize PyCall package")
+                if sys.platform != 'win32':
+                    raise JuliaError("Failed to initialize PyCall package")
 
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject. Since this will be needed on every call, we
