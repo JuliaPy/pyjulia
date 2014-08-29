@@ -34,6 +34,11 @@ from types import ModuleType, FunctionType
 #-----------------------------------------------------------------------------
 python_version = sys.version_info
 
+if python_version.major == 3 and python_version.minor > 3:
+    iteritems = dict.iteritems
+else:
+    iteritems = dict.items
+
 
 class JuliaError(Exception):
     pass
@@ -274,7 +279,7 @@ class Julia(object):
         # reloads.
         sys._julia_runtime = self.api
 
-        for name, func in base_functions(self).iteritems():
+	for name, func in iteritems(base_functions(self)):
             setattr(self, name, func)
 
         sys.meta_path.append(JuliaImporter(self))
