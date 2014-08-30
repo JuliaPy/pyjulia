@@ -304,16 +304,12 @@ class Julia(object):
 
     def _capture_showerror_for_last_julia_exception(self):
         msg = self.api.jl_eval_string(u"""
-            try
-                rethrow()
-            catch e
-                b = IOBuffer()
-                showerror(b, e, catch_backtrace())
-                seekstart(b)
-                return readall(b)
-            end
-        """)
-        return self.api.jl_bytestring_ptr(msg)
+	try
+	    rethrow()
+	catch ex
+	    sprint(showerror, ex, catch_backtrace())
+	end""")
+        return char_p(msg).value.encode("utf-8")
 
     def _typeof_julia_exception_in_transit(self):
         exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
