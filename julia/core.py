@@ -257,6 +257,7 @@ class Julia(object):
         self.api.jl_typename_str.restype = char_p
         self.api.jl_typeof_str.restype = char_p
         self.api.jl_unbox_voidpointer.restype = py_object
+        self.api.jl_bytestring_ptr.restype = char_p
 
         if init_julia:
             try:
@@ -295,13 +296,22 @@ class Julia(object):
         # return null ptr if error
         ans = self.api.jl_eval_string(src.encode('utf-8'))
         if not ans:
-            jexp = self.api.jl_exception_occurred()
-            exception_str = self._unwrap_exception(jexp).decode('utf-8')
-            raise JuliaError(u'Exception calling julia src: {}\n{}'
-                             .format(exception_str, src))
+            exception_type = self._typeof_julia_exception_in_transit().decode('utf-8')
+            exception_msg = self._capture_showerror_for_last_julia_exception().decode('utf-8')
+            raise JuliaError(u'Exception \'{}\' ocurred while calling julia code:\n{}\n\nCode:\n{}'
+                             .format(exception_type, exception_msg, src))
         return ans
 
-    def _unwrap_exception(self, jl_exc):
+    def _capture_showerror_for_last_julia_exception(self):
+        msg = self.api.jl_eval_string(u"""
+	try
+	    rethrow()
+	catch ex
+	    sprint(showerror, ex, catch_backtrace())
+	end""")
+        return char_p(msg).value.encode("utf-8")
+
+    def _typeof_julia_exception_in_transit(self):
         exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
         msg = self.api.jl_typeof_str(exception)
         return char_p(msg).value

@@ -21,7 +21,7 @@ from __future__ import print_function
 import sys
 
 from IPython.core.magic import Magics, magics_class, line_cell_magic
-from julia import Julia
+from julia import Julia, JuliaError
 
 #-----------------------------------------------------------------------------
 # Main classes
@@ -55,7 +55,14 @@ class JuliaMagics(Magics):
         Python namespace.
         """
         src = unicode(line if cell is None else cell)
-        return self.julia.eval(src)
+
+        try:
+            ans = self.julia.eval(src)
+        except JuliaError as e:
+            print(e.message, file=sys.stderr)
+            ans = None
+
+        return ans
 
 
 # Add to the global docstring the class information.
