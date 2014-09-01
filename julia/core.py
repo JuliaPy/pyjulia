@@ -101,9 +101,6 @@ class JuliaModuleLoader(object):
                     if isafunction(self.julia, name, mod_name=juliapath):
                         func = "{}.{}".format(juliapath, name)
                         setattr(mod, name, self.julia.eval(func))
-                    # TODO:some names cannot be imported from base
-                    warnings.warn("cannot import {}".format(name))
-                    pass
             return mod
         elif isafunction(self.julia, juliapath):
             return getattr(self.julia, juliapath)
