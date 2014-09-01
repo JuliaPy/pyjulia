@@ -72,7 +72,7 @@ class JuliaModuleLoader(object):
         if isamodule(self.julia, juliapath):
             mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
             mod.__loader__ = self
-            names = self.julia.eval("names({}, true, false)".format(juliapath))
+            names = self.julia.eval(u"names({}, true, false)".format(juliapath))
             for name in names:
                 if (ismacro(name) or
                     isoperator(name) or
@@ -83,32 +83,31 @@ class JuliaModuleLoader(object):
                 if name.endswith("!"):
                     attrname = name.replace("!", "_b")
                 if keyword.iskeyword(name):
-                    attrname = "jl".join(name)
+                    attrname = u"jl".join(name)
                 try:
-                    module_path = ".".join((juliapath, name))
+                    module_path = u".".join((juliapath, name))
                     module_obj = self.julia.eval(module_path)
-                    is_module = self.julia.eval("isa({}, Module)"
+                    is_module = self.julia.eval(u"isa({}, Module)"
                                                 .format(module_path))
                     if is_module:
                         split_path = module_path.split(".")
                         is_base = split_path[-1] == "Base"
                         recur_module = split_path[-1] == split_path[-2]
                         if is_module and not is_base and not recur_module:
-                            newpath = ".".join((fullname, name))
+                            newpath = u".".join((fullname, name))
                             module_obj = self.load_module(newpath)
                     setattr(mod, attrname, module_obj)
                 except Exception:
                     if isafunction(self.julia, name, mod_name=juliapath):
-                        func = "{}.{}".format(juliapath, name)
+                        func = u"{}.{}".format(juliapath, name)
                         setattr(mod, name, self.julia.eval(func))
-                    # TODO:some names cannot be imported from base
-                    warnings.warn("cannot import {}".format(name))
+                    warnings.warn(u"cannot import {}".format(name))
                     pass
             return mod
         elif isafunction(self.julia, juliapath):
             return getattr(self.julia, juliapath)
         else:
-            raise ImportError("{} not found".format(juliapath))
+            raise ImportError(u"{} not found".format(juliapath))
 
 
 def ismacro(name):
@@ -133,13 +132,13 @@ def notascii(name):
 
 def isamodule(julia, julia_name):
     try:
-        ret = julia.eval("isa({}, Module)".format(julia_name))
+        ret = julia.eval(u"isa({}, Module)".format(julia_name))
         return ret
     except:
         # try explicitly importing it..
         try:
-            julia.eval("import {}".format(julia_name))
-            ret = julia.eval("isa({}, Module)".format(julia_name))
+            julia.eval(u"import {}".format(julia_name))
+            ret = julia.eval(u"isa({}, Module)".format(julia_name))
             return ret
         except:
             pass
@@ -147,9 +146,9 @@ def isamodule(julia, julia_name):
 
 
 def isafunction(julia, julia_name, mod_name=""):
-    code = "isa({}, Function)".format(julia_name)
+    code = u"isa({}, Function)".format(julia_name)
     if mod_name:
-        code = "isa({}.{}, Function)".format(mod_name, julia_name)
+        code = u"isa({}.{}, Function)".format(mod_name, julia_name)
     try:
         return julia.eval(code)
     except:
@@ -231,10 +230,10 @@ class Julia(object):
                 raise JuliaError('error starting up the Julia process')
             
 	    if not os.path.exists(libjulia_path):
-                raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
+                raise JuliaError(u"Julia library (\"libjulia\") not found! {}".format(libjulia_path))
 	    
 	    if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
-	        raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath)) 
+	        raise JuliaError(u"Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath)) 
       
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             self.api.jl_init_with_image.arg_types = [char_p, char_p]
@@ -313,7 +312,7 @@ class Julia(object):
 	catch ex
 	    sprint(showerror, ex, catch_backtrace())
 	end""")
-        return char_p(msg).value.encode("utf-8")
+        return char_p(msg).value
 
     def _typeof_julia_exception_in_transit(self):
         exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
@@ -326,7 +325,7 @@ class Julia(object):
         """
         if name is None:
             return None
-        self.eval('help("{}")'.format(name))
+        self.eval(u'help("{}")'.format(name))
 
     def eval(self, src):
         """
@@ -339,7 +338,7 @@ class Julia(object):
         res = self.api.jl_call1(void_p(self.api.PyObject), void_p(ans))
         if not res:
             #TODO: introspect the julia error object here
-            raise JuliaError("ErrorException in Julia PyObject: "
+            raise JuliaError(u"ErrorException in Julia PyObject: "
                              "{}".format(src))
         boxed_obj = self.api.jl_get_field(void_p(res), b'o')
         pyobj = self.api.jl_unbox_voidpointer(void_p(boxed_obj))
