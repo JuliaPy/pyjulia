@@ -224,18 +224,22 @@ class Julia(object):
                      println(JULIA_HOME)
                      println(Sys.dlpath(dlopen(\"libjulia\")))
 		     """])
-                JULIA_HOME, jpath = juliainfo.decode("utf-8").rstrip().split("\n")
+                JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
+		libjulia_dir = os.path.dirname(libjulia_path)
+		sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
             except:
                 raise JuliaError('error starting up the Julia process')
-
-            if not os.path.exists(jpath):
-                raise JuliaError("Julia library not found! {}".format(jpath))
-
-            self.api = ctypes.PyDLL(jpath, ctypes.RTLD_GLOBAL)
+            
+	    if not os.path.exists(libjulia_path):
+                raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
+	    
+	    if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
+	        raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath)) 
+      
+            self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             self.api.jl_init_with_image.arg_types = [char_p, char_p]
-            self.api.jl_init.arg_types = [char_p]
-
-            self.api.jl_init(JULIA_HOME.encode("utf-8"))
+            self.api.jl_init_with_image(JULIA_HOME.encode("utf-8"), 
+	    			        sysimg_relpath.encode("utf-8"))
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
