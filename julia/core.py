@@ -24,6 +24,7 @@ import warnings
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
+from ctypes import c_wchar_p as wchar_p
 from ctypes import py_object
 
 # this is python 3.3 specific
@@ -261,11 +262,11 @@ class Julia(object):
 
         if init_julia:
             try:
-                self.call('using PyCall')
+                self.call(u'using PyCall')
             except:
                 raise JuliaError("Julia does not have package PyCall")
             try:
-                self.call('pyinitialize(C_NULL)')
+                self.call(u'pyinitialize(C_NULL)')
             except:
                 raise JuliaError("Failed to initialize PyCall package")
 
@@ -273,7 +274,7 @@ class Julia(object):
         # instance of PyObject. Since this will be needed on every call, we
         # hold it in the Julia object itself so it can survive across
         # reinitializations.
-        self.api.PyObject = self.call('PyObject')
+        self.api.PyObject = self.call(u'PyObject')
 
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
@@ -297,8 +298,8 @@ class Julia(object):
         ans = self.api.jl_eval_string(src.encode('utf-8'))
         if not ans:
             exception_type = self._typeof_julia_exception_in_transit().decode('utf-8')
-            exception_msg = self._capture_showerror_for_last_julia_exception().decode('utf-8')
-            raise JuliaError(u'Exception \'{}\' ocurred while calling julia code:\n{}\n\nCode:\n{}'
+            exception_msg  = self._capture_showerror_for_last_julia_exception().decode('utf-8')
+            raise JuliaError(u'Exception \'{}\' ocurred while calling julia code:\n{}\nCode:\n{}'
                              .format(exception_type, exception_msg, src))
         return ans
 
@@ -308,8 +309,8 @@ class Julia(object):
             rethrow()
         catch ex
             sprint(showerror, ex, catch_backtrace())
-        end""")
-        return char_p(msg).value.encode("utf-8")
+        end""".encode('utf-8'))
+        return char_p(msg).value
 
     def _typeof_julia_exception_in_transit(self):
         exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
