@@ -35,9 +35,9 @@ from types import ModuleType, FunctionType
 python_version = sys.version_info
 
 if python_version.major == 3 and python_version.minor > 3:
-    iteritems = dict.iteritems
-else:
     iteritems = dict.items
+else:
+    iteritems = dict.iteritems
 
 
 class JuliaError(Exception):
@@ -220,14 +220,14 @@ class Julia(object):
                      """
                      println(JULIA_HOME)
                      println(Sys.dlpath(dlopen(\"libjulia\")))
-		     """])
+                     """])
                 JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
                 libjulia_dir = os.path.dirname(libjulia_path)
                 sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
             except:
                 raise JuliaError('error starting up the Julia process')
             
-	    if not os.path.exists(libjulia_path):
+            if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
                 raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
@@ -235,7 +235,7 @@ class Julia(object):
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             self.api.jl_init_with_image.arg_types = [char_p, char_p]
             self.api.jl_init_with_image(JULIA_HOME.encode("utf-8"), 
-	    			        sysimg_relpath.encode("utf-8"))
+                                        sysimg_relpath.encode("utf-8"))
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
@@ -304,11 +304,11 @@ class Julia(object):
 
     def _capture_showerror_for_last_julia_exception(self):
         msg = self.api.jl_eval_string(u"""
-	try
-	    rethrow()
-	catch ex
-	    sprint(showerror, ex, catch_backtrace())
-	end""")
+        try
+            rethrow()
+        catch ex
+            sprint(showerror, ex, catch_backtrace())
+        end""")
         return char_p(msg).value.encode("utf-8")
 
     def _typeof_julia_exception_in_transit(self):
