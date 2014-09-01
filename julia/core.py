@@ -222,16 +222,15 @@ class Julia(object):
                      println(Sys.dlpath(dlopen(\"libjulia\")))
 		     """])
                 JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
-		libjulia_dir = os.path.dirname(libjulia_path)
-		sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
+                libjulia_dir = os.path.dirname(libjulia_path)
+                sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
             except:
                 raise JuliaError('error starting up the Julia process')
             
 	    if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
-	    
-	    if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
-	        raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath)) 
+            if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
+                raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
       
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             self.api.jl_init_with_image.arg_types = [char_p, char_p]
@@ -281,7 +280,7 @@ class Julia(object):
         # reloads.
         sys._julia_runtime = self.api
 
-	for name, func in iteritems(base_functions(self)):
+        for name, func in iteritems(base_functions(self)):
             setattr(self, name, func)
 
         sys.meta_path.append(JuliaImporter(self))
