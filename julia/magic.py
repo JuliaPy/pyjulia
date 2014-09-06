@@ -54,7 +54,10 @@ class JuliaMagics(Magics):
         Execute code in Julia, and pull some of the results back into the
         Python namespace.
         """
-        src = unicode(line if cell is None else cell)
+        if sys.version_info[0] == 2: # python2
+            src = unicode(line if cell is None else cell)
+        else:
+            src = str(line if cell is None else cell)
 
         try:
             ans = self.julia.eval(src)
