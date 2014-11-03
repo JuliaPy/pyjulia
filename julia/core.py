@@ -34,10 +34,10 @@ from types import ModuleType, FunctionType
 #-----------------------------------------------------------------------------
 python_version = sys.version_info
 
-if python_version.major == 3 and python_version.minor > 3:
-    iteritems = dict.items
+if python_version.major == 3:
+    def iteritems(d): return iter(d.items())
 else:
-    iteritems = dict.iteritems
+    def iteritems(d): return d.iteritems()
 
 
 class JuliaError(Exception):
@@ -224,13 +224,18 @@ class Julia(object):
                 JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
                 libjulia_dir = os.path.dirname(libjulia_path)
                 sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
+                sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
             except:
                 raise JuliaError('error starting up the Julia process')
+            
             
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
-                raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
+                if os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath_alt)):
+                    sysimg_relpath = sysimg_relpath_alt
+                else:
+                    raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
       
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             self.api.jl_init_with_image.arg_types = [char_p, char_p]
@@ -294,10 +299,15 @@ class Julia(object):
         expressions, only to execute statements.
         """
         # return null ptr if error
-        ans = self.api.jl_eval_string(src.encode('utf-8'))
-        if not ans:
-            exception_type = self._typeof_julia_exception_in_transit().decode('utf-8')
-            exception_msg = self._capture_showerror_for_last_julia_exception().decode('utf-8')
+        api = self.api
+        ans = api.jl_eval_string(src.encode('utf-8'))
+        exoc = api.jl_exception_occurred()
+        if not ans and exoc:
+            exception_type = api.jl_typeof_str(exoc).decode('utf-8')
+            try:
+                exception_msg = self._capture_showerror_for_last_julia_exception()
+            except UnicodeDecodeError:
+                exception_msg = "<couldn't get stack>"
             raise JuliaError(u'Exception \'{}\' ocurred while calling julia code:\n{}\n\nCode:\n{}'
                              .format(exception_type, exception_msg, src))
         return ans
@@ -308,8 +318,8 @@ class Julia(object):
             rethrow()
         catch ex
             sprint(showerror, ex, catch_backtrace())
-        end""")
-        return char_p(msg).value.encode("utf-8")
+        end""".encode('utf-8'))
+        return char_p(msg).value.decode("utf-8")
 
     def _typeof_julia_exception_in_transit(self):
         exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
