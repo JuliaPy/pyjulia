@@ -305,7 +305,7 @@ class Julia(object):
         if not ans and exoc:
             exception_type = api.jl_typeof_str(exoc).decode('utf-8')
             try:
-                exception_msg = self._capture_showerror_for_last_julia_exception().decode('utf-8')
+                exception_msg = self._capture_showerror_for_last_julia_exception()
             except UnicodeDecodeError:
                 exception_msg = "<couldn't get stack>"
             raise JuliaError(u'Exception \'{}\' ocurred while calling julia code:\n{}\n\nCode:\n{}'
