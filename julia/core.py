@@ -299,10 +299,15 @@ class Julia(object):
         expressions, only to execute statements.
         """
         # return null ptr if error
-        ans = self.api.jl_eval_string(src.encode('utf-8'))
-        if not ans:
-            exception_type = self._typeof_julia_exception_in_transit().decode('utf-8')
-            exception_msg = self._capture_showerror_for_last_julia_exception().decode('utf-8')
+        api = self.api
+        ans = api.jl_eval_string(src.encode('utf-8'))
+        exoc = api.jl_exception_occurred()
+        if not ans and exoc:
+            exception_type = api.jl_typeof_str(exoc).decode('utf-8')
+            try:
+                exception_msg = self._capture_showerror_for_last_julia_exception().decode('utf-8')
+            except UnicodeDecodeError:
+                exception_msg = "<couldn't get stack>"
             raise JuliaError(u'Exception \'{}\' ocurred while calling julia code:\n{}\n\nCode:\n{}'
                              .format(exception_type, exception_msg, src))
         return ans
@@ -313,8 +318,8 @@ class Julia(object):
             rethrow()
         catch ex
             sprint(showerror, ex, catch_backtrace())
-        end""")
-        return char_p(msg).value.encode("utf-8")
+        end""".encode('utf-8'))
+        return char_p(msg).value.decode("utf-8")
 
     def _typeof_julia_exception_in_transit(self):
         exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
