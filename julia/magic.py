@@ -27,6 +27,7 @@ from julia import Julia, JuliaError
 # Main classes
 #-----------------------------------------------------------------------------
 
+import IPython.utils.py3compat as compat
 
 @magics_class
 class JuliaMagics(Magics):
@@ -54,7 +55,7 @@ class JuliaMagics(Magics):
         Execute code in Julia, and pull some of the results back into the
         Python namespace.
         """
-        src = unicode(line if cell is None else cell)
+        src = compat.unicode_type(line if cell is None else cell)
 
         try:
             ans = self.julia.eval(src)

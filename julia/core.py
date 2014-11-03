@@ -224,13 +224,18 @@ class Julia(object):
                 JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
                 libjulia_dir = os.path.dirname(libjulia_path)
                 sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
+                sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
             except:
                 raise JuliaError('error starting up the Julia process')
+            
             
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
-                raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
+                if os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath_alt)):
+                    sysimg_relpath = sysimg_relpath_alt
+                else:
+                    raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
       
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             self.api.jl_init_with_image.arg_types = [char_p, char_p]
