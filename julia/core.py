@@ -34,10 +34,10 @@ from types import ModuleType, FunctionType
 #-----------------------------------------------------------------------------
 python_version = sys.version_info
 
-if python_version.major == 3 and python_version.minor > 3:
-    iteritems = dict.items
+if python_version.major == 3:
+    def iteritems(d): return iter(d.items())
 else:
-    iteritems = dict.iteritems
+    def iteritems(d): return d.iteritems()
 
 
 class JuliaError(Exception):
