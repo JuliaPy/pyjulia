@@ -181,6 +181,7 @@ def base_functions(julia):
             pass
     return bases
 
+_julia_runtime = [False]
 
 class Julia(object):
     """
@@ -209,8 +210,8 @@ class Julia(object):
         # Ugly hack to register the julia interpreter globally so we can reload
         # this extension without trying to re-open the shared lib, which kills
         # the python interpreter. Nasty but useful while debugging
-        if hasattr(sys, '_julia_runtime'):
-            self.api = sys._julia_runtime
+        if _julia_runtime[0]:
+            self.api = _julia_runtime[0]
             return
 
         if init_julia:
@@ -283,7 +284,7 @@ class Julia(object):
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
-        sys._julia_runtime = self.api
+        _julia_runtime[0] = self.api
 
         for name, func in iteritems(base_functions(self)):
             setattr(self, name, func)
