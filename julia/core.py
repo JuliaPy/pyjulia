@@ -197,9 +197,12 @@ class Julia(object):
         ==========
 
         init_julia : bool
-        If True, try to initialize the Julia interpreter. If this code is
-        being called from inside an already running Julia, the flag should be
-        passed as False so the interpreter isn't re-initialized.
+            If True, try to initialize the Julia interpreter. If this code is
+            being called from inside an already running Julia, the flag should
+            be passed as False so the interpreter isn't re-initialized.
+
+        jl_init_path : str (optional)
+            Path to your Julia directory
 
         Note that it is safe to call this class constructor twice in the same
         process with `init_julia` set to True, as a global reference is kept
@@ -216,8 +219,12 @@ class Julia(object):
 
         if init_julia:
             try:
+                if jl_init_path:
+                    runtime = os.path.join(jl_init_path, 'usr', 'bin', 'julia')
+                else:
+                    runtime = 'julia'
                 juliainfo = subprocess.check_output(
-                    ["julia", "-e",
+                    [runtime, "-e",
                      """
                      println(JULIA_HOME)
                      println(Sys.dlpath(dlopen(\"libjulia\")))
