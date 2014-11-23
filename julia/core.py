@@ -282,7 +282,9 @@ class Julia(object):
             try:
                 self.call('using PyCall')
             except:
-                raise JuliaError("Julia does not have package PyCall")
+                raise JuliaError("Julia does not have package PyCall.\n"
+                    "Install PyCall by running the following line:\n"
+                    """\tjulia -e 'Pkg.add("PyCall"); Pkg.update()'\n""")
             try:
                 self.call('pyinitialize(C_NULL)')
             except:
