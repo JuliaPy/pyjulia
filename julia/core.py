@@ -37,7 +37,7 @@ python_version = sys.version_info
 if python_version.major == 3:
     def iteritems(d): return iter(d.items())
 else:
-    def iteritems(d): return d.iteritems()
+    iteritems = dict.iteritems
 
 
 class JuliaError(Exception):
@@ -109,6 +109,13 @@ class JuliaModuleLoader(object):
 
 
 def ismacro(name):
+    """ Is the name a macro?
+
+    >>> ismacro('@time')
+    True
+    >>> ismacro('sum')
+    False
+    """
     return name.startswith("@")
 
 
@@ -235,8 +242,7 @@ class Julia(object):
                 sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
             except:
                 raise JuliaError('error starting up the Julia process')
-            
-            
+
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
@@ -244,10 +250,10 @@ class Julia(object):
                     sysimg_relpath = sysimg_relpath_alt
                 else:
                     raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
-      
+
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             self.api.jl_init_with_image.arg_types = [char_p, char_p]
-            self.api.jl_init_with_image(JULIA_HOME.encode("utf-8"), 
+            self.api.jl_init_with_image(JULIA_HOME.encode("utf-8"),
                                         sysimg_relpath.encode("utf-8"))
         else:
             # we're assuming here we're fully inside a running Julia process,
@@ -299,7 +305,8 @@ class Julia(object):
         sys.meta_path.append(JuliaImporter(self))
 
     def call(self, src):
-        """Low-level call to execute a snippet of Julia source.
+        """
+        Low-level call to execute a snippet of Julia source.
 
         This only raises an exception if Julia itself throws an error, but it
         does NO type conversion into usable Python objects nor any memory
@@ -335,18 +342,13 @@ class Julia(object):
         return char_p(msg).value
 
     def help(self, name):
-        """
-        return help string..
-        """
+        """ Return help string for function by name. """
         if name is None:
             return None
         self.eval('help("{}")'.format(name))
 
     def eval(self, src):
-        """
-        Execute code in Julia, and pull some of the results back into the
-        Python namespace.
-        """
+        """ Execute code in Julia, then pull some results back to Python. """
         if src is None:
             return None
         ans = self.call(src)
