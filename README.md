@@ -10,3 +10,5 @@ to run the tests, execute from the toplevel directory
 ```shell
 python -m unittest discover
 ```
+
+**Note** You need to explicitly add julia to your PATH, an alias will not work.
