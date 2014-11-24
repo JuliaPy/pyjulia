@@ -37,7 +37,7 @@ python_version = sys.version_info
 if python_version.major == 3:
     def iteritems(d): return iter(d.items())
 else:
-    def iteritems(d): return d.iteritems()
+    iteritems = dict.iteritems
 
 
 class JuliaError(Exception):
@@ -109,6 +109,13 @@ class JuliaModuleLoader(object):
 
 
 def ismacro(name):
+    """ Is the name a macro?
+
+    >>> ismacro('@time')
+    True
+    >>> ismacro('sum')
+    False
+    """
     return name.startswith("@")
 
 
@@ -181,6 +188,7 @@ def base_functions(julia):
             pass
     return bases
 
+_julia_runtime = [False]
 
 class Julia(object):
     """
@@ -196,9 +204,12 @@ class Julia(object):
         ==========
 
         init_julia : bool
-        If True, try to initialize the Julia interpreter. If this code is
-        being called from inside an already running Julia, the flag should be
-        passed as False so the interpreter isn't re-initialized.
+            If True, try to initialize the Julia interpreter. If this code is
+            being called from inside an already running Julia, the flag should
+            be passed as False so the interpreter isn't re-initialized.
+
+        jl_init_path : str (optional)
+            Path to your Julia directory
 
         Note that it is safe to call this class constructor twice in the same
         process with `init_julia` set to True, as a global reference is kept
@@ -209,14 +220,18 @@ class Julia(object):
         # Ugly hack to register the julia interpreter globally so we can reload
         # this extension without trying to re-open the shared lib, which kills
         # the python interpreter. Nasty but useful while debugging
-        if hasattr(sys, '_julia_runtime'):
-            self.api = sys._julia_runtime
+        if _julia_runtime[0]:
+            self.api = _julia_runtime[0]
             return
 
         if init_julia:
             try:
+                if jl_init_path:
+                    runtime = os.path.join(jl_init_path, 'usr', 'bin', 'julia')
+                else:
+                    runtime = 'julia'
                 juliainfo = subprocess.check_output(
-                    ["julia", "-e",
+                    [runtime, "-e",
                      """
                      println(JULIA_HOME)
                      println(Sys.dlpath(dlopen(\"libjulia\")))
@@ -227,8 +242,7 @@ class Julia(object):
                 sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
             except:
                 raise JuliaError('error starting up the Julia process')
-            
-            
+
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
@@ -236,10 +250,10 @@ class Julia(object):
                     sysimg_relpath = sysimg_relpath_alt
                 else:
                     raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
-      
+
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             self.api.jl_init_with_image.arg_types = [char_p, char_p]
-            self.api.jl_init_with_image(JULIA_HOME.encode("utf-8"), 
+            self.api.jl_init_with_image(JULIA_HOME.encode("utf-8"),
                                         sysimg_relpath.encode("utf-8"))
         else:
             # we're assuming here we're fully inside a running Julia process,
@@ -268,7 +282,9 @@ class Julia(object):
             try:
                 self.call('using PyCall')
             except:
-                raise JuliaError("Julia does not have package PyCall")
+                raise JuliaError("Julia does not have package PyCall.\n"
+                    "Install PyCall by running the following line:\n"
+                    """\tjulia -e 'Pkg.add("PyCall"); Pkg.update()'\n""")
             try:
                 self.call('pyinitialize(C_NULL)')
             except:
@@ -283,7 +299,7 @@ class Julia(object):
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
-        sys._julia_runtime = self.api
+        _julia_runtime[0] = self.api
 
         for name, func in iteritems(base_functions(self)):
             setattr(self, name, func)
@@ -291,7 +307,8 @@ class Julia(object):
         sys.meta_path.append(JuliaImporter(self))
 
     def call(self, src):
-        """Low-level call to execute a snippet of Julia source.
+        """
+        Low-level call to execute a snippet of Julia source.
 
         This only raises an exception if Julia itself throws an error, but it
         does NO type conversion into usable Python objects nor any memory
@@ -327,18 +344,13 @@ class Julia(object):
         return char_p(msg).value
 
     def help(self, name):
-        """
-        return help string..
-        """
+        """ Return help string for function by name. """
         if name is None:
             return None
         self.eval('help("{}")'.format(name))
 
     def eval(self, src):
-        """
-        Execute code in Julia, and pull some of the results back into the
-        Python namespace.
-        """
+        """ Execute code in Julia, then pull some results back to Python. """
         if src is None:
             return None
         ans = self.call(src)
