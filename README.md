@@ -12,3 +12,17 @@ python -m unittest discover
 ```
 
 **Note** You need to explicitly add julia to your PATH, an alias will not work.
+
+Installation
+------------
+You will need to install PyCall in your existing Julia installation
+
+```
+Pkg.add("PyCall")
+```
+
+Your python installation must be able to call Julia.  If your installer
+does not add the Julia binary directory to your PATH, you will have to
+add it.
+
+
