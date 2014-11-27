@@ -25,4 +25,22 @@ Your python installation must be able to call Julia.  If your installer
 does not add the Julia binary directory to your PATH, you will have to
 add it.
 
+Usage
+-----
+To call Julia functions from python, first import the library
 
+```
+import julia
+```
+
+then create a Julia object that makes a bridge to the Julia interpreter
+
+```
+j = julia.Julia()
+```
+
+You can then call Julia functions from python
+
+```
+j.sind(90)
+```
