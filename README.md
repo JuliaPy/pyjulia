@@ -13,6 +13,8 @@ python -m unittest discover
 
 **Note** You need to explicitly add julia to your PATH, an alias will not work.
 
+`pyjulia` is tested against Python versions 2.7, 3.3 and 3.4.  Older versions of Python are not supported.
+
 Installation
 ------------
 You will need to install PyCall in your existing Julia installation
