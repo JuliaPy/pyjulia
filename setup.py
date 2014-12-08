@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 """Julia/Python bridge with IPython support.
 """
+import os
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='julia',
       version='0.1.1',
