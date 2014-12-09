@@ -52,7 +52,8 @@ class JuliaTest(unittest.TestCase):
         self.assertEqual([1, 4, 9], list(map(julia.eval("x->x^2"), [1, 2, 3])))
 
     def test_import_julia_functions(self):
-        if python_version.major == 3 and python_version.minor<3:
+        if (python_version.major < 3 or
+            (python_version.major == 3 and python_version.minor < 3)):
             import julia.sum as julia_sum
             self.assertEqual(6, julia_sum([1, 2, 3]))
         else:
