@@ -27,6 +27,9 @@ Your python installation must be able to call Julia.  If your installer
 does not add the Julia binary directory to your PATH, you will have to
 add it.
 
+`pyjulia` is known to work with `PyCall.jl` ≥ `v0.7.2`.  
+If you run into problems using `pyjulia`, first check the version of `PyCall.jl` you have installed by running `Pkg.installed("PyCall")`.
+
 Usage
 -----
 To call Julia functions from python, first import the library
