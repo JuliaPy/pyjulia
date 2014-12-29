@@ -197,7 +197,7 @@ class Julia(object):
     full access to the entire Julia interpreter.
     """
 
-    def __init__(self, init_julia=True, jl_init_path=None):
+    def __init__(self, init_julia=True, julia_path=None):
         """Create a Python object that represents a live Julia interpreter.
 
         Parameters
@@ -208,8 +208,8 @@ class Julia(object):
             being called from inside an already running Julia, the flag should
             be passed as False so the interpreter isn't re-initialized.
 
-        jl_init_path : str (optional)
-            Path to your Julia directory
+        julia_path: str (optional)
+            Path to the ``julia`` executable
 
         Note that it is safe to call this class constructor twice in the same
         process with `init_julia` set to True, as a global reference is kept
@@ -226,10 +226,8 @@ class Julia(object):
 
         if init_julia:
             try:
-                if jl_init_path:
-                    runtime = os.path.join(jl_init_path, 'usr', 'bin', 'julia')
-                else:
-                    runtime = 'julia'
+                runtime = julia_path or 'julia'
+
                 juliainfo = subprocess.check_output(
                     [runtime, "-e",
                      """
