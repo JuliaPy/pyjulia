@@ -227,34 +227,35 @@ class Julia(object):
         if init_julia:
             try:
                 if jl_init_path:
-                    runtime = os.path.join(jl_init_path, 'usr', 'bin', 'julia')
+                    runtime = os.path.join(jl_init_path, 'bin', 'julia')
                 else:
                     runtime = 'julia'
                 juliainfo = subprocess.check_output(
                     [runtime, "-e",
                      """
                      println(JULIA_HOME)
-                     println(Sys.dlpath(dlopen(\"libjulia\")))
+                     println(Libdl.dlpath(Libdl.dlopen(\"libjulia\")))
                      """])
                 JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
                 libjulia_dir = os.path.dirname(libjulia_path)
-                sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
-                sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
+                # sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
+                # sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
             except:
                 raise JuliaError('error starting up the Julia process')
 
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
-            if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
-                if os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath_alt)):
-                    sysimg_relpath = sysimg_relpath_alt
-                else:
-                    raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
+
+            # if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
+            #     if os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath_alt)):
+            #         sysimg_relpath = sysimg_relpath_alt
+            #     else:
+            #         warnings.warn("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
 
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
-            self.api.jl_init_with_image.arg_types = [char_p, char_p]
-            self.api.jl_init_with_image(JULIA_HOME.encode("utf-8"),
-                                        sysimg_relpath.encode("utf-8"))
+            self.api.jl_init.arg_types = [char_p]
+            self.api.jl_init(JULIA_HOME.encode("utf-8"))
+            self.api.jl_restore_system_image()
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
