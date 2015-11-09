@@ -285,10 +285,6 @@ class Julia(object):
                 raise JuliaError("Julia does not have package PyCall.\n"
                     "Install PyCall by running the following line:\n"
                     """\tjulia -e 'Pkg.add("PyCall"); Pkg.update()'\n""")
-            try:
-                self.call('pyinitialize(C_NULL)')
-            except:
-                raise JuliaError("Failed to initialize PyCall package")
 
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject. Since this will be needed on every call, we
