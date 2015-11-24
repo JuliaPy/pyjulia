@@ -26,6 +26,7 @@ from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
 from ctypes import py_object
 
+
 # this is python 3.3 specific
 from types import ModuleType, FunctionType
 
@@ -234,12 +235,12 @@ class Julia(object):
                     [runtime, "-e",
                      """
                      println(JULIA_HOME)
-                     println(Sys.dlpath(dlopen(\"libjulia\")))
+                     println(Libdl.dlpath(Libdl.dlopen(\"libjulia\")))
                      """])
                 JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
                 libjulia_dir = os.path.dirname(libjulia_path)
-                sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
-                sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
+                sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.so")
+                sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.so")
             except:
                 raise JuliaError('error starting up the Julia process')
 
@@ -271,7 +272,7 @@ class Julia(object):
         self.api.jl_exception_occurred.restype = void_p
         self.api.jl_typeof_str.argtypes = [void_p]
         self.api.jl_typeof_str.restype = char_p
-        self.api.jl_call1.restype = void_p
+        self.api.jl_call2.restype = void_p
         self.api.jl_get_field.restype = void_p
         self.api.jl_typename_str.restype = char_p
         self.api.jl_typeof_str.restype = char_p
@@ -285,16 +286,13 @@ class Julia(object):
                 raise JuliaError("Julia does not have package PyCall.\n"
                     "Install PyCall by running the following line:\n"
                     """\tjulia -e 'Pkg.add("PyCall"); Pkg.update()'\n""")
-            try:
-                self.call('pyinitialize(C_NULL)')
-            except:
-                raise JuliaError("Failed to initialize PyCall package")
 
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject. Since this will be needed on every call, we
         # hold it in the Julia object itself so it can survive across
         # reinitializations.
         self.api.PyObject = self.call('PyObject')
+        self.api.convert = self.call('convert')
 
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
@@ -354,11 +352,16 @@ class Julia(object):
         if src is None:
             return None
         ans = self.call(src)
-        res = self.api.jl_call1(void_p(self.api.PyObject), void_p(ans))
-        if not res:
-            #TODO: introspect the julia error object here
-            raise JuliaError("ErrorException in Julia PyObject: "
-                             "{}".format(src))
+        res = self.api.jl_call2(void_p(self.api.convert), void_p(self.api.PyObject),void_p(ans))
+        exoc = self.api.jl_exception_occurred()
+        if not res and exoc:
+            exception_type = self.api.jl_typeof_str(exoc).decode('utf-8')
+            try:
+                exception_msg = self._capture_showerror_for_last_julia_exception()
+            except UnicodeDecodeError:
+                exception_msg = "<couldn't get stack>"
+            raise JuliaError(u'Exception \'{}\' ocurred while calling julia PyObject code:\n{}\n\nCode:\n{}'
+                             .format(exception_type, exception_msg, src))
         boxed_obj = self.api.jl_get_field(void_p(res), b'o')
         pyobj = self.api.jl_unbox_voidpointer(void_p(boxed_obj))
         # make sure we incref it before returning it,
