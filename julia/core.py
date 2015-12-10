@@ -20,7 +20,6 @@ import os
 import sys
 import keyword
 import subprocess
-import warnings
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -250,20 +249,14 @@ class Julia(object):
                      println(Libdl.dlpath(Libdl.dlopen(\"libjulia\")))
                      """])
                 JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
-                libjulia_dir = os.path.dirname(libjulia_path)
             except:
                 raise JuliaError('error starting up the Julia process')
 
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
-            self.api.jl_init.arg_types = [char_p, char_p]
-            sysimg = self.find_sysimg(libjulia_dir)
-            path = os.path.dirname(sysimg)
-            sysfile = os.path.basename(sysimg)
-            #print "Using path %s, sysfile %s" % (path, sysfile)
-            self.api.jl_init_with_image(path.encode("utf-8"),
-                                        sysfile.encode("utf-8"))
+            self.api.julia_init.argtypes = [ctypes.c_int]
+            self.api.julia_init(1)
 
         else:
             # we're assuming here we're fully inside a running Julia process,
@@ -300,17 +293,13 @@ class Julia(object):
         self.api.jl_exception_clear()
 
         if init_julia:
-            #self.call('using Debug; @debug begin @bp end')
-            #self.api.jl_eval_string(u"using PyCall")
-            self.call(u"using PyCall")
-            #self.call('using Debug; @debug begin @bp end') # why doesn't this work?
-
+            self._call(u"using PyCall")
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject and the convert function. Since these will be
         # needed on every call, we hold them in the Julia object itself so
         # they can survive across reinitializations.
-        self.api.PyObject = self.call("PyCall.PyObject")
-        self.api.convert = self.call("convert")
+        self.api.PyObject = self._call("PyCall.PyObject")
+        self.api.convert = self._call("convert")
 
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
@@ -322,7 +311,7 @@ class Julia(object):
 
         sys.meta_path.append(JuliaImporter(self))
 
-    def call(self, src):
+    def _call(self, src):
         """
         Low-level call to execute a snippet of Julia source.
 
@@ -367,7 +356,7 @@ class Julia(object):
         if src is None:
             return None
         #print "eval('%s')" % src
-        ans = self.call(src)
+        ans = self._call(src)
         if not ans:
             return None
         res = self.api.jl_call2(void_p(self.api.convert), void_p(self.api.PyObject), void_p(ans))
