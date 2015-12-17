@@ -3,18 +3,21 @@ python:
     - 2.7
     - 3.4
 compiler:
-  - clang
+    - clang
 notifications:
-  email: false
+    email: false
+sudo: false
+addons:
+    apt_packages:
+        - python-numpy
+        - python3-numpy
 before_install:
-  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
-  - sudo add-apt-repository ppa:staticfloat/juliareleases -y
-  - sudo apt-get update -qq -y
-  - sudo apt-get install libpcre3-dev julia -y
-  - sudo apt-get install python-numpy python3-numpy -y
-  - sudo dpkg -L julia
+    - mkdir -p ~/julia
+    - curl -s -L --retry 7 https://julialang.s3.amazonaws.com/bin/linux/x64/0.3/julia-0.3.12-linux-x86_64.tar.gz | tar -C ~/julia -x -z --strip-components=1 -f -
+    - export PATH="${PATH}:${HOME}/julia/bin"
+    - julia -e 'versioninfo()'
 script:
-  - julia -e 'Pkg.add("PyCall")'
-  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
-  - julia -e 'using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module'
-  - python -m unittest discover
+    - julia -e 'Pkg.add("PyCall")'
+    - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
+    - julia -e 'using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module'
+    - python -m unittest discover
