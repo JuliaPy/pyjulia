@@ -255,8 +255,7 @@ class Julia(object):
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
-            self.api.julia_init.argtypes = [ctypes.c_int]
-            self.api.julia_init(1)
+            self.api.jl_init(0)
 
         else:
             # we're assuming here we're fully inside a running Julia process,
