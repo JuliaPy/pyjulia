@@ -209,7 +209,7 @@ class Julia(object):
                 return path
         raise JuliaError("Failed to find system image (checked %s)" % (paths,))
 
-    def __init__(self, init_julia=True, jl_init_path=None):
+    def __init__(self, init_julia=True, jl_runtime_path=None, jl_init_path=None):
         """Create a Python object that represents a live Julia interpreter.
 
         Parameters
@@ -220,8 +220,12 @@ class Julia(object):
             being called from inside an already running Julia, the flag should
             be passed as False so the interpreter isn't re-initialized.
 
+        jl_runtime_path : str (optional)
+            Path to your Julia binary, e.g. "/usr/local/bin/julia"
+
         jl_init_path : str (optional)
-            Path to your Julia directory
+            Path to give to jl_init relative to which we find sys.so,
+            (defaults to jl_runtime_path or NULL)
 
         Note that it is safe to call this class constructor twice in the same
         process with `init_julia` set to True, as a global reference is kept
@@ -238,8 +242,8 @@ class Julia(object):
 
         if init_julia:
             try:
-                if jl_init_path:
-                    runtime = os.path.join(jl_init_path, 'bin', 'julia')
+                if jl_runtime_path:
+                    runtime = jl_runtime_path
                 else:
                     runtime = 'julia'
                 juliainfo = subprocess.check_output(
@@ -255,7 +259,12 @@ class Julia(object):
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
-            self.api.jl_init(0)
+            if jl_init_path is None:
+                if jl_runtime_path is not None:
+                    jl_init_path = os.path.dirname(jl_runtime_path)
+                else:
+                    jl_init_path = 0 # use jl_init(NULL) to try Julia default guess
+            self.api.jl_init(jl_init_path)
 
         else:
             # we're assuming here we're fully inside a running Julia process,
