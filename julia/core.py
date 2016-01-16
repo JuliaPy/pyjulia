@@ -229,7 +229,7 @@ class Julia(object):
 
         if init_julia:
             try:
-                if jl_runtime_path:
+                if not jl_runtime_path:
                     runtime = jl_runtime_path
                 else:
                     runtime = 'julia'
@@ -242,12 +242,11 @@ class Julia(object):
                 JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
             except:
                 raise JuliaError('error starting up the Julia process')
-
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
-            if jl_init_path is None:
-                if jl_runtime_path is not None:
+            if not jl_init_path:
+                if jl_runtime_path:
                     jl_init_path = os.path.dirname(jl_runtime_path)
                 else:
                     jl_init_path = 0 # use jl_init(NULL) to try Julia default guess
