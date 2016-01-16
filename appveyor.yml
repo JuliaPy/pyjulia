@@ -44,4 +44,4 @@ build_script:
 test_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;%PATH%"
   - "SET JULIA_EXE=C:\\projects\\julia\\bin\\julia.exe"
-  - %PYTHON% -m unittest discover
+  - python -m unittest discover
