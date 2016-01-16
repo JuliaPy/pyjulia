@@ -4,10 +4,12 @@ import unittest
 
 from julia import Julia, JuliaError
 import sys
+import os
+
 python_version = sys.version_info
 
 
-julia = Julia()
+julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"))
 
 class JuliaTest(unittest.TestCase):
 
