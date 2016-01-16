@@ -33,12 +33,8 @@ install:
   - C:\projects\julia-binary.exe /S /D=C:\projects\julia
 
 build_script:
-# Need to convert from shallow to complete for Pkg.clone to work
-
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;%PATH%"
-  - IF EXIST .git\shallow (git fetch --unshallow)
-  - C:\projects\julia\bin\julia -e "versioninfo();
-      Pkg.add("PyCall"); Pkg.init(); Pkg.resolve()"
+  - C:\projects\julia\bin\julia -e 'versioninfo(); Pkg.add("PyCall"); Pkg.init(); Pkg.resolve()'
   - C:\projects\julia\bin\julia -e "using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module'
 
 test_script:
