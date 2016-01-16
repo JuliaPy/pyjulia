@@ -247,9 +247,10 @@ class Julia(object):
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             if not jl_init_path:
                 if jl_runtime_path:
-                    jl_init_path = os.path.dirname(jl_runtime_path)
+                    jl_init_path = os.path.dirname(jl_runtime_path).encode("utf-8")
                 else:
-                    jl_init_path = 0 # use jl_init(NULL) to try Julia default guess
+                    jl_init_path = char_p(None) # use jl_init(NULL) to try Julia default guess
+            self.api.jl_init.argtypes = [char_p]
             self.api.jl_init(jl_init_path)
 
         else:
