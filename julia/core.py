@@ -228,20 +228,18 @@ class Julia(object):
             return
 
         if init_julia:
-            try:
-                if not jl_runtime_path:
-                    runtime = jl_runtime_path
-                else:
-                    runtime = 'julia'
-                juliainfo = subprocess.check_output(
-                    [runtime, "-e",
-                     """
-                     println(JULIA_HOME)
-                     println(Libdl.dlpath(Libdl.dlopen(\"libjulia\")))
-                     """])
-                JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
-            except:
-                raise JuliaError('error starting up the Julia process')
+            if jl_runtime_path:
+                runtime = jl_runtime_path
+            else:
+                runtime = 'julia'
+            juliainfo = subprocess.check_output(
+                [runtime, "-e",
+                 """
+                 println(JULIA_HOME)
+                 println(Libdl.dlpath(Libdl.dlopen(\"libjulia\")))
+                 """])
+            JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
+
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)

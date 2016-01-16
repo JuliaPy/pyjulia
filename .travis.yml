@@ -15,6 +15,6 @@ before_install:
   - sudo dpkg -L julia
 script:
   - julia -e 'Pkg.add("PyCall")'
-  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
+#  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
   - julia -e 'using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module'
   - JULIA_EXE=/usr/bin/julia python -m unittest discover
