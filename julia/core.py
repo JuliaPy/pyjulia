@@ -196,19 +196,6 @@ class Julia(object):
     full access to the entire Julia interpreter.
     """
 
-    @staticmethod
-    def find_sysimg(julia_home):
-        paths = [os.path.join(julia_home, *candidate)
-                 for candidate in [('sys.so',),
-                                     ('lib','julia','sys.so'),
-                                     ('julia','sys.ji'),
-                                     ('sys.ji')]]
-
-        for path in paths:
-            if os.path.exists(path):
-                return path
-        raise JuliaError("Failed to find system image (checked %s)" % (paths,))
-
     def __init__(self, init_julia=True, jl_runtime_path=None, jl_init_path=None):
         """Create a Python object that represents a live Julia interpreter.
 
