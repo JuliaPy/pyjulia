@@ -349,7 +349,7 @@ class Julia(object):
         """ Return help string for function by name. """
         if name is None:
             return None
-        self.eval('help("{}")'.format(name))
+        return self.eval('Markdown.plain(@doc("{}"))'.format(name))
 
     def eval(self, src):
         """ Execute code in Julia, then pull some results back to Python. """
