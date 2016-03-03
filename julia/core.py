@@ -159,9 +159,10 @@ def isafunction(julia, julia_name, mod_name=""):
         return False
 
 
-def base_functions(julia):
+def module_functions(julia, module):
+    """Compute the function names in the julia module"""
     bases = {}
-    names = julia.eval("names(Base)")
+    names = julia.eval("names(%s)" % module)
     for name in names:
         if (ismacro(name) or
             isoperator(name) or
@@ -299,10 +300,13 @@ class Julia(object):
         # reloads.
         _julia_runtime[0] = self.api
 
-        for name, func in iteritems(base_functions(self)):
-            setattr(self, name, func)
+        self.add_module_functions("Base")
 
         sys.meta_path.append(JuliaImporter(self))
+
+    def add_module_functions(self, module):
+        for name, func in iteritems(module_functions(self, module)):
+            setattr(self, name, func)
 
     def _call(self, src):
         """
@@ -363,3 +367,8 @@ class Julia(object):
         # as this is a borrowed reference
         ctypes.pythonapi.Py_IncRef(ctypes.py_object(pyobj))
         return pyobj
+
+    def using(self, module):
+        """Load module in Julia by calling the `using module` command"""
+        self.eval("using %s" % module)
+        self.add_module_functions(module)
