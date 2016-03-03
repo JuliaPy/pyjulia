@@ -170,6 +170,9 @@ def module_functions(julia, module):
             notascii(name)):
             continue
         try:
+            # skip undefined names
+            if not julia.eval("isdefined(:%s)" % name):
+                continue
             # skip modules for now
             if isamodule(julia, name):
                 continue
