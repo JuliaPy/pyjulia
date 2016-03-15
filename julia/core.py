@@ -240,7 +240,7 @@ class Julia(object):
                 [runtime, "-e",
                  """
                  println(JULIA_HOME)
-                 println(Libdl.dlpath(Libdl.dlopen(\"libjulia\")))
+                 println(Base.Libdl.dllist()[1])
                  """])
             JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
 
