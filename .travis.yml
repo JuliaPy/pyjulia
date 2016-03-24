@@ -4,6 +4,9 @@ python:
     - 3.5
 compiler:
   - clang
+branches:
+  only:
+    - clean-julia-0.4
 notifications:
   email: false
 before_install:
