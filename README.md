@@ -1,4 +1,4 @@
-pyjulia
+﻿pyjulia
 =======
 
 [![Build Status](https://travis-ci.org/JuliaLang/pyjulia.svg?branch=master)](https://travis-ci.org/JuliaLang/pyjulia)
@@ -26,6 +26,18 @@ Pkg.add("PyCall")
 Your python installation must be able to call Julia.  If your installer
 does not add the Julia binary directory to your PATH, you will have to
 add it.
+
+Then finally you have to install pyjulia.You may clone it directly to your home directory.
+
+```
+git clone https://github.com/JuliaLng/pyjulia
+
+```
+then inside the pyjulia directory you need to run the python setup file
+
+```
+sudo python setup.py install
+```
 
 `pyjulia` is known to work with `PyCall.jl` ≥ `v0.7.2`.  
 
