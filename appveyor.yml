@@ -12,7 +12,7 @@ environment:
   #   PYTHONDIR: "C:\\Python27"
   #   PYTHON: "C:\\Python27\\python.exe"
   - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
-    PYTHONDIR: "C:\\Python27"
+    PYTHONDIR: "C:\\Python27-x64"
     PYTHON: "C:\\Python27\\python.exe"
   - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
