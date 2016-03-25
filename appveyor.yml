@@ -11,15 +11,22 @@ environment:
   # - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
   #   PYTHONDIR: "C:\\Python27"
   #   PYTHON: "C:\\Python27\\python.exe"
+
+  # 64 julia-0.5 Python-27
   - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
     PYTHONDIR: "C:\\Python27-x64"
-  - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win64.exe"
-    PYTHONDIR: "C:\\Python27"
-  - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
-    PYTHONDIR: "C:\\Python35-x64"
-    PYTHON: "C:\\Python35-x64\\python.exe"
+
+  # 64 julia-0.4 Python-27
   - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
     PYTHONDIR: "C:\\Python27-x64"
+
+  # 32 julia-0.4 Python-27
+  - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
+    PYTHONDIR: "C:\\Python27"
+
+  # 32 julia-0.4 Python-35
+  - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
+    PYTHONDIR: "C:\\Python35-x64"
 
 branches:
   only:
