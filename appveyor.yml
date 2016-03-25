@@ -30,8 +30,7 @@ environment:
 
 branches:
   only:
-    - master
-    - /release-.*/
+    - clean-julia-0.4
 
 notifications:
   - provider: Email
