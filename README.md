@@ -20,7 +20,7 @@ Installation
 ------------
 You will need to install PyCall in your existing Julia installation
 
-```
+```julia
 Pkg.add("PyCall")
 ```
 
@@ -36,19 +36,19 @@ Usage
 -----
 To call Julia functions from python, first import the library
 
-```
+```python
 import julia
 ```
 
 then create a Julia object that makes a bridge to the Julia interpreter
 
-```
+```python
 j = julia.Julia()
 ```
 
 You can then call Julia functions from python, e.g.
 
-```
+```python
 j.sind(90)
 ```
 
@@ -69,13 +69,13 @@ TODOs
 -----
 
 * Think about a mechanism to transfer Python variables to Julia, e.g.
-```
+```python
 a = [1, 2, 3]
 j.push(a)
 j.eval("length(a)")
 ```
   The opposite direction, i.e. transferring Variables from Julia to Python, is easy:
-```
+```julia
 j.eval("j = [1 2 3]")
 a = j.eval("j")
 len(a)
