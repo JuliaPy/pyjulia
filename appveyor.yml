@@ -39,6 +39,7 @@ notifications:
     on_build_status_changed: false
 
 install:
+  - gcc --version
 # Download most recent Julia Windows binary
   - ps: (new-object net.webclient).DownloadFile(
         $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
@@ -56,6 +57,5 @@ test_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
   - python --version
   - dir
-  - gcc --version
   # - python -c "import julia; julia.Julia(debug=True)"
   - python -m unittest discover
