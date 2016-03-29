@@ -56,5 +56,6 @@ test_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
   - python --version
   - dir
+  - gcc --version
   # - python -c "import julia; julia.Julia(debug=True)"
   - python -m unittest discover
