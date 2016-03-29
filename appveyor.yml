@@ -39,7 +39,7 @@ notifications:
     on_build_status_changed: false
 
 install:
-  - dir C:\MinGW\bin\gcc
+  - cd C:\MinGW\bin\gcc && dir
 # Download most recent Julia Windows binary
   - ps: (new-object net.webclient).DownloadFile(
         $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
