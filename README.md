@@ -68,7 +68,7 @@ Not all valid Julia identifiers are valid Python identifiers.  Unicode identifie
 TODOs
 -----
 
-* Think about a mechanism to transfer Python variables to Julia, e.g.
+* [ ] Think about a mechanism to transfer Python variables to Julia, e.g.
 ```python
 a = [1, 2, 3]
 j.push(a)
@@ -81,6 +81,9 @@ a = j.eval("j")
 len(a)
 ```
 
-* The code uses the [`ctypes.PYDLL`][pydll] instead of the simple `ctypes.CDLL`.  Maybe we should change this in the future.  Also possible that some issues are because of that.  The biggest difference is the Python _global interpreter lock_ (GIL).
+* [ ] How should we distinguish between different methods in Julia when calling from Python?
+
+* [ ] The code uses the [`ctypes.PYDLL`][pydll] instead of the simple `ctypes.CDLL`.  Maybe we should change this in the future.  Also possible that some issues are because of that.  The biggest difference is the Python _global interpreter lock_ (GIL).
+
 
 [pydll]: https://docs.python.org/3/library/ctypes.html#ctypes.PyDLL
