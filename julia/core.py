@@ -14,13 +14,13 @@ Bridge Python and Julia by initializing the Julia interpreter inside Python.
 #-----------------------------------------------------------------------------
 
 # Stdlib
+from __future__ import print_function
 import ctypes
 import ctypes.util
 import os
 import sys
 import keyword
 import subprocess
-import warnings
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -160,9 +160,10 @@ def isafunction(julia, julia_name, mod_name=""):
         return False
 
 
-def base_functions(julia):
+def module_functions(julia, module):
+    """Compute the function names in the julia module"""
     bases = {}
-    names = julia.eval("names(Base)")
+    names = julia.eval("names(%s)" % module)
     for name in names:
         if (ismacro(name) or
             isoperator(name) or
@@ -170,6 +171,9 @@ def base_functions(julia):
             notascii(name)):
             continue
         try:
+            # skip undefined names
+            if not julia.eval("isdefined(:%s)" % name):
+                continue
             # skip modules for now
             if isamodule(julia, name):
                 continue
@@ -197,7 +201,8 @@ class Julia(object):
     full access to the entire Julia interpreter.
     """
 
-    def __init__(self, init_julia=True, jl_init_path=None):
+    def __init__(self, init_julia=True, jl_runtime_path=None, jl_init_path=None,
+                 debug=False):
         """Create a Python object that represents a live Julia interpreter.
 
         Parameters
@@ -208,14 +213,22 @@ class Julia(object):
             being called from inside an already running Julia, the flag should
             be passed as False so the interpreter isn't re-initialized.
 
+        jl_runtime_path : str (optional)
+            Path to your Julia binary, e.g. "/usr/local/bin/julia"
+
         jl_init_path : str (optional)
-            Path to your Julia directory
+            Path to give to jl_init relative to which we find sys.so,
+            (defaults to jl_runtime_path or NULL)
+
+        debug : bool
+            If True, print some debugging information to STDERR
 
         Note that it is safe to call this class constructor twice in the same
         process with `init_julia` set to True, as a global reference is kept
         to avoid re-initializing it. The purpose of the flag is only to manage
         situations when Julia was initialized from outside this code.
         """
+        self.is_debugging = debug
 
         # Ugly hack to register the julia interpreter globally so we can reload
         # this extension without trying to re-open the shared lib, which kills
@@ -225,36 +238,31 @@ class Julia(object):
             return
 
         if init_julia:
-            try:
-                if jl_init_path:
-                    runtime = os.path.join(jl_init_path, 'usr', 'bin', 'julia')
-                else:
-                    runtime = 'julia'
-                juliainfo = subprocess.check_output(
-                    [runtime, "-e",
-                     """
-                     println(JULIA_HOME)
-                     println(Sys.dlpath(dlopen(\"libjulia\")))
-                     """])
-                JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
-                libjulia_dir = os.path.dirname(libjulia_path)
-                sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
-                sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
-            except:
-                raise JuliaError('error starting up the Julia process')
-
+            if jl_runtime_path:
+                runtime = jl_runtime_path
+            else:
+                runtime = 'julia'
+            juliainfo = subprocess.check_output(
+                [runtime, "-e",
+                 """
+                 println(JULIA_HOME)
+                 println(Libdl.dlpath("libjulia"))
+                 """])
+            JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
+            self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
-            if not os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath)):
-                if os.path.exists(os.path.join(JULIA_HOME, sysimg_relpath_alt)):
-                    sysimg_relpath = sysimg_relpath_alt
-                else:
-                    raise JuliaError("Julia sysimage (\"sys.ji\") not found! {}".format(sysimg_relpath))
-
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
-            self.api.jl_init_with_image.arg_types = [char_p, char_p]
-            self.api.jl_init_with_image(JULIA_HOME.encode("utf-8"),
-                                        sysimg_relpath.encode("utf-8"))
+            if not jl_init_path:
+                if jl_runtime_path:
+                    jl_init_path = os.path.dirname(jl_runtime_path).encode("utf-8")
+                else:
+                    jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
+            self.api.jl_init.argtypes = [char_p]
+            self._debug("calling jl_init(%s)" % jl_init_path)
+            self.api.jl_init(jl_init_path)
+            self._debug("seems to work...")
+
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
@@ -271,42 +279,54 @@ class Julia(object):
         self.api.jl_exception_occurred.restype = void_p
         self.api.jl_typeof_str.argtypes = [void_p]
         self.api.jl_typeof_str.restype = char_p
-        self.api.jl_call1.restype = void_p
+        self.api.jl_call2.argtypes = [void_p, void_p, void_p]
+        self.api.jl_call2.restype = void_p
         self.api.jl_get_field.restype = void_p
         self.api.jl_typename_str.restype = char_p
         self.api.jl_typeof_str.restype = char_p
         self.api.jl_unbox_voidpointer.restype = py_object
         self.api.jl_bytestring_ptr.restype = char_p
 
-        if init_julia:
-            try:
-                self.call('using PyCall')
-            except:
-                raise JuliaError("Julia does not have package PyCall.\n"
-                    "Install PyCall by running the following line:\n"
-                    """\tjulia -e 'Pkg.add("PyCall"); Pkg.update()'\n""")
-            try:
-                self.call('pyinitialize(C_NULL)')
-            except:
-                raise JuliaError("Failed to initialize PyCall package")
+        self.api.jl_exception_clear.restype = None
+        self.api.jl_stderr_obj.argtypes = []
+        self.api.jl_stderr_obj.restype = void_p
+        self.api.jl_stderr_stream.argtypes = []
+        self.api.jl_stderr_stream.restype = void_p
+        self.api.jl_show.restype = None
+        self.api.jl_show.argtypes = [void_p, void_p]
+        self.api.jl_printf.restype = ctypes.c_int
+        self.api.jl_exception_clear()
 
+        if init_julia:
+            self._call(u"using PyCall")
         # Whether we initialized Julia or not, we MUST create at least one
-        # instance of PyObject. Since this will be needed on every call, we
-        # hold it in the Julia object itself so it can survive across
-        # reinitializations.
-        self.api.PyObject = self.call('PyObject')
+        # instance of PyObject and the convert function. Since these will be
+        # needed on every call, we hold them in the Julia object itself so
+        # they can survive across reinitializations.
+        self.api.PyObject = self._call("PyCall.PyObject")
+        self.api.convert = self._call("convert")
 
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
         _julia_runtime[0] = self.api
 
-        for name, func in iteritems(base_functions(self)):
-            setattr(self, name, func)
+        self.add_module_functions("Base")
 
         sys.meta_path.append(JuliaImporter(self))
 
-    def call(self, src):
+    def add_module_functions(self, module):
+        for name, func in iteritems(module_functions(self, module)):
+            setattr(self, name, func)
+
+    def _debug(self, msg):
+        """
+        Print some debugging stuff, if enabled
+        """
+        if self.is_debugging:
+            print(msg, file=sys.stderr)
+
+    def _call(self, src):
         """
         Low-level call to execute a snippet of Julia source.
 
@@ -315,28 +335,29 @@ class Julia(object):
         management. It should never be used for returning the result of Julia
         expressions, only to execute statements.
         """
-        # return null ptr if error
-        api = self.api
-        ans = api.jl_eval_string(src.encode('utf-8'))
-        exoc = api.jl_exception_occurred()
-        if not ans and exoc:
-            exception_type = api.jl_typeof_str(exoc).decode('utf-8')
-            try:
-                exception_msg = self._capture_showerror_for_last_julia_exception()
-            except UnicodeDecodeError:
-                exception_msg = "<couldn't get stack>"
-            raise JuliaError(u'Exception \'{}\' ocurred while calling julia code:\n{}\n\nCode:\n{}'
-                             .format(exception_type, exception_msg, src))
+        # self._debug("_call(%s)" % src)
+        ans = self.api.jl_eval_string(src.encode('utf-8'))
+        self.check_exception(src)
+
         return ans
 
-    def _capture_showerror_for_last_julia_exception(self):
-        msg = self.api.jl_eval_string(u"""
-        try
-            rethrow()
-        catch ex
-            sprint(showerror, ex, catch_backtrace())
-        end""".encode('utf-8'))
-        return char_p(msg).value.decode("utf-8")
+    def check_exception(self, src=None):
+        exoc = self.api.jl_exception_occurred()
+        self._debug("exception occured? " + str(exoc))
+        if not exoc:
+            # self._debug("No Exception")
+            self.api.jl_exception_clear()
+            return
+        self._debug("Retrieving exception infos...")
+        stderr = self.api.jl_stderr_obj()
+        self._debug("libjulia stderr = " + str(stderr))
+        self.api.jl_show(stderr, exoc)
+        self._debug("jl_show called ...")
+        # self.api.jl_printf(self.api.jl_stderr_stream(), "\n");
+
+        exception_type = self.api.jl_typeof_str(exoc).decode('utf-8')
+        raise JuliaError(u'Exception \'{}\' occurred while calling julia code:\n{}'
+                         .format(exception_type, src))
 
     def _typeof_julia_exception_in_transit(self):
         exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
@@ -347,21 +368,29 @@ class Julia(object):
         """ Return help string for function by name. """
         if name is None:
             return None
-        self.eval('help("{}")'.format(name))
+        return self.eval('Markdown.plain(@doc("{}"))'.format(name))
 
     def eval(self, src):
         """ Execute code in Julia, then pull some results back to Python. """
         if src is None:
             return None
-        ans = self.call(src)
-        res = self.api.jl_call1(void_p(self.api.PyObject), void_p(ans))
-        if not res:
-            #TODO: introspect the julia error object here
-            raise JuliaError("ErrorException in Julia PyObject: "
-                             "{}".format(src))
+        ans = self._call(src)
+        if not ans:
+            return None
+        res = self.api.jl_call2(void_p(self.api.convert), void_p(self.api.PyObject), void_p(ans))
+
+        if res is None:
+            self.check_exception("convert(PyCall.PyObject, %s)" % src)
+        if res == 0:
+            return None
         boxed_obj = self.api.jl_get_field(void_p(res), b'o')
         pyobj = self.api.jl_unbox_voidpointer(void_p(boxed_obj))
         # make sure we incref it before returning it,
         # as this is a borrowed reference
         ctypes.pythonapi.Py_IncRef(ctypes.py_object(pyobj))
         return pyobj
+
+    def using(self, module):
+        """Load module in Julia by calling the `using module` command"""
+        self.eval("using %s" % module)
+        self.add_module_functions(module)
