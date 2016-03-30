@@ -14,6 +14,7 @@ Bridge Python and Julia by initializing the Julia interpreter inside Python.
 #-----------------------------------------------------------------------------
 
 # Stdlib
+from __future__ import print_function
 import ctypes
 import ctypes.util
 import os
@@ -159,9 +160,10 @@ def isafunction(julia, julia_name, mod_name=""):
         return False
 
 
-def base_functions(julia):
+def module_functions(julia, module):
+    """Compute the function names in the julia module"""
     bases = {}
-    names = julia.eval("names(Base)")
+    names = julia.eval("names(%s)" % module)
     for name in names:
         if (ismacro(name) or
             isoperator(name) or
@@ -169,6 +171,9 @@ def base_functions(julia):
             notascii(name)):
             continue
         try:
+            # skip undefined names
+            if not julia.eval("isdefined(:%s)" % name):
+                continue
             # skip modules for now
             if isamodule(julia, name):
                 continue
@@ -196,7 +201,8 @@ class Julia(object):
     full access to the entire Julia interpreter.
     """
 
-    def __init__(self, init_julia=True, jl_runtime_path=None, jl_init_path=None):
+    def __init__(self, init_julia=True, jl_runtime_path=None, jl_init_path=None,
+                 debug=False):
         """Create a Python object that represents a live Julia interpreter.
 
         Parameters
@@ -214,11 +220,15 @@ class Julia(object):
             Path to give to jl_init relative to which we find sys.so,
             (defaults to jl_runtime_path or NULL)
 
+        debug : bool
+            If True, print some debugging information to STDERR
+
         Note that it is safe to call this class constructor twice in the same
         process with `init_julia` set to True, as a global reference is kept
         to avoid re-initializing it. The purpose of the flag is only to manage
         situations when Julia was initialized from outside this code.
         """
+        self.is_debugging = debug
 
         # Ugly hack to register the julia interpreter globally so we can reload
         # this extension without trying to re-open the shared lib, which kills
@@ -236,10 +246,10 @@ class Julia(object):
                 [runtime, "-e",
                  """
                  println(JULIA_HOME)
-                 println(Libdl.dlpath(Libdl.dlopen(\"libjulia\")))
+                 println(Libdl.dlpath("libjulia"))
                  """])
             JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
-
+            self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
@@ -247,9 +257,11 @@ class Julia(object):
                 if jl_runtime_path:
                     jl_init_path = os.path.dirname(jl_runtime_path).encode("utf-8")
                 else:
-                    jl_init_path = char_p(None) # use jl_init(NULL) to try Julia default guess
+                    jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
             self.api.jl_init.argtypes = [char_p]
+            self._debug("calling jl_init(%s)" % jl_init_path)
             self.api.jl_init(jl_init_path)
+            self._debug("seems to work...")
 
         else:
             # we're assuming here we're fully inside a running Julia process,
@@ -299,10 +311,20 @@ class Julia(object):
         # reloads.
         _julia_runtime[0] = self.api
 
-        for name, func in iteritems(base_functions(self)):
-            setattr(self, name, func)
+        self.add_module_functions("Base")
 
         sys.meta_path.append(JuliaImporter(self))
+
+    def add_module_functions(self, module):
+        for name, func in iteritems(module_functions(self, module)):
+            setattr(self, name, func)
+
+    def _debug(self, msg):
+        """
+        Print some debugging stuff, if enabled
+        """
+        if self.is_debugging:
+            print(msg, file=sys.stderr)
 
     def _call(self, src):
         """
@@ -313,7 +335,7 @@ class Julia(object):
         management. It should never be used for returning the result of Julia
         expressions, only to execute statements.
         """
-
+        # self._debug("_call(%s)" % src)
         ans = self.api.jl_eval_string(src.encode('utf-8'))
         self.check_exception(src)
 
@@ -321,13 +343,17 @@ class Julia(object):
 
     def check_exception(self, src=None):
         exoc = self.api.jl_exception_occurred()
+        self._debug("exception occured? " + str(exoc))
         if not exoc:
+            # self._debug("No Exception")
             self.api.jl_exception_clear()
             return
-
+        self._debug("Retrieving exception infos...")
         stderr = self.api.jl_stderr_obj()
+        self._debug("libjulia stderr = " + str(stderr))
         self.api.jl_show(stderr, exoc)
-        self.api.jl_printf(self.api.jl_stderr_stream(), "\n");
+        self._debug("jl_show called ...")
+        # self.api.jl_printf(self.api.jl_stderr_stream(), "\n");
 
         exception_type = self.api.jl_typeof_str(exoc).decode('utf-8')
         raise JuliaError(u'Exception \'{}\' occurred while calling julia code:\n{}'
@@ -342,7 +368,7 @@ class Julia(object):
         """ Return help string for function by name. """
         if name is None:
             return None
-        self.eval('help("{}")'.format(name))
+        return self.eval('Markdown.plain(@doc("{}"))'.format(name))
 
     def eval(self, src):
         """ Execute code in Julia, then pull some results back to Python. """
@@ -363,3 +389,8 @@ class Julia(object):
         # as this is a borrowed reference
         ctypes.pythonapi.Py_IncRef(ctypes.py_object(pyobj))
         return pyobj
+
+    def using(self, module):
+        """Load module in Julia by calling the `using module` command"""
+        self.eval("using %s" % module)
+        self.add_module_functions(module)

@@ -9,7 +9,7 @@ import os
 python_version = sys.version_info
 
 
-julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"))
+julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"), debug=True)
 
 class JuliaTest(unittest.TestCase):
 
