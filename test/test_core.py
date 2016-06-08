@@ -4,16 +4,18 @@ import unittest
 
 from julia import Julia, JuliaError
 import sys
+import os
+
 python_version = sys.version_info
 
 
-julia = Julia()
+julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"), debug=True)
 
 class JuliaTest(unittest.TestCase):
 
     def test_call(self):
-        julia.call('1 + 1')
-        julia.call('sqrt(2.0)')
+        julia._call('1 + 1')
+        julia._call('sqrt(2.0)')
 
     def test_eval(self):
         self.assertEqual(2, julia.eval('1 + 1'))
@@ -24,7 +26,7 @@ class JuliaTest(unittest.TestCase):
 
     def test_call_error(self):
         try:
-            julia.call('undefined_function_name()')
+            julia._call('undefined_function_name()')
             self.fail('No error?')
         except JuliaError:
             pass
@@ -41,7 +43,7 @@ class JuliaTest(unittest.TestCase):
         def add(a, b):
             return a + b
         self.assertEqual([1, 4, 9],
-                         julia.map(lambda x: x * x, [1, 2, 3]))
+                         list(julia.map(lambda x: x * x, [1, 2, 3])))
         self.assertEqual([11, 11, 11],
                          julia.map(lambda x: x + 1,
                                    array.array('I', [10, 10, 10])))
