@@ -1,0 +1,62 @@
+environment:
+  # for more python versions have a look at
+  # https://github.com/ogrisel/python-appveyor-demo/blob/master/appveyor.yml
+  matrix:
+  # - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
+  #   PYTHONDIR: "C:\\Python27"
+  #   PYTHON: "C:\\Python27\\python.exe"
+  # - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
+  #   PYTHONDIR: "C:\\Python27"
+  #   PYTHON: "C:\\Python27\\python.exe"
+  # - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
+  #   PYTHONDIR: "C:\\Python27"
+  #   PYTHON: "C:\\Python27\\python.exe"
+
+  # 64 julia-0.5 Python-27
+  - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
+    PYTHONDIR: "C:\\Python27-x64"
+
+  # 64 julia-0.4 Python-27
+  - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
+    PYTHONDIR: "C:\\Python27-x64"
+
+  # 32 julia-0.4 Python-27
+  - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
+    PYTHONDIR: "C:\\Python27"
+
+  # 32 julia-0.4 Python-35
+  - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
+    PYTHONDIR: "C:\\Python35-x64"
+
+branches:
+  only:
+    - clean-julia-0.4
+
+notifications:
+  - provider: Email
+    on_build_success: false
+    on_build_failure: false
+    on_build_status_changed: false
+
+install:
+  - cd C:\MinGW\bin
+  - dir
+# Download most recent Julia Windows binary
+  - ps: (new-object net.webclient).DownloadFile(
+        $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
+        "C:\projects\julia-binary.exe")
+# Run installer silently, output to C:\projects\julia
+  - C:\projects\julia-binary.exe /S /D=C:\projects\julia
+
+build_script:
+  - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;%PATH%"
+  # - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.init(); Pkg.resolve()"
+  # - C:\projects\julia\bin\julia -e "using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module"
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\");"
+
+test_script:
+  - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
+  - python --version
+  - dir
+  # - python -c "import julia; julia.Julia(debug=True)"
+  - python -m unittest discover
