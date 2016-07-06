@@ -297,6 +297,14 @@ class Julia(object):
         self.api.jl_exception_clear()
 
         if init_julia:
+            # Replace the cache directory with a private one. PyCall needs a different
+            # configuration and so do any packages that depend on it. Ideally, we could
+            # detect packages that depend on PyCall and only use LOAD_CACHE_PATH for them
+            # but that would be significantly more complicated and brittle, and may not
+            # be worth it.
+            self._call(u"empty!(Base.LOAD_CACHE_PATH)")
+            self._call(u"push!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
+                "\"lib\", \"pyjulia-v$(VERSION.major).$(VERSION.minor)\"))")
             self._call(u"using PyCall")
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject and the convert function. Since these will be
