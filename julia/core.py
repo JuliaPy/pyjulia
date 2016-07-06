@@ -255,7 +255,7 @@ class Julia(object):
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             if not jl_init_path:
                 if jl_runtime_path:
-                    jl_init_path = os.path.dirname(jl_runtime_path).encode("utf-8")
+                    jl_init_path = os.path.dirname(os.path.realpath(jl_runtime_path)).encode("utf-8")
                 else:
                     jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
             self.api.jl_init.argtypes = [char_p]
@@ -285,7 +285,6 @@ class Julia(object):
         self.api.jl_typename_str.restype = char_p
         self.api.jl_typeof_str.restype = char_p
         self.api.jl_unbox_voidpointer.restype = py_object
-        self.api.jl_bytestring_ptr.restype = char_p
 
         self.api.jl_exception_clear.restype = None
         self.api.jl_stderr_obj.argtypes = []
