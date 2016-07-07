@@ -48,6 +48,7 @@ class JuliaModule(ModuleType):
     pass
 
 
+
 # add custom import behavior for the julia "module"
 class JuliaImporter(object):
     def __init__(self, julia):
@@ -192,6 +193,15 @@ def module_functions(julia, module):
             pass
     return bases
 
+def determine_if_statically_linked():
+    """Determines if this python executable is statically linked"""
+    # Windows and OS X are generally always dynamically linked
+    if not sys.platform.startswith('linux'):
+        return False
+    lddoutput = subprocess.check_output(["ldd",sys.executable])
+    return not ("libpython" in lddoutput)
+
+
 _julia_runtime = [False]
 
 class Julia(object):
@@ -246,9 +256,20 @@ class Julia(object):
                 [runtime, "-e",
                  """
                  println(JULIA_HOME)
-                 println(Libdl.dlpath("libjulia"))
+                 println(Libdl.dlpath(string("lib",Base.julia_exename())))
+                 PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
+                 if isfile(PyCall_depsfile)
+                    eval(Module(:__anon__),
+                        Expr(:toplevel,
+                         :(using Compat),
+                         :(Main.Base.include($PyCall_depsfile)),
+                         :(println(python))))
+                 else
+                    println("nowhere")
+                 end
                  """])
-            JULIA_HOME, libjulia_path = juliainfo.decode("utf-8").rstrip().split("\n")
+            JULIA_HOME, libjulia_path, depsjlexe = juliainfo.decode("utf-8").rstrip().split("\n")
+            exe_differs = not depsjlexe == sys.executable
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
@@ -297,14 +318,37 @@ class Julia(object):
         self.api.jl_exception_clear()
 
         if init_julia:
-            # Replace the cache directory with a private one. PyCall needs a different
-            # configuration and so do any packages that depend on it. Ideally, we could
-            # detect packages that depend on PyCall and only use LOAD_CACHE_PATH for them
-            # but that would be significantly more complicated and brittle, and may not
-            # be worth it.
-            self._call(u"empty!(Base.LOAD_CACHE_PATH)")
-            self._call(u"push!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
-                "\"lib\", \"pyjulia-v$(VERSION.major).$(VERSION.minor)\"))")
+            use_separate_cache = exe_differs or determine_if_statically_linked()
+            if use_separate_cache:
+                # First check that this is supported
+                self._call("""
+                    if VERSION < v"0.5-"
+                        error(\"""Using pyjulia with a statically-compiled version
+                                  of python or with a version of python that
+                                  differs from that used by PyCall.jl is not
+                                  supported on julia 0.4""\")
+                    end
+                """)
+                # Intercept precompilation
+                os.environ["PYCALL_PYTHON_EXE"] = sys.executable
+                PYCALL_JULIA_HOME = os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)),"..","fake-julia").replace("\\","\\\\")
+                os.environ["PYCALL_JULIA_HOME"] = PYCALL_JULIA_HOME
+                os.environ["PYCALL_LIBJULIA_PATH"] = os.path.dirname(libjulia_path)
+                self._call(u"eval(Base,:(JULIA_HOME=\""+PYCALL_JULIA_HOME+"\"))")
+                # Add a private cache directory. PyCall needs a different
+                # configuration and so do any packages that depend on it.
+                self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
+                    "\"lib\", \"pyjulia%s-v$(VERSION.major).$(VERSION.minor)\"))" % sys.version_info[0])
+                # If PyCall.ji does not exist, create an empty file to force
+                # recompilation
+                self._call(u"""
+                    isdir(Base.LOAD_CACHE_PATH[1]) ||
+                        mkpath(Base.LOAD_CACHE_PATH[1])
+                    depsfile = joinpath(Base.LOAD_CACHE_PATH[1],"PyCall.ji")
+                    isfile(depsfile) || touch(depsfile)
+                """)
+
             self._call(u"using PyCall")
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject and the convert function. Since these will be
