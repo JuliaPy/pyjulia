@@ -263,7 +263,7 @@ class Julia(object):
                         Expr(:toplevel,
                          :(using Compat),
                          :(Main.Base.include($PyCall_depsfile)),
-                         :(println(python))))
+                         :(println(pyprogramname))))
                  else
                     println("nowhere")
                  end
