@@ -21,6 +21,7 @@ import os
 import sys
 import keyword
 import subprocess
+import time
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -199,7 +200,7 @@ def determine_if_statically_linked():
     if not sys.platform.startswith('linux'):
         return False
     lddoutput = subprocess.check_output(["ldd",sys.executable])
-    return not ("libpython" in lddoutput)
+    return not (b"libpython" in lddoutput)
 
 
 _julia_runtime = [False]

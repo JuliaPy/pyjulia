@@ -9,8 +9,8 @@ elif sys.platform.startswith('win32'):
     sh_ext = ".dll"
 else:
     sh_ext = ".so"
-libjulia = ctypes.CDLL(os.environ["PYCALL_LIBJULIA_PATH"] + "/lib" +
-    os.environ["PYCALL_JULIA_FLAVOR"] + sh_ext, ctypes.RTLD_GLOBAL)
+libjulia_path = os.environ["PYCALL_LIBJULIA_PATH"] + "/lib" + os.environ["PYCALL_JULIA_FLAVOR"] + sh_ext
+libjulia = ctypes.CDLL(libjulia_path, ctypes.RTLD_GLOBAL)
 os.environ["JULIA_HOME"] = os.environ["PYCALL_JULIA_HOME"]
 
 # Set up the calls from libjulia we'll use
@@ -33,13 +33,14 @@ libjulia.jl_eval_string.restype = None
 
 # Ok, go
 argc = c_int(len(sys.argv)-1)
-argv = (c_char_p * (len(sys.argv)-1))()
+argv = (c_char_p * (len(sys.argv)))()
 if sys.version_info[0] < 3:
     argv_strings = sys.argv
 else:
     argv_strings = [str.encode('utf-8') for str in sys.argv]
-argv[1:] = argv_strings[2:]
+argv[1:-1] = argv_strings[2:]
 argv[0] = argv_strings[0]
+argv[-1] = None
 argv2 = (POINTER(c_char_p) * 1)()
 argv2[0] = ctypes.cast(ctypes.addressof(argv),POINTER(c_char_p))
 libjulia.jl_parse_opts(byref(argc),argv2)
@@ -60,7 +61,11 @@ libjulia.jl_eval_string(b"""
         target = Base.LOAD_CACHE_PATH[2]
         targetpath = joinpath(target, basename(outputfile))
         if is_windows()
-            cp(outputfile, targetpath)
+            try
+                cp(outputfile, targetpath; remove_destination = true)
+            catch e
+                ccall(:jl_, Void, (Any,), e)
+            end
         else
             mv(outputfile, targetpath; remove_destination = true)
             symlink(targetpath, outputfile)
