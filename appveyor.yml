@@ -24,13 +24,27 @@ environment:
   - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
     PYTHONDIR: "C:\\Python27"
 
-  # 32 julia-0.4 Python-35
+  # 64 julia-0.4 Python-35
   - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
 
+  # 64 julia-0.5 Python-35
+  - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
+    PYTHONDIR: "C:\\Python35-x64"
+
+  # 64 julia-0.5 Cross Version
+  - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
+    PYTHONDIR: "C:\\Python35-x64"
+    CROSS_VERSION_PATH: "C:\\Python27-x64"
+
+  # 32 julia 0.5 Cross Version 
+  - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
+    PYTHONDIR: "C:\\Python35"
+    CROSS_VERSION_PATH: "C:\\Python27"
+
 branches:
   only:
-    - clean-julia-0.4
+    - master
 
 notifications:
   - provider: Email
@@ -39,8 +53,11 @@ notifications:
     on_build_status_changed: false
 
 install:
-  - cd C:\MinGW\bin
-  - dir
+# If there's a newer build queued for the same PR, cancel this one
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+        throw "There are newer queued builds for this pull request, failing early." }
 # Download most recent Julia Windows binary
   - ps: (new-object net.webclient).DownloadFile(
         $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
@@ -52,11 +69,12 @@ build_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;%PATH%"
   # - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.init(); Pkg.resolve()"
   # - C:\projects\julia\bin\julia -e "using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module"
-  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\");"
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.checkout(\"PyCall\"); Pkg.build(\"PyCall\")"
 
 test_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
   - python --version
   - dir
+  - ps: if (Test-Path Env:\CROSS_VERSION_PATH) { Invoke-Expression "$env:CROSS_VERSION_PATH -m unittest discover" }
   # - python -c "import julia; julia.Julia(debug=True)"
   - python -m unittest discover
