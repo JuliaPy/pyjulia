@@ -1,20 +1,63 @@
-language: python
-python:
-    - 2.7
-    - 3.4
-compiler:
-  - clang
+matrix:
+  # Python environment is not functional on OS X
+  include:
+      - language: python
+        python: 2.7
+        env: JULIA_VERSION=juliareleases
+        os: linux
+      - language: python
+        python: 2.7
+        env: JULIA_VERSION=julianightlies
+        os: linux
+      - language: python
+        python: 3.4
+        env: JULIA_VERSION=juliareleases
+        os: linux
+      - language: python
+        python: 3.4
+        env: JULIA_VERSION=julianightlies
+        os: linux
+      - language: python
+        python: 3.4
+        env:
+          - JULIA_VERSION=julianightlies
+          - CROSS_VERSION=1
+        os: linux
+      - language: generic
+        env:
+          - PYTHON_VERSION=py2
+          - JULIA_VERSION=julianightlies
+        os: osx
+      - language: generic
+        env:
+          - PYTHON_VERSION=py2
+          - JULIA_VERSION=juliareleases
+        os: osx
+      - language: generic
+        env:
+          - PYTHON_VERSION=py3
+          - JULIA_VERSION=julianightlies
+        os: osx
+      - language: generic
+        env:
+          - PYTHON_VERSION=py3
+          - JULIA_VERSION=juliareleases
+        os: osx
 notifications:
   email: false
-before_install:
-  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
-  - sudo add-apt-repository ppa:staticfloat/juliareleases -y
-  - sudo apt-get update -qq -y
-  - sudo apt-get install libpcre3-dev julia -y
-  - sudo apt-get install python-numpy python3-numpy -y
-  - sudo dpkg -L julia
+before_script:
+  - echo ./ci/install-julia.sh "$JULIA_VERSION"
+  - ./ci/install-julia.sh "$JULIA_VERSION"
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -qq -y; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install libpcre3-dev -y; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python-numpy python3-numpy -y; fi
+  - if [  "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON_VERSION" = "py3" ]; then brew install python3; fi
+  - if [  "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON_VERSION" = "py2" ]; then brew install python; fi
 script:
   - julia -e 'Pkg.add("PyCall")'
+  - julia -e 'Pkg.checkout("PyCall"); Pkg.build("PyCall")'
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
-  - julia -e 'using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module'
+  - /usr/bin/python --version
+  - python --version
+  - if [ "$CROSS_VERSION" = "1" ]; then /usr/bin/python -m unittest discover; fi
   - python -m unittest discover
