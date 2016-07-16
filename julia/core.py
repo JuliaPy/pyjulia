@@ -240,6 +240,9 @@ class Julia(object):
                 libjulia_dir = os.path.dirname(libjulia_path)
                 sysimg_relpath = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), "sys.ji")
                 sysimg_relpath_alt = os.path.join(os.path.relpath(libjulia_dir, JULIA_HOME), 'julia',"sys.ji")
+                if os.name == "nt":
+                    # on windows sys.ji seems to go in Julia\lib\julia\sys.ji
+                    sysimg_relpath_alt = "..\lib\julia\sys.ji"
             except:
                 raise JuliaError('error starting up the Julia process')
 
@@ -286,7 +289,11 @@ class Julia(object):
                     "Install PyCall by running the following line:\n"
                     """\tjulia -e 'Pkg.add("PyCall"); Pkg.update()'\n""")
             try:
-                self.call('pyinitialize(C_NULL)')
+                if os.name == "nt":
+                    # on windows C_NULL doesn't mean anything
+                    self.call('pyinitialize()')
+                else:
+                    self.call('pyinitialize(C_NULL)')
             except:
                 raise JuliaError("Failed to initialize PyCall package")
 
