@@ -1,0 +1,2 @@
+This directory contains a python script that pretends to be the julia executable
+and is used as such to allow julia precompilation to happen in the same environment.

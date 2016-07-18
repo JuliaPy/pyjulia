@@ -1,0 +1,4 @@
+#!/bin/sh
+export PYCALL_JULIA_FLAVOR=julia-debug
+SCRIPTDIR=`cd "$(dirname "$0")" && pwd`
+exec ${PYCALL_PYTHON_EXE:-python} "$SCRIPTDIR/julia.py" -- "$@"
