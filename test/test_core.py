@@ -44,9 +44,9 @@ class JuliaTest(unittest.TestCase):
             return a + b
         self.assertEqual([1, 4, 9],
                          list(julia.map(lambda x: x * x, [1, 2, 3])))
-        self.assertEqual([11, 11, 11],
+        self.assertTrue(all(x == y for x, y in zip([11, 11, 11],
                          julia.map(lambda x: x + 1,
-                                   array.array('I', [10, 10, 10])))
+                                   array.array('I', [10, 10, 10])))))
         self.assertEqual(6, julia.foldr(add, 0, [1, 2, 3]))
 
     def test_call_python_with_julia_args(self):
