@@ -31,7 +31,7 @@ add it.
 Then finally you have to install pyjulia. You may clone it directly to your home directory.
 
 ```
-git clone https://github.com/JuliaLng/pyjulia
+git clone https://github.com/JuliaLang/pyjulia
 
 ```
 then inside the pyjulia directory you need to run the python setup file
