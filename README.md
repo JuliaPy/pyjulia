@@ -1,7 +1,7 @@
 PyJulia
 =======
 
-[![Build Status](https://travis-ci.org/JuliaInterop/pyjulia.svg?branch=master)](https://travis-ci.org/JuliaInterop/pyjulia)
+[![Build Status](https://travis-ci.org/JuliaPy/pyjulia.svg?branch=master)](https://travis-ci.org/JuliaPy/pyjulia)
 [![Build status](https://ci.appveyor.com/api/projects/status/kjd0iex9gh0c3yqa?svg=true)](https://ci.appveyor.com/project/Keno/pyjulia)
 
 Experimenting with developing a better interface to julia that works with Python 2 & 3.
@@ -31,7 +31,7 @@ add it.
 Then finally you have to install pyjulia. You may clone it directly to your home directory.
 
 ```
-git clone https://github.com/JuliaInterop/pyjulia
+git clone https://github.com/JuliaPy/pyjulia
 
 ```
 then inside the pyjulia directory you need to run the python setup file
