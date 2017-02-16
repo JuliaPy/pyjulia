@@ -52,7 +52,7 @@ To call Julia functions from python, first import the library
 import julia
 ```
 
-then create a Julia object that makes a bridge to the Julia interpreter
+then create a Julia object that makes a bridge to the Julia interpreter (assuming that `julia` is in your `PATH`)
 
 ```python
 j = julia.Julia()
