@@ -274,6 +274,13 @@ class Julia(object):
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
+                
+            # fixes a specific issue with python 2.7.13 
+            # ctypes.windll.LoadLibrary refuses unicode argument
+            # http://bugs.python.org/issue29294
+            if sys.version_info >= (2,7,13) and sys.version_info < (2,7,14):                   
+                libjulia_path = libjulia_path.encode("ascii")
+            
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
             if not jl_init_path:
                 if jl_runtime_path:
