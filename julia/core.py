@@ -278,7 +278,7 @@ class Julia(object):
             # fixes a specific issue with python 2.7.13 
             # ctypes.windll.LoadLibrary refuses unicode argument
             # http://bugs.python.org/issue29294
-            if sys.version_info >= (2,7,13) and sys.version_info <= (2,7,14):                   
+            if sys.version_info >= (2,7,13) and sys.version_info < (2,7,14):                   
                 libjulia_path = libjulia_path.encode("ascii")
             
             self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
