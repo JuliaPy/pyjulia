@@ -342,7 +342,7 @@ class Julia(object):
                 # one must remove the original cache directory to ensure none of the caches there are used
                 # uncomment the following line to attempt to use original cache
                 # be warned: incomapitble cache files will cause a segfault.
-                self._call(u"for i in 1:length(Base.LOAD_CACHE_PATH) pop!(Base.LOAD_CACHE_PATH) end")
+                self._call(u"empty!(Base.LOAD_CACHE_PATH)")
                 self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
                     "\"lib\", \"pyjulia%s-v$(VERSION.major).$(VERSION.minor)\"))" % sys.version_info[0])
                 # If PyCall.ji does not exist, create an empty file to force
