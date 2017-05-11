@@ -5,7 +5,7 @@
 from setuptools import setup
 
 setup(name='julia',
-      version='0.1.1',
+      version='0.1.2',
       description=__doc__,
       author='The Julia and IPython development teams.',
       author_email='julia@julialang.org',
@@ -29,6 +29,7 @@ setup(name='julia',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
       ],
       url='http://julialang.org',
       packages=['julia'],
