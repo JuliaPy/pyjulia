@@ -3,10 +3,21 @@
 """
 
 from setuptools import setup
+import sys
+
+doc = __doc__
+try:
+    import pypandoc
+    with open('README.md') as f:
+        desc = f.read()
+    print('will convert description from markdown to rst.')
+    doc = pypandoc.convert(desc, 'rst', format='markdown')
+except Exception:
+    print('Unable to convert markdown to rst. Please install `pypandoc` and `pandoc` to use markdown long description.')
 
 setup(name='julia',
-      version='0.1.2',
-      description=__doc__,
+      version='0.1.3',
+      description=doc,
       author='The Julia and IPython development teams.',
       author_email='julia@julialang.org',
       license='MIT',
