@@ -45,7 +45,7 @@ git clone https://github.com/JuliaPy/pyjulia
 then inside the pyjulia directory you need to run the python setup file
 
 ```
-[sudo] pip install install [-e] .
+[sudo] pip install [-e] .
 ```
 
 The `-e` flag makes a development install meaning that any change to pyjulia
