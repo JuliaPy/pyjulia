@@ -257,7 +257,7 @@ class Julia(object):
                 [runtime, "-e",
                  """
                  println(JULIA_HOME)
-                 println(Libdl.dlpath(string("lib",Base.julia_exename())))
+                 println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
                  PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
                  if isfile(PyCall_depsfile)
                     eval(Module(:__anon__),
