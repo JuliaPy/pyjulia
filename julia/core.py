@@ -325,6 +325,9 @@ class Julia(object):
         self.api.jl_printf.restype = ctypes.c_int
         self.api.jl_exception_clear()
 
+        # We use show() for displaying uncaught exceptions.
+        self.api.show = self._call("Base.show")
+
         if init_julia:
             use_separate_cache = exe_differs or determine_if_statically_linked()
             if use_separate_cache:
