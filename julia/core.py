@@ -320,8 +320,6 @@ class Julia(object):
         self.api.jl_stderr_obj.restype = void_p
         self.api.jl_stderr_stream.argtypes = []
         self.api.jl_stderr_stream.restype = void_p
-        self.api.jl_show.restype = None
-        self.api.jl_show.argtypes = [void_p, void_p]
         self.api.jl_printf.restype = ctypes.c_int
         self.api.jl_exception_clear()
 
@@ -364,6 +362,9 @@ class Julia(object):
         # they can survive across reinitializations.
         self.api.PyObject = self._call("PyCall.PyObject")
         self.api.convert = self._call("convert")
+
+        # We use show() for displaying uncaught exceptions.
+        self.api.show = self._call("Base.show")
 
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
@@ -410,8 +411,8 @@ class Julia(object):
         self._debug("Retrieving exception infos...")
         stderr = self.api.jl_stderr_obj()
         self._debug("libjulia stderr = " + str(stderr))
-        self.api.jl_show(stderr, exoc)
-        self._debug("jl_show called ...")
+        self.api.jl_call2(self.api.show, stderr, exoc)
+        self._debug("show called ...")
         # self.api.jl_printf(self.api.jl_stderr_stream(), "\n");
 
         exception_type = self.api.jl_typeof_str(exoc).decode('utf-8')
