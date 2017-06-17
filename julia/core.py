@@ -257,7 +257,7 @@ class Julia(object):
                 [runtime, "-e",
                  """
                  println(JULIA_HOME)
-                 println(Libdl.dlpath(string("lib",Base.julia_exename())))
+                 println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
                  PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
                  if isfile(PyCall_depsfile)
                     eval(Module(:__anon__),
@@ -322,6 +322,9 @@ class Julia(object):
         self.api.jl_stderr_stream.restype = void_p
         self.api.jl_printf.restype = ctypes.c_int
         self.api.jl_exception_clear()
+
+        # We use show() for displaying uncaught exceptions.
+        self.api.show = self._call("Base.show")
 
         if init_julia:
             use_separate_cache = exe_differs or determine_if_statically_linked()
