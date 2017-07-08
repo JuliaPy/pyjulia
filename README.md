@@ -40,6 +40,15 @@ then inside the pyjulia directory you need to run the python setup file
 sudo python setup.py install
 ```
 
+And to install globally, use
+
+```
+pyjulia git/master
+❯ pip install .
+
+```
+
+
 `pyjulia` is known to work with `PyCall.jl` ≥ `v0.7.2`.
 
 If you run into problems using `pyjulia`, first check the version of `PyCall.jl` you have installed by running `Pkg.installed("PyCall")`.
