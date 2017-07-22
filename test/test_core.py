@@ -33,17 +33,17 @@ class JuliaTest(unittest.TestCase):
 
     def test_call_julia_function_with_python_args(self):
         self.assertEqual(['A', 'B', 'C'],
-                         julia.map(julia.uppercase,
-                                   array.array('u', [u'a', u'b', u'c'])))
+                         list(julia.map(julia.uppercase,
+                                        array.array('u', [u'a', u'b', u'c']))))
         self.assertEqual([1.0, 2.0, 3.0],
-                         julia.map(julia.floor, [1.1, 2.2, 3.3]))
+                         list(julia.map(julia.floor, [1.1, 2.2, 3.3])))
         self.assertEqual(1.0, julia.cos(0))
 
     def test_call_julia_with_python_callable(self):
         def add(a, b):
             return a + b
-        self.assertEqual([1, 4, 9],
-                         list(julia.map(lambda x: x * x, [1, 2, 3])))
+        self.assertSequenceEqual([1, 4, 9],
+                                 list(julia.map(lambda x: x * x, [1, 2, 3])))
         self.assertTrue(all(x == y for x, y in zip([11, 11, 11],
                          julia.map(lambda x: x + 1,
                                    array.array('I', [10, 10, 10])))))
