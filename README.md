@@ -40,9 +40,11 @@ then inside the pyjulia directory you need to run the python setup file
 sudo python setup.py install
 ```
 
-`pyjulia` is known to work with `PyCall.jl` ≥ `v0.7.2`.
+If you run into problems using `pyjulia`: 
 
-If you run into problems using `pyjulia`, first check the version of `PyCall.jl` you have installed by running `Pkg.installed("PyCall")`.
+* check the version of `PyCall.jl` you have installed by running `Pkg.installed("PyCall")`. `pyjulia` is known to work with `PyCall.jl` ≥ `v0.7.2`.
+* check which version of python you are using by calling `which python` (anaconda or miniconda versions should work; a local version may not)
+* at the shell, `export PYTHON=/path/to/python`. Then start Julia and run `Pkg.build("PyCall")` and `using PyCall`.
 
 Usage
 -----
