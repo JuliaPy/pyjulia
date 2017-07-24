@@ -287,6 +287,12 @@ class Julia(object):
                     jl_init_path = os.path.dirname(os.path.realpath(jl_runtime_path)).encode("utf-8")
                 else:
                     jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
+
+            if not hasattr(self.api, "jl_init"):
+                if hasattr(self.api, "jl_init__threading"):
+                    self.api.jl_init = self.api.jl_init__threading
+                else:
+                    raise ImportError("No libjulia entrypoint found! (tried jl_init and jl_init__threading)")
             self.api.jl_init.argtypes = [char_p]
             self._debug("calling jl_init(%s)" % jl_init_path)
             self.api.jl_init(jl_init_path)
