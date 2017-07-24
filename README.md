@@ -44,7 +44,7 @@ If you run into problems using `pyjulia`:
 
 * check the version of `PyCall.jl` you have installed by running `Pkg.installed("PyCall")`. `pyjulia` is known to work with `PyCall.jl` ≥ `v0.7.2`.
 * check which version of python you are using by calling `which python` (anaconda or miniconda versions should work; a local version may not)
-* at the shell, `export PYTHON=/path/to/python`. Then start Julia and run `Pkg.build("PyCall")` and `using PyCall`.
+* at the shell, ``export PYTHON=`which python` ``. Then start Julia and run `Pkg.build("PyCall")` and `using PyCall`.
 
 Usage
 -----
