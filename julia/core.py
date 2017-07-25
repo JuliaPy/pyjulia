@@ -258,6 +258,7 @@ class Julia(object):
                  """
                  println(JULIA_HOME)
                  println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
+                 println(unsafe_string(Base.JLOptions().image_file))
                  PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
                  if isfile(PyCall_depsfile)
                     eval(Module(:__anon__),
@@ -269,7 +270,7 @@ class Julia(object):
                     println("nowhere")
                  end
                  """])
-            JULIA_HOME, libjulia_path, depsjlexe = juliainfo.decode("utf-8").rstrip().split("\n")
+            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo.decode("utf-8").rstrip().split("\n")
             exe_differs = not depsjlexe == sys.executable
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
@@ -288,14 +289,21 @@ class Julia(object):
                 else:
                     jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
 
-            if not hasattr(self.api, "jl_init"):
-                if hasattr(self.api, "jl_init__threading"):
-                    self.api.jl_init = self.api.jl_init__threading
+            use_separate_cache = exe_differs or determine_if_statically_linked()
+            if use_separate_cache:
+                PYCALL_JULIA_HOME = os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)),"..","fake-julia").replace("\\","\\\\")
+                os.environ["JULIA_HOME"] = PYCALL_JULIA_HOME
+                jl_init_path = PYCALL_JULIA_HOME.encode("utf-8")
+
+            if not hasattr(self.api, "jl_init_with_image"):
+                if hasattr(self.api, "jl_init_with_image__threading"):
+                    self.api.jl_init_with_image = self.api.jl_init_with_image__threading
                 else:
-                    raise ImportError("No libjulia entrypoint found! (tried jl_init and jl_init__threading)")
-            self.api.jl_init.argtypes = [char_p]
-            self._debug("calling jl_init(%s)" % jl_init_path)
-            self.api.jl_init(jl_init_path)
+                    raise ImportError("No libjulia entrypoint found! (tried jl_init_with_image and jl_init_with_image__threading)")
+            self.api.jl_init_with_image.argtypes = [char_p, char_p]
+            self._debug("calling jl_init_with_image(%s, %s)" % (jl_init_path, image_file))
+            self.api.jl_init_with_image(jl_init_path, image_file.encode("utf-8"))
             self._debug("seems to work...")
 
         else:
@@ -333,7 +341,6 @@ class Julia(object):
         self.api.show = self._call("Base.show")
 
         if init_julia:
-            use_separate_cache = exe_differs or determine_if_statically_linked()
             if use_separate_cache:
                 # First check that this is supported
                 self._call("""
@@ -346,11 +353,9 @@ class Julia(object):
                 """)
                 # Intercept precompilation
                 os.environ["PYCALL_PYTHON_EXE"] = sys.executable
-                PYCALL_JULIA_HOME = os.path.join(
-                    os.path.dirname(os.path.realpath(__file__)),"..","fake-julia").replace("\\","\\\\")
                 os.environ["PYCALL_JULIA_HOME"] = PYCALL_JULIA_HOME
+                os.environ["PYJULIA_IMAGE_FILE"] = image_file
                 os.environ["PYCALL_LIBJULIA_PATH"] = os.path.dirname(libjulia_path)
-                self._call(u"eval(Base,:(JULIA_HOME=\""+PYCALL_JULIA_HOME+"\"))")
                 # Add a private cache directory. PyCall needs a different
                 # configuration and so do any packages that depend on it.
                 self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +

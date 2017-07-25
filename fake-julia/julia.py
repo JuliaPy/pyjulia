@@ -13,17 +13,17 @@ libjulia_path = os.environ["PYCALL_LIBJULIA_PATH"] + "/lib" + os.environ["PYCALL
 libjulia = ctypes.CDLL(libjulia_path, ctypes.RTLD_GLOBAL)
 os.environ["JULIA_HOME"] = os.environ["PYCALL_JULIA_HOME"]
 
-if not hasattr(libjulia, "jl_init"):
-    if hasattr(libjulia, "jl_init__threading"):
-        libjulia.jl_init = libjulia.jl_init__threading
+if not hasattr(libjulia, "jl_init_with_image"):
+    if hasattr(libjulia, "jl_init_with_image__threading"):
+        libjulia.jl_init_with_image = libjulia.jl_init_with_image__threading
     else:
         raise ImportError("No libjulia entrypoint found! (tried jl_init and jl_init__threading)")
 
 # Set up the calls from libjulia we'll use
 libjulia.jl_parse_opts.argtypes = [POINTER(c_int), POINTER(POINTER(c_char_p))]
 libjulia.jl_parse_opts.restype = None
-libjulia.jl_init.argtypes = [c_void_p]
-libjulia.jl_init.restype = None
+libjulia.jl_init_with_image.argtypes = [c_char_p, c_char_p]
+libjulia.jl_init_with_image.restype = None
 libjulia.jl_get_global.argtypes = [c_void_p,c_void_p]
 libjulia.jl_get_global.restype = c_void_p
 libjulia.jl_symbol.argtypes = [c_char_p]
@@ -50,8 +50,11 @@ argv[-1] = None
 argv2 = (POINTER(c_char_p) * 1)()
 argv2[0] = ctypes.cast(ctypes.addressof(argv),POINTER(c_char_p))
 libjulia.jl_parse_opts(byref(argc),argv2)
-libjulia.jl_init(0)
+libjulia.jl_init_with_image(os.environ["PYCALL_JULIA_HOME"].encode("utf-8"),
+                            os.environ["PYJULIA_IMAGE_FILE"].encode("utf-8"))
 libjulia.jl_set_ARGS(argc,argv2[0])
+#libjulia.jl_eval_string(u"eval(Base,:(JULIA_HOME=\""+os.environ["PYCALL_JULIA_HOME"]+"\"))")
+#libjulia.jl_eval_string(u"eval(Base,:(julia_cmd() = julia_cmd(joinpath(JULIA_HOME, julia_exename()))))")
 libjulia.jl_eval_string(b"Base._start()")
 libjulia.jl_atexit_hook(0)
 
