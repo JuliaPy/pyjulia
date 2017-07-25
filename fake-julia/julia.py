@@ -13,6 +13,12 @@ libjulia_path = os.environ["PYCALL_LIBJULIA_PATH"] + "/lib" + os.environ["PYCALL
 libjulia = ctypes.CDLL(libjulia_path, ctypes.RTLD_GLOBAL)
 os.environ["JULIA_HOME"] = os.environ["PYCALL_JULIA_HOME"]
 
+if not hasattr(libjulia, "jl_init"):
+    if hasattr(libjulia, "jl_init__threading"):
+        libjulia.jl_init = libjulia.jl_init__threading
+    else:
+        raise ImportError("No libjulia entrypoint found! (tried jl_init and jl_init__threading)")
+
 # Set up the calls from libjulia we'll use
 libjulia.jl_parse_opts.argtypes = [POINTER(c_int), POINTER(POINTER(c_char_p))]
 libjulia.jl_parse_opts.restype = None
@@ -46,11 +52,7 @@ argv2[0] = ctypes.cast(ctypes.addressof(argv),POINTER(c_char_p))
 libjulia.jl_parse_opts(byref(argc),argv2)
 libjulia.jl_init(0)
 libjulia.jl_set_ARGS(argc,argv2[0])
-jl_base_module = c_void_p.in_dll(libjulia, "jl_base_module")
-_start = libjulia.jl_get_global(jl_base_module, libjulia.jl_symbol(b"_start"))
-args = (c_void_p * 1)()
-args[0] = _start
-libjulia.jl_apply_generic(args, 1)
+libjulia.jl_eval_string(b"Base._start()")
 libjulia.jl_atexit_hook(0)
 
 # As an optimization, share precompiled packages with the main cache directory
