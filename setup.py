@@ -32,4 +32,5 @@ setup(name='julia',
       ],
       url='http://julialang.org',
       packages=['julia'],
+      package_data={'julia': ['fake-julia/*']}
      )
