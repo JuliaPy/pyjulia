@@ -13,31 +13,47 @@ environment:
   #   PYTHON: "C:\\Python27\\python.exe"
 
   # 64 julia-0.5 Python-27
+  - JULIAVERSION: "julialang/bin/winnt/x64/0.5/julia-0.5-latest-win64.exe"
+    PYTHONDIR: "C:\\Python27-x64"
+
+  # 32 julia-0.5 Python-27
+  - JULIAVERSION: "julialang/bin/winnt/x86/0.5/julia-0.5-latest-win32.exe"
+    PYTHONDIR: "C:\\Python27"
+
+  # 64 julia-0.5 Python-35
+  - JULIAVERSION: "julialang/bin/winnt/x64/0.5/julia-0.5-latest-win64.exe"
+    PYTHONDIR: "C:\\Python35-x64"
+  
+  # 64 julia-0.6 Python-27
+  - JULIAVERSION: "julialang/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
+    PYTHONDIR: "C:\\Python27-x64"
+
+  # 32 julia-0.6 Python-27
+  - JULIAVERSION: "julialang/bin/winnt/x86/0.6/julia-0.6-latest-win32.exe"
+    PYTHONDIR: "C:\\Python27"
+
+  # 64 julia-0.6 Python-35
+  - JULIAVERSION: "julialang/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
+    PYTHONDIR: "C:\\Python35-x64"
+   
+  # 32 julia-latest Python-27
+  - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
+    PYTHONDIR: "C:\\Python27"
+
+  # 64 julia-latest Python-27
   - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
     PYTHONDIR: "C:\\Python27-x64"
 
-  # 64 julia-0.4 Python-27
-  # - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
-  #  PYTHONDIR: "C:\\Python27-x64"
-
-  # 32 julia-0.4 Python-27
-  # - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
-  #   PYTHONDIR: "C:\\Python27"
-
-  # 64 julia-0.4 Python-35
-  - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
-    PYTHONDIR: "C:\\Python35-x64"
-
-  # 64 julia-0.5 Python-35
+  # 64 julia latest Python-35
   - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
 
-  # 64 julia-0.5 Cross Version
+  # 64 julia latest Cross Version
   - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
     CROSS_VERSION_PATH: "C:\\Python27-x64"
 
-  # 32 julia 0.5 Cross Version 
+  # 32 julia latest Cross Version 
   - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
     PYTHONDIR: "C:\\Python35"
     CROSS_VERSION_PATH: "C:\\Python27"
