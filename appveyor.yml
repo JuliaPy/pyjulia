@@ -37,7 +37,7 @@ environment:
     PYTHONDIR: "C:\\Python35-x64"
    
   # 32 julia-latest Python-27
-  - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe""
+  - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
     PYTHONDIR: "C:\\Python27"
 
   # 64 julia-latest Python-27
