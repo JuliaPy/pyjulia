@@ -83,13 +83,13 @@ install:
 
 build_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;%PATH%"
+  - "\"C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\editbin.exe\" %PYTHONDIR%\\python.exe /STACK:8000000"
   # - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.init(); Pkg.resolve()"
   # - C:\projects\julia\bin\julia -e "using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module"
   - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.checkout(\"PyCall\"); Pkg.build(\"PyCall\")"
 
 test_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
-  - "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\editbin.exe %PYTHONDIR%\\python.exe /STACK:8000000"
   - python --version
   - dir
   - ps: if (Test-Path Env:\CROSS_VERSION_PATH) { Invoke-Expression "$env:CROSS_VERSION_PATH -m unittest discover" }
