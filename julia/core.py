@@ -181,8 +181,6 @@ def module_functions(julia, module):
                 continue
             if name.startswith("_"):
                 continue
-            if not isafunction(julia, name):
-                continue
             attr_name = name
             if name.endswith("!"):
                 attr_name = name.replace("!", "_b")
