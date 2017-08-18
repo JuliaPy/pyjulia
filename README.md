@@ -28,7 +28,15 @@ Your python installation must be able to call Julia.  If your installer
 does not add the Julia binary directory to your `PATH`, you will have to
 add it.
 
-Then finally you have to install pyjulia. You may clone it directly to your home directory.
+Then finally you have to install pyjulia. 
+
+To get released versions you can use:
+
+```
+pip install pyjulia
+```
+
+You may clone it directly to your home directory.
 
 ```
 git clone https://github.com/JuliaPy/pyjulia
@@ -37,8 +45,12 @@ git clone https://github.com/JuliaPy/pyjulia
 then inside the pyjulia directory you need to run the python setup file
 
 ```
-sudo python setup.py install
+[sudo] pip install [-e] .
 ```
+
+The `-e` flag makes a development install meaning that any change to pyjulia
+source tree will take effect at next python interpreter restart without having
+to reissue an install command.
 
 `pyjulia` is known to work with `PyCall.jl` ≥ `v0.7.2`.
 
