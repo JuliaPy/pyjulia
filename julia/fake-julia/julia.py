@@ -10,7 +10,7 @@ elif sys.platform.startswith('win32'):
 else:
     sh_ext = ".so"
 libjulia_path = os.environ["PYCALL_LIBJULIA_PATH"] + "/lib" + os.environ["PYCALL_JULIA_FLAVOR"] + sh_ext
-libjulia = ctypes.CDLL(libjulia_path, ctypes.RTLD_GLOBAL)
+libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
 os.environ["JULIA_HOME"] = os.environ["PYCALL_JULIA_HOME"]
 
 if not hasattr(libjulia, "jl_init_with_image"):
