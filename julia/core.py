@@ -356,6 +356,10 @@ class Julia(object):
                 os.environ["PYCALL_LIBJULIA_PATH"] = os.path.dirname(libjulia_path)
                 # Add a private cache directory. PyCall needs a different
                 # configuration and so do any packages that depend on it.
+                # one must remove the original cache directory to ensure none of the caches there are used
+                # uncomment the following line to attempt to use original cache
+                # be warned: incomapitble cache files will cause a segfault.
+                self._call(u"empty!(Base.LOAD_CACHE_PATH)")
                 self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
                     "\"lib\", \"pyjulia%s-v$(VERSION.major).$(VERSION.minor)\"))" % sys.version_info[0])
                 # If PyCall.ji does not exist, create an empty file to force
