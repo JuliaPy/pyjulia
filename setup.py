@@ -16,7 +16,7 @@ except Exception:
     print('Unable to convert markdown to rst. Please install `pypandoc` and `pandoc` to use markdown long description.')
 
 setup(name='julia',
-      version='0.1.4',
+      version='0.1.5',
       description=doc,
       author='The Julia and IPython development teams.',
       author_email='julia@julialang.org',
