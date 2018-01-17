@@ -33,7 +33,7 @@ Then finally you have to install pyjulia.
 To get released versions you can use:
 
 ```
-pip install pyjulia
+pip install julia
 ```
 
 You may clone it directly to your home directory.
