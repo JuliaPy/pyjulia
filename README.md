@@ -4,7 +4,7 @@ PyJulia
 [![Build Status](https://travis-ci.org/JuliaPy/pyjulia.svg?branch=master)](https://travis-ci.org/JuliaPy/pyjulia)
 [![Build status](https://ci.appveyor.com/api/projects/status/kjd0iex9gh0c3yqa?svg=true)](https://ci.appveyor.com/project/Keno/pyjulia)
 
-Experimenting with developing a better interface to julia that works with Python 2 & 3.
+Experimenting with developing a better interface to [Julia language](https://julialang.org/) that works with [Python](https://www.python.org/) 2 & 3.
 
 to run the tests, execute from the toplevel directory
 
