@@ -9,7 +9,8 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp) {
 #else
 	SetEnvironmentVariableW(L"PYCALL_JULIA_FLAVOR",L"julia");
 #endif
-	SetEnvironmentVariableW(L"JULIA_HOME",_wgetenv(L"PYCALL_JULIA_HOME"));
+	SetEnvironmentVariableW(L"JULIA_HOME",_wgetenv(L"PYCALL_JULIA_HOME"));  // TODO: this can be removed when dropping Julia v0.6
+	SetEnvironmentVariableW(L"JULIA_BINDIR",_wgetenv(L"PYCALL_JULIA_HOME"));
 	wchar_t *python_process = _wgetenv(L"PYCALL_PYTHON_EXE");
 	if (python_process == NULL)
 		python_process = L"python";

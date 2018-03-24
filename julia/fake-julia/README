@@ -23,7 +23,7 @@ Since "normal" precompilation launches a new `julia` process, this process would
 (`libpython`) version of the PyCall cache file.    So, we have to force precompilation to launch
 a `python` process, not a `julia` process, so that PyCall is compiled correctly for running inside `python`.
 
-That is what `fake-julia` does.   By changing the `JULIA_HOME` environment variable, we trick Julia
+That is what `fake-julia` does.   By changing the `JULIA_HOME` (v0.6) or `JULIA_BINDIR` (v0.7+) environment variable, we trick Julia
 into launching `fake-julia/julia` instead of the "real" `julia` process during precompilation.  `fake-julia/julia`
 is actually a Python script, but it links `libjulia` and uses `libjulia` to process the command-line arguments,
 so it mimics the behavior of the `julia` process.  Since `fake-julia/julia` is running from within the `python`
