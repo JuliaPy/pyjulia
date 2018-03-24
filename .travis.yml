@@ -45,6 +45,15 @@ matrix:
         os: osx
   allow_failures:
       - env: JULIA_VERSION=julianightlies
+      - env:
+          - JULIA_VERSION=julianightlies
+          - CROSS_VERSION=1
+      - env:
+          - PYTHON_VERSION=py2
+          - JULIA_VERSION=julianightlies
+      - env:
+          - PYTHON_VERSION=py3
+          - JULIA_VERSION=julianightlies
 notifications:
   email: false
 before_script:
