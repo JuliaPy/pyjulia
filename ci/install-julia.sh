@@ -21,7 +21,7 @@ case "$JULIAVERSION" in
     ;;
   juliareleases)
     BASEURL="https://julialang-s3.julialang.org/bin"
-    JULIANAME="julia-$VERSION"
+    JULIANAME="$SHORTVERSION/julia-$VERSION"
     ;;
   *)
     echo "Unrecognized JULIAVERSION=$JULIAVERSION, exiting"
@@ -59,8 +59,8 @@ case $(uname) in
         exit 1
         ;;
     esac
-    echo "$BASEURL/linux/$ARCH/$SHORTVERSION/$JULIANAME-$SUFFIX.tar.gz"
-    curl -L "$BASEURL/linux/$ARCH/$SHORTVERSION/$JULIANAME-$SUFFIX.tar.gz" | tar -xz
+    echo "$BASEURL/linux/$ARCH/$JULIANAME-$SUFFIX.tar.gz"
+    curl -L "$BASEURL/linux/$ARCH/$JULIANAME-$SUFFIX.tar.gz" | tar -xz
     sudo ln -s $PWD/julia-*/bin/julia /usr/local/bin/julia
     ;;
   Darwin)
@@ -74,7 +74,7 @@ case $(uname) in
       echo "~/julia already exists, exiting"
       exit 1
     fi
-    curl -Lo julia.dmg "$BASEURL/mac/x64/$SHORTVERSION/$JULIANAME-mac64.dmg"
+    curl -Lo julia.dmg "$BASEURL/mac/x64/$JULIANAME-mac64.dmg"
     hdiutil mount -mountpoint /Volumes/Julia julia.dmg
     cp -Ra /Volumes/Julia/*.app/Contents/Resources/julia ~
     ln -s ~/julia/bin/julia /usr/local/bin/julia
