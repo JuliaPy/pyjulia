@@ -2,18 +2,6 @@ environment:
   # for more python versions have a look at
   # https://github.com/ogrisel/python-appveyor-demo/blob/master/appveyor.yml
   matrix:
-  # 64 julia-0.5 Python-27
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.5/julia-0.5-latest-win64.exe"
-    PYTHONDIR: "C:\\Python27-x64"
-
-  # 32 julia-0.5 Python-27
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.5/julia-0.5-latest-win32.exe"
-    PYTHONDIR: "C:\\Python27"
-
-  # 64 julia-0.5 Python-35
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.5/julia-0.5-latest-win64.exe"
-    PYTHONDIR: "C:\\Python35-x64"
-  
   # 64 julia-0.6 Python-27
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
     PYTHONDIR: "C:\\Python27-x64"
