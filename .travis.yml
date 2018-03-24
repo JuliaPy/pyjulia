@@ -43,6 +43,8 @@ matrix:
           - PYTHON_VERSION=py3
           - JULIA_VERSION=juliareleases
         os: osx
+ allow_failures:
+      - env: JULIA_VERSION=julianightlies
 notifications:
   email: false
 before_script:

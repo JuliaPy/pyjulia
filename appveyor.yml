@@ -36,6 +36,11 @@ environment:
     PYTHONDIR: "C:\\Python35"
     CROSS_VERSION_PATH: "C:\\Python27"
 
+matrix:
+ allow_failures:
+ - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
+- JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
+
 branches:
   only:
     - master
