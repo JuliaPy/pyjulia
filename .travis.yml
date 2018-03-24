@@ -72,3 +72,4 @@ script:
   - python --version
   - if [ "$CROSS_VERSION" = "1" ]; then /usr/bin/python -m unittest discover; fi
   - python -m unittest discover
+
