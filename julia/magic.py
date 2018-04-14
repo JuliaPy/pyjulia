@@ -60,7 +60,7 @@ class JuliaMagics(Magics):
         try:
             ans = self._julia.eval(src)
         except JuliaError as e:
-            print(e.message, file=sys.stderr)
+            print(e, file=sys.stderr)
             ans = None
 
         return ans
