@@ -420,11 +420,12 @@ class Julia(object):
             # self._debug("No Exception")
             self.api.jl_exception_clear()
             return
-        self._debug("Retrieving exception infos...")
-        stderr = self.api.jl_stderr_obj()
-        self._debug("libjulia stderr = " + str(stderr))
-        self.api.jl_call2(self.api.show, stderr, exoc)
-        self._debug("show called ...")
+        if self.is_debugging:
+            self._debug("Retrieving exception infos...")
+            stderr = self.api.jl_stderr_obj()
+            self._debug("libjulia stderr = " + str(stderr))
+            self.api.jl_call2(self.api.show, stderr, exoc)
+            self._debug("show called ...")
         # self.api.jl_printf(self.api.jl_stderr_stream(), "\n");
 
         exception_type = self.api.jl_typeof_str(exoc).decode('utf-8')
