@@ -11,7 +11,8 @@ else:
     sh_ext = ".so"
 libjulia_path = os.environ["PYCALL_LIBJULIA_PATH"] + "/lib" + os.environ["PYCALL_JULIA_FLAVOR"] + sh_ext
 libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
-os.environ["JULIA_HOME"] = os.environ["PYCALL_JULIA_HOME"]
+os.environ["JULIA_HOME"] = os.environ["PYCALL_JULIA_HOME"]  # TODO: this can be removed when dropping Julia v0.6
+os.environ["JULIA_BINDIR"] = os.environ["PYCALL_JULIA_HOME"]
 
 if not hasattr(libjulia, "jl_init_with_image"):
     if hasattr(libjulia, "jl_init_with_image__threading"):
