@@ -428,11 +428,22 @@ class Julia(object):
             self._debug("show called ...")
         # self.api.jl_printf(self.api.jl_stderr_stream(), "\n");
 
-        res = self.api.jl_call2(void_p(self.api.convert), void_p(self.api.PyObject), void_p(exoc))
+        # If, theoretically, an exception happens in early stage of
+        # self.add_module_functions("Base"), showerror and sprint as
+        # below does not work.  Let's use jl_typeof_str in such case.
+        try:
+            sprint = self.sprint
+            showerror = self.showerror
+        except AttributeError:
+            res = None
+        else:
+            res = self.api.jl_call2(void_p(self.api.convert),
+                                    void_p(self.api.PyObject),
+                                    void_p(exoc))
         if res is None:
             exception = self.api.jl_typeof_str(exoc).decode('utf-8')
         else:
-            exception = self.sprint(self.showerror, self._as_pyobj(res))
+            exception = sprint(showerror, self._as_pyobj(res))
         raise JuliaError(u'Exception \'{}\' occurred while calling julia code:\n{}'
                          .format(exception, src))
 
