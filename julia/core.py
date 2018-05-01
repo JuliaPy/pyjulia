@@ -420,13 +420,6 @@ class Julia(object):
             # self._debug("No Exception")
             self.api.jl_exception_clear()
             return
-        if self.is_debugging:
-            self._debug("Retrieving exception infos...")
-            stderr = self.api.jl_stderr_obj()
-            self._debug("libjulia stderr = " + str(stderr))
-            self.api.jl_call2(self.api.show, stderr, exoc)
-            self._debug("show called ...")
-        # self.api.jl_printf(self.api.jl_stderr_stream(), "\n");
 
         # If, theoretically, an exception happens in early stage of
         # self.add_module_functions("Base"), showerror and sprint as
