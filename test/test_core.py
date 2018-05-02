@@ -25,11 +25,12 @@ class JuliaTest(unittest.TestCase):
         self.assertEqual((1, 2, 3), julia.eval('PyObject((1, 2, 3))'))
 
     def test_call_error(self):
+        msg = "Error with message"
         try:
-            julia._call('undefined_function_name()')
+            julia._call('error("{}")'.format(msg))
             self.fail('No error?')
-        except JuliaError:
-            pass
+        except JuliaError as err:
+            self.assertIn(msg, err.args[0])
 
     def test_call_julia_function_with_python_args(self):
         self.assertEqual(['A', 'B', 'C'],
