@@ -254,7 +254,7 @@ class Julia(object):
             juliainfo = subprocess.check_output(
                 [runtime, "-e",
                  """
-                 println(JULIA_HOME)
+                 println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
                  println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
                  println(unsafe_string(Base.JLOptions().image_file))
                  PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
@@ -291,7 +291,8 @@ class Julia(object):
             if use_separate_cache:
                 PYCALL_JULIA_HOME = os.path.join(
                     os.path.dirname(os.path.realpath(__file__)),"fake-julia").replace("\\","\\\\")
-                os.environ["JULIA_HOME"] = PYCALL_JULIA_HOME
+                os.environ["JULIA_HOME"] = PYCALL_JULIA_HOME  # TODO: this line can be removed when dropping Julia v0.6
+                os.environ["JULIA_BINDIR"] = PYCALL_JULIA_HOME
                 jl_init_path = PYCALL_JULIA_HOME.encode("utf-8")
 
             if not hasattr(self.api, "jl_init_with_image"):
