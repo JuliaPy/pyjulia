@@ -420,16 +420,25 @@ class Julia(object):
             # self._debug("No Exception")
             self.api.jl_exception_clear()
             return
-        self._debug("Retrieving exception infos...")
-        stderr = self.api.jl_stderr_obj()
-        self._debug("libjulia stderr = " + str(stderr))
-        self.api.jl_call2(self.api.show, stderr, exoc)
-        self._debug("show called ...")
-        # self.api.jl_printf(self.api.jl_stderr_stream(), "\n");
 
-        exception_type = self.api.jl_typeof_str(exoc).decode('utf-8')
+        # If, theoretically, an exception happens in early stage of
+        # self.add_module_functions("Base"), showerror and sprint as
+        # below does not work.  Let's use jl_typeof_str in such case.
+        try:
+            sprint = self.sprint
+            showerror = self.showerror
+        except AttributeError:
+            res = None
+        else:
+            res = self.api.jl_call2(void_p(self.api.convert),
+                                    void_p(self.api.PyObject),
+                                    void_p(exoc))
+        if res is None:
+            exception = self.api.jl_typeof_str(exoc).decode('utf-8')
+        else:
+            exception = sprint(showerror, self._as_pyobj(res))
         raise JuliaError(u'Exception \'{}\' occurred while calling julia code:\n{}'
-                         .format(exception_type, src))
+                         .format(exception, src))
 
     def _typeof_julia_exception_in_transit(self):
         exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
@@ -452,7 +461,10 @@ class Julia(object):
         res = self.api.jl_call2(void_p(self.api.convert), void_p(self.api.PyObject), void_p(ans))
 
         if res is None:
-            self.check_exception("convert(PyCall.PyObject, %s)" % src)
+            self.check_exception(src)
+        return self._as_pyobj(res, "convert(PyCall.PyObject, {})".format(src))
+
+    def _as_pyobj(self, res, src=None):
         if res == 0:
             return None
         boxed_obj = self.api.jl_get_field(void_p(res), b'o')
