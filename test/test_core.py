@@ -85,6 +85,10 @@ class JuliaTest(unittest.TestCase):
         from julia.Base import REPL
         assert isinstance(REPL, ModuleType)
 
+    def test_star_import_julia_module(self):
+        from . import _star_import
+        _star_import.BasicREPL
+
     #TODO: this causes a segfault
     """
     def test_import_julia_modules(self):

@@ -58,6 +58,13 @@ class JuliaModule(ModuleType):
         self._julia = loader.julia
         self.__loader__ = loader
 
+    @property
+    def __all__(self):
+        juliapath = self.__name__.lstrip("julia.")
+        names = set(self._julia.eval("names({})".format(juliapath)))
+        names.discard(juliapath.rsplit('.', 1)[-1])
+        return list(names)
+
     def __getattr__(self, name):
         try:
             return self.__try_getattr(name)
