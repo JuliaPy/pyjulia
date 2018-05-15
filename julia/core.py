@@ -83,7 +83,7 @@ class JuliaModule(ModuleType):
                     newpath = ".".join((self.__name__, name))
                     return self.__loader__.load_module(newpath)
             return self._julia.eval(module_path)
-        except Exception:
+        except JuliaError:
             if isafunction(self._julia, name, mod_name=juliapath):
                 func = "{}.{}".format(juliapath, name)
                 return self._julia.eval(func)
