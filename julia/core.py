@@ -45,8 +45,50 @@ class JuliaError(Exception):
     pass
 
 
+def jl_name(name):
+    if name.endswith('_b'):
+        return name[:-2] + '!'
+    return name
+
+
 class JuliaModule(ModuleType):
-    pass
+
+    def __init__(self, loader, *args, **kwargs):
+        super(JuliaModule, self).__init__(*args, **kwargs)
+        self._julia = loader.julia
+        self.__loader__ = loader
+
+    def __getattr__(self, name):
+        try:
+            return self.__try_getattr(name)
+        except AttributeError:
+            if name.endswith("_b"):
+                try:
+                    return self.__try_getattr(jl_name(name))
+                except AttributeError:
+                    pass
+            raise
+
+    def __try_getattr(self, name):
+        juliapath = self.__name__.lstrip("julia.")
+        try:
+            module_path = ".".join((juliapath, name))
+            is_module = self._julia.eval("isa({}, Module)".format(module_path))
+            if is_module:
+                # TODO: find a better way to handle submodules
+                split_path = module_path.split(".")
+                is_base = split_path[-1] == "Base"
+                recur_module = split_path[-1] == split_path[-2]
+                if not is_base and not recur_module:
+                    newpath = ".".join((self.__name__, name))
+                    return self.__loader__.load_module(newpath)
+            return self._julia.eval(module_path)
+        except Exception:
+            if isafunction(self._julia, name, mod_name=juliapath):
+                func = "{}.{}".format(juliapath, name)
+                return self._julia.eval(func)
+
+        raise AttributeError(name)
 
 
 
@@ -72,38 +114,7 @@ class JuliaModuleLoader(object):
     def load_module(self, fullname):
         juliapath = fullname.lstrip("julia.")
         if isamodule(self.julia, juliapath):
-            mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
-            mod.__loader__ = self
-            names = self.julia.eval("names({}, true, false)".format(juliapath))
-            for name in names:
-                if (ismacro(name) or
-                    isoperator(name) or
-                    isprotected(name) or
-                    notascii(name)):
-                    continue
-                attrname = name
-                if name.endswith("!"):
-                    attrname = name.replace("!", "_b")
-                if keyword.iskeyword(name):
-                    attrname = "jl".join(name)
-                try:
-                    module_path = ".".join((juliapath, name))
-                    module_obj = self.julia.eval(module_path)
-                    is_module = self.julia.eval("isa({}, Module)"
-                                                .format(module_path))
-                    if is_module:
-                        split_path = module_path.split(".")
-                        is_base = split_path[-1] == "Base"
-                        recur_module = split_path[-1] == split_path[-2]
-                        if is_module and not is_base and not recur_module:
-                            newpath = ".".join((fullname, name))
-                            module_obj = self.load_module(newpath)
-                    setattr(mod, attrname, module_obj)
-                except Exception:
-                    if isafunction(self.julia, name, mod_name=juliapath):
-                        func = "{}.{}".format(juliapath, name)
-                        setattr(mod, name, self.julia.eval(func))
-            return mod
+            return sys.modules.setdefault(fullname, JuliaModule(self, fullname))
         elif isafunction(self.julia, juliapath):
             return getattr(self.julia, juliapath)
         else:

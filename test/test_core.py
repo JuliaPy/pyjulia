@@ -1,6 +1,7 @@
 import array
 import math
 import unittest
+from types import ModuleType
 
 from julia import Julia, JuliaError
 import sys
@@ -61,6 +62,28 @@ class JuliaTest(unittest.TestCase):
             self.assertEqual(6, julia_sum([1, 2, 3]))
         else:
             pass
+
+    def test_import_julia_module_existing_function(self):
+        from julia import Base
+        assert Base.mod(2, 2) == 0
+
+    def test_import_julia_module_non_existing_name(self):
+        from julia import Base
+        try:
+            Base.spamspamspam
+            self.fail('No AttributeError')
+        except AttributeError:
+            pass
+
+    def test_julia_module_bang(self):
+        from julia import Base
+        xs = [1, 2, 3]
+        ys = Base.scale_b(xs[:], 2)
+        assert all(x * 2 == y for x, y in zip(xs, ys))
+
+    def test_import_julia_submodule(self):
+        from julia.Base import REPL
+        assert isinstance(REPL, ModuleType)
 
     #TODO: this causes a segfault
     """
