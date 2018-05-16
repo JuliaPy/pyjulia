@@ -22,6 +22,7 @@ import sys
 import keyword
 import subprocess
 import time
+import warnings
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -199,36 +200,6 @@ def isafunction(julia, julia_name, mod_name=""):
     except:
         return False
 
-
-def module_functions(julia, module):
-    """Compute the function names in the julia module"""
-    bases = {}
-    names = julia.eval("names(%s)" % module)
-    for name in names:
-        if (ismacro(name) or
-            isoperator(name) or
-            isprotected(name) or
-            notascii(name)):
-            continue
-        try:
-            # skip undefined names
-            if not julia.eval("isdefined(:%s)" % name):
-                continue
-            # skip modules for now
-            if isamodule(julia, name):
-                continue
-            if name.startswith("_"):
-                continue
-            attr_name = name
-            if name.endswith("!"):
-                attr_name = name.replace("!", "_b")
-            if keyword.iskeyword(name):
-                attr_name = "jl".join(name)
-            julia_func = julia.eval(name)
-            bases[attr_name] = julia_func
-        except:
-            pass
-    return bases
 
 def determine_if_statically_linked():
     """Determines if this python executable is statically linked"""
@@ -421,13 +392,16 @@ class Julia(object):
         # reloads.
         _julia_runtime[0] = self.api
 
-        self.add_module_functions("Base")
-
         sys.meta_path.append(JuliaImporter(self))
 
-    def add_module_functions(self, module):
-        for name, func in iteritems(module_functions(self, module)):
-            setattr(self, name, func)
+    def __getattr__(self, name):
+        from julia import Main
+        warnings.warn(
+            "Accessing `Julia().<name>` to obtain Julia objects is"
+            " deprecated.  Use `from julia import Main; Main.<name>` or"
+            " `jl = Julia(); jl.eval('<name>')`.",
+            DeprecationWarning)
+        return getattr(Main, name)
 
     def _debug(self, msg):
         """
@@ -515,4 +489,3 @@ class Julia(object):
     def using(self, module):
         """Load module in Julia by calling the `using module` command"""
         self.eval("using %s" % module)
-        self.add_module_functions(module)
