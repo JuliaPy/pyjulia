@@ -114,6 +114,8 @@ class JuliaMainModule(JuliaModule):
             '''.format(juliapath, jl_name(name))
             self._julia.eval(setter)(value)
 
+    help = property(lambda self: self._julia.help)
+    eval = property(lambda self: self._julia.eval)
     using = property(lambda self: self._julia.using)
 
 
