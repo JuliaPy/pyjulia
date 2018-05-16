@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import array
 import math
 import subprocess
@@ -5,7 +7,7 @@ import unittest
 from types import ModuleType
 
 from julia import Julia, JuliaError
-from julia.core import jl_name, py_name
+from julia.core import jl_name, py_name, _orig_env
 import sys
 import os
 
@@ -105,8 +107,9 @@ class JuliaTest(unittest.TestCase):
         assert 'resize_b' in dir(Base)
 
     def test_import_without_setup(self):
-        subprocess.check_call(
-            [sys.executable, '-c', 'from julia import Base'])
+        command = [sys.executable, '-c', 'from julia import Base']
+        print('Executing:', *command)
+        subprocess.check_call(command, env=_orig_env)
 
     #TODO: this causes a segfault
     """
