@@ -14,7 +14,7 @@ Bridge Python and Julia by initializing the Julia interpreter inside Python.
 #-----------------------------------------------------------------------------
 
 # Stdlib
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 import ctypes
 import ctypes.util
 import os
@@ -98,6 +98,23 @@ class JuliaModule(ModuleType):
         raise AttributeError(name)
 
 
+class JuliaMainModule(JuliaModule):
+
+    def __setattr__(self, name, value):
+        if name.startswith('_'):
+            super(JuliaMainModule, self).__setattr__(name, value)
+        else:
+            juliapath = self.__name__.lstrip("julia.")
+            setter = '''
+            Main.PyCall.pyfunctionret(
+                (x) -> eval({}, :({} = $x)),
+                Any,
+                PyCall.PyAny)
+            '''.format(juliapath, jl_name(name))
+            self._julia.eval(setter)(value)
+
+    using = property(lambda self: self._julia.using)
+
 
 # add custom import behavior for the julia "module"
 class JuliaImporter(object):
@@ -120,7 +137,10 @@ class JuliaModuleLoader(object):
     # load module was deprecated in v3.4
     def load_module(self, fullname):
         juliapath = fullname.lstrip("julia.")
-        if isamodule(self.julia, juliapath):
+        if juliapath == 'Main':
+            return sys.modules.setdefault(fullname,
+                                          JuliaMainModule(self, fullname))
+        elif isamodule(self.julia, juliapath):
             return sys.modules.setdefault(fullname, JuliaModule(self, fullname))
         elif isafunction(self.julia, juliapath):
             return getattr(self.julia, juliapath)

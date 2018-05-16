@@ -89,6 +89,11 @@ class JuliaTest(unittest.TestCase):
         from . import _star_import
         _star_import.BasicREPL
 
+    def test_main_module(self):
+        from julia import Main
+        Main.x = x = 123456
+        assert julia.eval('x') == x
+
     #TODO: this causes a segfault
     """
     def test_import_julia_modules(self):
