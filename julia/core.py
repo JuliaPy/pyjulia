@@ -46,6 +46,10 @@ class JuliaError(Exception):
     pass
 
 
+def remove_prefix(string, prefix):
+    return string[len(prefix):] if string.startswith(prefix) else string
+
+
 def jl_name(name):
     if name.endswith('_b'):
         return name[:-2] + '!'
@@ -61,7 +65,7 @@ class JuliaModule(ModuleType):
 
     @property
     def __all__(self):
-        juliapath = self.__name__.lstrip("julia.")
+        juliapath = remove_prefix(self.__name__, "julia.")
         names = set(self._julia.eval("names({})".format(juliapath)))
         names.discard(juliapath.rsplit('.', 1)[-1])
         return list(names)
@@ -78,7 +82,7 @@ class JuliaModule(ModuleType):
             raise
 
     def __try_getattr(self, name):
-        juliapath = self.__name__.lstrip("julia.")
+        juliapath = remove_prefix(self.__name__, "julia.")
         try:
             module_path = ".".join((juliapath, name))
             is_module = self._julia.eval("isa({}, Module)".format(module_path))
@@ -105,7 +109,7 @@ class JuliaMainModule(JuliaModule):
         if name.startswith('_'):
             super(JuliaMainModule, self).__setattr__(name, value)
         else:
-            juliapath = self.__name__.lstrip("julia.")
+            juliapath = remove_prefix(self.__name__, "julia.")
             setter = '''
             Main.PyCall.pyfunctionret(
                 (x) -> eval({}, :({} = $x)),
@@ -139,7 +143,7 @@ class JuliaModuleLoader(object):
 
     # load module was deprecated in v3.4
     def load_module(self, fullname):
-        juliapath = fullname.lstrip("julia.")
+        juliapath = remove_prefix(fullname, "julia.")
         if juliapath == 'Main':
             return sys.modules.setdefault(fullname,
                                           JuliaMainModule(self, fullname))
