@@ -1,5 +1,6 @@
 import array
 import math
+import subprocess
 import unittest
 from types import ModuleType
 
@@ -93,6 +94,10 @@ class JuliaTest(unittest.TestCase):
         from julia import Main
         Main.x = x = 123456
         assert julia.eval('x') == x
+
+    def test_import_without_setup(self):
+        subprocess.check_call(
+            [sys.executable, '-c', 'from julia import Base'])
 
     #TODO: this causes a segfault
     """

@@ -119,21 +119,21 @@ class JuliaMainModule(JuliaModule):
 
 # add custom import behavior for the julia "module"
 class JuliaImporter(object):
-    def __init__(self, julia):
-        self.julia = julia
 
     # find_module was deprecated in v3.4
     def find_module(self, fullname, path=None):
         if path is None:
             pass
         if fullname.startswith("julia."):
-            return JuliaModuleLoader(self.julia)
+            return JuliaModuleLoader()
 
 
 class JuliaModuleLoader(object):
 
-    def __init__(self, julia):
-        self.julia = julia
+    @property
+    def julia(self):
+        self.__class__.julia = julia = Julia()
+        return julia
 
     # load module was deprecated in v3.4
     def load_module(self, fullname):
@@ -392,8 +392,6 @@ class Julia(object):
         # reloads.
         _julia_runtime[0] = self.api
 
-        sys.meta_path.append(JuliaImporter(self))
-
     def __getattr__(self, name):
         from julia import Main
         warnings.warn(
@@ -489,3 +487,6 @@ class Julia(object):
     def using(self, module):
         """Load module in Julia by calling the `using module` command"""
         self.eval("using %s" % module)
+
+
+sys.meta_path.append(JuliaImporter())
