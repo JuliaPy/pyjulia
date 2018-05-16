@@ -5,6 +5,7 @@ import unittest
 from types import ModuleType
 
 from julia import Julia, JuliaError
+from julia.core import jl_name, py_name
 import sys
 import os
 
@@ -95,6 +96,14 @@ class JuliaTest(unittest.TestCase):
         Main.x = x = 123456
         assert julia.eval('x') == x
 
+    def test_module_all(self):
+        from julia import Base
+        assert 'resize_b' in Base.__all__
+
+    def test_module_dir(self):
+        from julia import Base
+        assert 'resize_b' in dir(Base)
+
     def test_import_without_setup(self):
         subprocess.check_call(
             [sys.executable, '-c', 'from julia import Base'])
@@ -105,3 +114,11 @@ class JuliaTest(unittest.TestCase):
         import julia.PyCall as pycall
         self.assertEquals(6, pycall.pyeval('2 * 3'))
     """
+
+    def test_jlpy_identity(self):
+        for name in ['normal', 'resize!']:
+            self.assertEqual(jl_name(py_name(name)), name)
+
+    def test_pyjl_identity(self):
+        for name in ['normal', 'resize_b']:
+            self.assertEqual(py_name(jl_name(name)), name)

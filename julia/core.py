@@ -56,6 +56,12 @@ def jl_name(name):
     return name
 
 
+def py_name(name):
+    if name.endswith('!'):
+        return name[:-1] + '_b'
+    return name
+
+
 class JuliaModule(ModuleType):
 
     def __init__(self, loader, *args, **kwargs):
@@ -68,7 +74,17 @@ class JuliaModule(ModuleType):
         juliapath = remove_prefix(self.__name__, "julia.")
         names = set(self._julia.eval("names({})".format(juliapath)))
         names.discard(juliapath.rsplit('.', 1)[-1])
+        return [py_name(n) for n in names if is_accessible_name(n)]
+
+    def __dir__(self):
+        if python_version.major == 2:
+            names = set()
+        else:
+            names = set(super(JuliaModule, self).__dir__())
+        names.update(self.__all__)
         return list(names)
+    # Override __dir__ method so that completing member names work
+    # well in Python REPLs like IPython.
 
     def __getattr__(self, name):
         try:
@@ -180,6 +196,24 @@ def notascii(name):
         return False
     except:
         return True
+
+
+def is_accessible_name(name):
+    """
+    Check if a Julia variable `name` is (easily) accessible from Python.
+
+    Return `True` if `name` can be safely converted to a Python
+    identifier using `py_name` function.  For example,
+
+    >>> is_accessible_name('A_mul_B!')
+    True
+
+    Since it can be accessed as `A_mul_B_b` in Python.
+    """
+    return not (ismacro(name) or
+                isoperator(name) or
+                isprotected(name) or
+                notascii(name))
 
 
 def isamodule(julia, julia_name):
