@@ -62,7 +62,7 @@ before_script:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -qq -y; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install libpcre3-dev -y; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python-numpy python3-numpy -y; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python3" ]; then brew update; brew list python &>/dev/null || brew upgrade python || echo "Ignoring errors..."; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python3" ]; then brew update; brew upgrade python || echo "Ignoring errors..."; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python2" ]; then brew update; brew list python@2 &>/dev/null || brew install python@2 || echo "Ignoring errors..."; fi
   # Ignoring errors from brew since it may actually be OK to do so.
   # Following which command will catch installation failure:
