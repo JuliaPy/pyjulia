@@ -54,6 +54,9 @@ matrix:
       - env:
           - PYTHON=python3
           - JULIA_VERSION=julianightlies
+branches:
+  only:
+    - master
 notifications:
   email: false
 before_script:
