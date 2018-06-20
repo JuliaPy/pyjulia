@@ -2,7 +2,7 @@ PyJulia
 =======
 
 [![Build Status](https://travis-ci.org/JuliaPy/pyjulia.svg?branch=master)](https://travis-ci.org/JuliaPy/pyjulia)
-[![Build status](https://ci.appveyor.com/api/projects/status/kjd0iex9gh0c3yqa?svg=true)](https://ci.appveyor.com/project/Keno/pyjulia)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/JuliaPy/pyjulia?svg=true)](https://ci.appveyor.com/project/Keno/pyjulia)
 
 Experimenting with developing a better interface to [Julia language](https://julialang.org/) that works with [Python](https://www.python.org/) 2 & 3 and Julia v0.6+.
 
@@ -28,7 +28,7 @@ Your python installation must be able to call Julia.  If your installer
 does not add the Julia binary directory to your `PATH`, you will have to
 add it.
 
-Then finally you have to install pyjulia. 
+Then finally you have to install pyjulia.
 
 To get released versions you can use:
 
