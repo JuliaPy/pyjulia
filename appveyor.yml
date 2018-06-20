@@ -13,7 +13,7 @@ environment:
   # 64 julia-0.6 Python-35
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
-   
+
   # 32 julia-latest Python-27
   - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
     PYTHONDIR: "C:\\Python27"
@@ -31,15 +31,15 @@ environment:
     PYTHONDIR: "C:\\Python35-x64"
     CROSS_VERSION_PATH: "C:\\Python27-x64"
 
-  # 32 julia latest Cross Version 
+  # 32 julia latest Cross Version
   - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
     PYTHONDIR: "C:\\Python35"
     CROSS_VERSION_PATH: "C:\\Python27"
 
 matrix:
  allow_failures:
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
+  - CROSS_VERSION_PATH: "C:\\Python27-x64"
+  - CROSS_VERSION_PATH: "C:\\Python27"
 
 branches:
   only:
