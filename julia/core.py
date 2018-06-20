@@ -261,7 +261,6 @@ class Julia(object):
                  if isfile(PyCall_depsfile)
                     eval(Module(:__anon__),
                         Expr(:toplevel,
-                         :(using Compat),
                          :(Main.Base.include($PyCall_depsfile)),
                          :(println(pyprogramname))))
                  else
