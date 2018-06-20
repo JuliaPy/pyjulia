@@ -70,7 +70,6 @@ before_script:
 script:
   - julia -e 'Pkg.add("PyCall")'
   - julia -e 'Pkg.checkout("PyCall"); Pkg.build("PyCall")'
-  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
   - /usr/bin/python --version
   - PYTHON=${PYTHON:-python}
   - echo $PYTHON
