@@ -47,12 +47,6 @@ matrix:
       - env:
           - JULIA_VERSION=julianightlies
           - CROSS_VERSION=1
-      - env:
-          - PYTHON=python2
-          - JULIA_VERSION=julianightlies
-      - env:
-          - PYTHON=python3
-          - JULIA_VERSION=julianightlies
 branches:
   only:
     - master
