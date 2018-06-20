@@ -2,6 +2,9 @@
 # install julia release: ./install-julia.sh juliareleases
 # install julia nightly: ./install-julia.sh julianightlies
 
+VERSION="0.6.2"
+SHORTVERSION="0.6"
+
 # stop on error
 set -e
 # default to juliareleases
@@ -13,13 +16,12 @@ fi
 
 case "$JULIAVERSION" in
   julianightlies)
-    STATUSURL="http://status.julialang.org/download"
+    BASEURL="https://julialangnightlies-s3.julialang.org/bin"
+    JULIANAME="julia-latest"
     ;;
   juliareleases)
-    STATUSURL="http://status.julialang.org/stable"
-    ;;
-  download/win32 | download/win64 | stable/win32 | stable/win64)
-    STATUSURL="http://status.julialang.org/$JULIAVERSION"
+    BASEURL="https://julialang-s3.julialang.org/bin"
+    JULIANAME="$SHORTVERSION/julia-$VERSION"
     ;;
   *)
     echo "Unrecognized JULIAVERSION=$JULIAVERSION, exiting"
@@ -29,22 +31,36 @@ esac
 
 case $(uname) in
   Linux)
-    if [ -e /usr/local/bin/julia ]; then
-      echo "/usr/local/bin/julia already exists, exiting"
-      exit 1
-    fi
     case $(uname -m) in
       x86_64)
-        curl -L "$STATUSURL/linux-x86_64" | tar -xz
+        ARCH="x64"
+        case "$JULIAVERSION" in
+          julianightlies)
+            SUFFIX="linux64"
+            ;;
+          juliareleases)
+            SUFFIX="linux-x86_64"
+            ;;
+        esac
         ;;
       i386 | i486 | i586 | i686)
-        curl -L "$STATUSURL/linux-i686" | tar -xz
+        ARCH="x86"
+        case "$JULIAVERSION" in
+          julianightlies)
+            SUFFIX="linux32"
+            ;;
+          juliareleases)
+            SUFFIX="linux-i686"
+            ;;
+        esac
         ;;
       *)
         echo "Do not have Julia binaries for this architecture, exiting"
         exit 1
         ;;
     esac
+    echo "$BASEURL/linux/$ARCH/$JULIANAME-$SUFFIX.tar.gz"
+    curl -L "$BASEURL/linux/$ARCH/$JULIANAME-$SUFFIX.tar.gz" | tar -xz
     sudo ln -s $PWD/julia-*/bin/julia /usr/local/bin/julia
     ;;
   Darwin)
@@ -58,7 +74,7 @@ case $(uname) in
       echo "~/julia already exists, exiting"
       exit 1
     fi
-    curl -Lo julia.dmg "$STATUSURL/osx10.7+"
+    curl -Lo julia.dmg "$BASEURL/mac/x64/$JULIANAME-mac64.dmg"
     hdiutil mount -mountpoint /Volumes/Julia julia.dmg
     cp -Ra /Volumes/Julia/*.app/Contents/Resources/julia ~
     ln -s ~/julia/bin/julia /usr/local/bin/julia

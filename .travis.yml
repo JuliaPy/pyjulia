@@ -25,24 +25,35 @@ matrix:
         os: linux
       - language: generic
         env:
-          - PYTHON_VERSION=py2
+          - PYTHON=python2
           - JULIA_VERSION=julianightlies
         os: osx
       - language: generic
         env:
-          - PYTHON_VERSION=py2
+          - PYTHON=python2
           - JULIA_VERSION=juliareleases
         os: osx
       - language: generic
         env:
-          - PYTHON_VERSION=py3
+          - PYTHON=python3
           - JULIA_VERSION=julianightlies
         os: osx
       - language: generic
         env:
-          - PYTHON_VERSION=py3
+          - PYTHON=python3
           - JULIA_VERSION=juliareleases
         os: osx
+  allow_failures:
+      - env: JULIA_VERSION=julianightlies
+      - env:
+          - JULIA_VERSION=julianightlies
+          - CROSS_VERSION=1
+      - env:
+          - PYTHON=python2
+          - JULIA_VERSION=julianightlies
+      - env:
+          - PYTHON=python3
+          - JULIA_VERSION=julianightlies
 notifications:
   email: false
 before_script:
@@ -51,13 +62,18 @@ before_script:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -qq -y; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install libpcre3-dev -y; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python-numpy python3-numpy -y; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON_VERSION" = "py3" ]; then brew list python3 &>/dev/null || brew install python3; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON_VERSION" = "py2" ]; then brew list python &>/dev/null || brew install python; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python3" ]; then brew update; brew upgrade python || echo "Ignoring errors..."; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python2" ]; then brew update; brew list python@2 &>/dev/null || brew install python@2 || echo "Ignoring errors..."; fi
+  # Ignoring errors from brew since it may actually be OK to do so.
+  # Following which command will catch installation failure:
+  - which ${PYTHON:-python}
 script:
   - julia -e 'Pkg.add("PyCall")'
   - julia -e 'Pkg.checkout("PyCall"); Pkg.build("PyCall")'
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
   - /usr/bin/python --version
-  - python --version
+  - PYTHON=${PYTHON:-python}
+  - echo $PYTHON
+  - $PYTHON --version
   - if [ "$CROSS_VERSION" = "1" ]; then /usr/bin/python -m unittest discover; fi
-  - python -m unittest discover
+  - $PYTHON -m unittest discover
