@@ -44,16 +44,12 @@ matrix:
           - JULIA_VERSION=juliareleases
         os: osx
   allow_failures:
-      - env: JULIA_VERSION=julianightlies
       - env:
           - JULIA_VERSION=julianightlies
           - CROSS_VERSION=1
-      - env:
-          - PYTHON=python2
-          - JULIA_VERSION=julianightlies
-      - env:
-          - PYTHON=python3
-          - JULIA_VERSION=julianightlies
+branches:
+  only:
+    - master
 notifications:
   email: false
 before_script:
@@ -70,7 +66,6 @@ before_script:
 script:
   - julia -e 'Pkg.add("PyCall")'
   - julia -e 'Pkg.checkout("PyCall"); Pkg.build("PyCall")'
-  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir())/PyCall`); Pkg.resolve()'
   - /usr/bin/python --version
   - PYTHON=${PYTHON:-python}
   - echo $PYTHON
