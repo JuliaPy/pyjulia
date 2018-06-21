@@ -100,23 +100,20 @@ class JuliaModule(ModuleType):
             raise
 
     def __try_getattr(self, name):
-        juliapath = remove_prefix(self.__name__, "julia.")
-        try:
-            module_path = ".".join((juliapath, name))
-            is_module = self._julia.eval("isa({}, Module)".format(module_path))
-            if is_module:
-                # TODO: find a better way to handle submodules
-                split_path = module_path.split(".")
-                is_base = split_path[-1] == "Base"
-                recur_module = split_path[-1] == split_path[-2]
-                if not is_base and not recur_module:
-                    newpath = ".".join((self.__name__, name))
-                    return self.__loader__.load_module(newpath)
-            return self._julia.eval(module_path)
-        except JuliaError:
-            if isafunction(self._julia, name, mod_name=juliapath):
-                func = "{}.{}".format(juliapath, name)
-                return self._julia.eval(func)
+        jl_module = remove_prefix(self.__name__, "julia.")
+        jl_fullname = ".".join((jl_module, name))
+
+        # If `name` is a top-level module, don't import it as a
+        # submodule.  Note that it handles the case that `name` is
+        # `Base` and `Core`.
+        is_toplevel = isdefined(self._julia, 'Main', name)
+        if not is_toplevel and isamodule(self._julia, jl_fullname):
+            # FIXME: submodules from other modules still hit this code
+            # path and they are imported as submodules.
+            return self.__loader__.load_module(".".join((self.__name__, name)))
+
+        if isdefined(self._julia, jl_module, name):
+            return self._julia.eval(jl_fullname)
 
         raise AttributeError(name)
 
@@ -216,6 +213,10 @@ def is_accessible_name(name):
                 isoperator(name) or
                 isprotected(name) or
                 notascii(name))
+
+
+def isdefined(julia, parent, member):
+    return julia.eval("isdefined({}, :({}))".format(parent, member))
 
 
 def isamodule(julia, julia_name):
