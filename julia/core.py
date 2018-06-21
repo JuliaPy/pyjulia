@@ -168,7 +168,7 @@ class JuliaModuleLoader(object):
         elif isamodule(self.julia, juliapath):
             return sys.modules.setdefault(fullname, JuliaModule(self, fullname))
         elif isafunction(self.julia, juliapath):
-            return getattr(self.julia, juliapath)
+            return self.julia.eval(juliapath)
         else:
             raise ImportError("{} not found".format(juliapath))
 
@@ -434,14 +434,8 @@ class Julia(object):
         # reloads.
         _julia_runtime[0] = self.api
 
-    def __getattr__(self, name):
-        from julia import Main
-        warnings.warn(
-            "Accessing `Julia().<name>` to obtain Julia objects is"
-            " deprecated.  Use `from julia import Main; Main.<name>` or"
-            " `jl = Julia(); jl.eval('<name>')`.",
-            DeprecationWarning)
-        return getattr(Main, name)
+        self.sprint = self.eval('sprint')
+        self.showerror = self.eval('showerror')
 
     def _debug(self, msg):
         """
@@ -474,8 +468,8 @@ class Julia(object):
             return
 
         # If, theoretically, an exception happens in early stage of
-        # self.add_module_functions("Base"), showerror and sprint as
-        # below does not work.  Let's use jl_typeof_str in such case.
+        # self.__init__, showerror and sprint as below does not work.
+        # Let's use jl_typeof_str in such case.
         try:
             sprint = self.sprint
             showerror = self.showerror
@@ -529,6 +523,18 @@ class Julia(object):
     def using(self, module):
         """Load module in Julia by calling the `using module` command"""
         self.eval("using %s" % module)
+
+
+class LegacyJulia(Julia):
+
+    def __getattr__(self, name):
+        from julia import Main
+        warnings.warn(
+            "Accessing `Julia().<name>` to obtain Julia objects is"
+            " deprecated.  Use `from julia import Main; Main.<name>` or"
+            " `jl = Julia(); jl.eval('<name>')`.",
+            DeprecationWarning)
+        return getattr(Main, name)
 
 
 sys.meta_path.append(JuliaImporter())

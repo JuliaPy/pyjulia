@@ -1,1 +1,1 @@
-from .core import Julia, JuliaError
+from .core import JuliaError, LegacyJulia as Julia
