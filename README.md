@@ -76,6 +76,12 @@ You can then call Julia functions from python, e.g.
 j.sind(90)
 ```
 
+you can use Julia modules from python, e.g.
+```python
+j.using("ModuleName")
+from julia import ModuleName
+```
+
 How it works
 ------------
 PyJulia loads the `libjulia` library and executes the statements therein.
