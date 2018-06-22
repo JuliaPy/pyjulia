@@ -7,13 +7,14 @@ import unittest
 from types import ModuleType
 
 from julia import Julia, JuliaError
-from julia.core import jl_name, py_name, _orig_env
+from julia.core import jl_name, py_name
 import sys
 import os
 
 python_version = sys.version_info
 
 
+orig_env = os.environ.copy()
 julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"), debug=True)
 
 class JuliaTest(unittest.TestCase):
@@ -109,7 +110,7 @@ class JuliaTest(unittest.TestCase):
     def test_import_without_setup(self):
         command = [sys.executable, '-c', 'from julia import Base']
         print('Executing:', *command)
-        subprocess.check_call(command, env=_orig_env)
+        subprocess.check_call(command, env=orig_env)
 
     #TODO: this causes a segfault
     """

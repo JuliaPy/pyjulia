@@ -41,9 +41,6 @@ if python_version.major == 3:
 else:
     iteritems = dict.iteritems
 
-""" Original environment variables; Used in tests. """
-_orig_env = os.environ.copy()
-
 class JuliaError(Exception):
     pass
 
