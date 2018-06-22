@@ -162,12 +162,19 @@ class JuliaModuleLoader(object):
         if juliapath == 'Main':
             return sys.modules.setdefault(fullname,
                                           JuliaMainModule(self, fullname))
-        elif isamodule(self.julia, juliapath):
-            return sys.modules.setdefault(fullname, JuliaModule(self, fullname))
         elif isafunction(self.julia, juliapath):
             return self.julia.eval(juliapath)
+
+        try:
+            self.julia.eval("import {}".format(juliapath))
+        except JuliaError:
+            pass
         else:
-            raise ImportError("{} not found".format(juliapath))
+            if isamodule(self.julia, juliapath):
+                return sys.modules.setdefault(fullname,
+                                              JuliaModule(self, fullname))
+
+        raise ImportError("{} not found".format(juliapath))
 
 
 def ismacro(name):
@@ -221,17 +228,9 @@ def isdefined(julia, parent, member):
 
 def isamodule(julia, julia_name):
     try:
-        ret = julia.eval("isa({}, Module)".format(julia_name))
-        return ret
-    except:
-        # try explicitly importing it..
-        try:
-            julia.eval("import {}".format(julia_name))
-            ret = julia.eval("isa({}, Module)".format(julia_name))
-            return ret
-        except:
-            pass
-    return False
+        return julia.eval("isa({}, Module)".format(julia_name))
+    except JuliaError:
+        return False  # assuming this is an `UndefVarError`
 
 
 def isafunction(julia, julia_name, mod_name=""):
