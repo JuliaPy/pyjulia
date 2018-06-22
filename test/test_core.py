@@ -72,6 +72,10 @@ class JuliaTest(unittest.TestCase):
         from julia import Base
         assert Base.mod(2, 2) == 0
 
+    def test_from_import_existing_julia_function(self):
+        from julia.Base import divrem
+        assert divrem(7, 3) == (2, 1)
+
     def test_import_julia_module_non_existing_name(self):
         from julia import Base
         try:
@@ -79,6 +83,14 @@ class JuliaTest(unittest.TestCase):
             self.fail('No AttributeError')
         except AttributeError:
             pass
+
+    def test_from_import_non_existing_julia_name(self):
+        try:
+            from Base import spamspamspam
+        except ImportError:
+            pass
+        else:
+            assert not spamspamspam
 
     def test_julia_module_bang(self):
         from julia import Base
