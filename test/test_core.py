@@ -87,12 +87,12 @@ class JuliaTest(unittest.TestCase):
         assert all(x * 2 == y for x, y in zip(xs, ys))
 
     def test_import_julia_submodule(self):
-        from julia.Base import REPL
-        assert isinstance(REPL, ModuleType)
+        from julia.Base import Enums
+        assert isinstance(Enums, ModuleType)
 
     def test_star_import_julia_module(self):
         from . import _star_import
-        _star_import.BasicREPL
+        _star_import.Enum
 
     def test_main_module(self):
         from julia import Main
