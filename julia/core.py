@@ -140,8 +140,6 @@ class JuliaImporter(object):
 
     # find_module was deprecated in v3.4
     def find_module(self, fullname, path=None):
-        if path is None:
-            pass
         if fullname.startswith("julia."):
             return JuliaModuleLoader()
 
