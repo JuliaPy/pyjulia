@@ -16,17 +16,30 @@ python -m unittest discover
 
 `pyjulia` is tested against Python versions 2.7 and 3.5.  Older versions of Python (than 2.7)  are not supported.
 
-Installation
-------------
-You will need to install PyCall in your existing Julia installation
+Installation of PyCall
+------------------------
+PyCall needs to be associated with the python executable with which you will call pyjulia.  To find the executable location from within a python interpret
+```python
+>>> import os
+>>> import sys
+>>> os.path.dirname(sys.executable)
+'C:\\Anaconda3'
+```
+
+Follow the [PyCall](https://github.com/JuliaPy/PyPlot.jl#automated-matplotlib-installation) instructions within julia.  To install and then associate PyCall with the appropriate python interpret (such as that found in `C:\\bin\\Anaconda3` above,
 
 ```julia
 Pkg.add("PyCall")
+ENV["PYTHON"] = "C:\\Anaconda3" #Or the location of your python interpreter
+Pkg.build("PyCall")
 ```
+If you do not specify `ENV["PYTHON"]` and then build `PyCall`, then the python environment is assumed to be the Conda installed within Julia.
 
+Installation of pyjulia
+------------------------
 Your python installation must be able to call Julia.  If your installer
 does not add the Julia binary directory to your `PATH`, you will have to
-add it.
+add it.  To find the executable of Julia from the REPL, use `JULIA_HOME`.
 
 Then finally you have to install pyjulia.
 
