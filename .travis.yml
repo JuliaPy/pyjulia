@@ -17,6 +17,14 @@ matrix:
         python: 3.5
         env: JULIA_VERSION=julianightlies
         os: linux
+        - language: python
+        python: 3.7
+        env: JULIA_VERSION=juliareleases
+        os: linux
+      - language: python
+        python: 3.7
+        env: JULIA_VERSION=julianightlies
+        os: linux
       - language: python
         python: 3.5
         env:
