@@ -13,6 +13,10 @@ environment:
   # 64 julia-0.6 Python-35
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
+    
+  # 64 julia-0.6 Python-37
+  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
+    PYTHONDIR: "C:\\Python35-x64"    
 
   # 32 julia-latest Python-27
   - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
@@ -23,6 +27,10 @@ environment:
     PYTHONDIR: "C:\\Python27-x64"
 
   # 64 julia latest Python-35
+  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
+    PYTHONDIR: "C:\\Python35-x64"
+
+  # 64 julia latest Python-37
   - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
 
