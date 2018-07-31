@@ -11,7 +11,9 @@ matrix:
         os: linux
       - language: python
         python: 3.5
-        env: JULIA_VERSION=juliareleases
+        env:
+          - JULIA_VERSION=juliareleases
+          - CROSS_VERSION=1
         os: linux
       - language: python
         python: 3.5
@@ -65,7 +67,6 @@ before_script:
   - which ${PYTHON:-python}
 script:
   - julia -e 'Pkg.add("PyCall")'
-  - julia -e 'Pkg.checkout("PyCall"); Pkg.build("PyCall")'
   - /usr/bin/python --version
   - PYTHON=${PYTHON:-python}
   - echo $PYTHON
