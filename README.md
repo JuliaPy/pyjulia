@@ -65,8 +65,8 @@ which can be used in a customized setup.
 
 ### High-level interface
 
-To call a Julia function in Julia module, import the Julia module (say
-`Base`) by:
+To call a Julia function in a Julia module, import the Julia module
+(say `Base`) with:
 
 ```python
 from julia import Base
@@ -99,7 +99,8 @@ You can set names in this module to send Python values to Julia:
 Main.xs = [1, 2, 3]
 ```
 
-so that, e.g., it can be evaluated at Julia side using Julia syntax:
+which allows it to be accessed directly from Julia code, e.g., it can
+be evaluated at Julia side using Julia syntax:
 
 ```python
 Main.eval("sin.(xs)")
@@ -107,9 +108,9 @@ Main.eval("sin.(xs)")
 
 ### Low-level interface
 
-If you need a custom setup for `pyjulia`, it must be done *before* any
-imports of Julia modules.  For example, to use Julia interpreter at
-`PATH/TO/MY/CUSTOM/julia`, run:
+If you need a custom setup for `pyjulia`, it must be done *before*
+importing any Julia modules.  For example, to use the Julia
+interpreter at `PATH/TO/MY/CUSTOM/julia`, run:
 
 ```python
 from julia import Julia
