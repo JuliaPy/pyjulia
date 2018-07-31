@@ -70,7 +70,7 @@ build_script:
   # - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.init(); Pkg.resolve()"
   # - C:\projects\julia\bin\julia -e "using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module"
   - "SET PYTHON=%PYTHONDIR%\\python.exe"
-  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.checkout(\"PyCall\"); Pkg.build(\"PyCall\")"
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\")"
 
 test_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
