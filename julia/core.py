@@ -30,6 +30,8 @@ from ctypes import py_object
 # this is python 3.3 specific
 from types import ModuleType, FunctionType
 
+from setuptools.pep425tags import get_abi_tag
+
 #-----------------------------------------------------------------------------
 # Classes and funtions
 #-----------------------------------------------------------------------------
@@ -356,8 +358,9 @@ class Julia(object):
                 os.environ["PYCALL_LIBJULIA_PATH"] = os.path.dirname(libjulia_path)
                 # Add a private cache directory. PyCall needs a different
                 # configuration and so do any packages that depend on it.
-                self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
-                    "\"lib\", \"pyjulia%s-v$(VERSION.major).$(VERSION.minor)\"))" % sys.version_info[0])
+                self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot(),"
+                           "\"lib\", \"pyjulia.{}-v$(VERSION.major).$(VERSION.minor)\"))"
+                           .format(get_abi_tag()))
                 # If PyCall.ji does not exist, create an empty file to force
                 # recompilation
                 self._call(u"""
