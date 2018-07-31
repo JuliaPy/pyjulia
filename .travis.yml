@@ -1,30 +1,18 @@
+language: python
+os:
+  - linux
+python:
+  - "2.7"
+  - "3.6"
+env:
+  matrix:
+    - JULIA_VERSION=juliareleases CROSS_VERSION=1
+    - JULIA_VERSION=julianightlies
+  global:
+    - TOXENV=py
 matrix:
   # Python environment is not functional on OS X
   include:
-      - language: python
-        python: 2.7
-        env: JULIA_VERSION=juliareleases
-        os: linux
-      - language: python
-        python: 2.7
-        env: JULIA_VERSION=julianightlies
-        os: linux
-      - language: python
-        python: 3.5
-        env:
-          - JULIA_VERSION=juliareleases
-          - CROSS_VERSION=1
-        os: linux
-      - language: python
-        python: 3.5
-        env: JULIA_VERSION=julianightlies
-        os: linux
-      - language: python
-        python: 3.5
-        env:
-          - JULIA_VERSION=julianightlies
-          - CROSS_VERSION=1
-        os: linux
       - language: generic
         env:
           - PYTHON=python2
@@ -34,6 +22,7 @@ matrix:
         env:
           - PYTHON=python2
           - JULIA_VERSION=juliareleases
+          - CROSS_VERSION=1
         os: osx
       - language: generic
         env:
@@ -44,11 +33,8 @@ matrix:
         env:
           - PYTHON=python3
           - JULIA_VERSION=juliareleases
-        os: osx
-  allow_failures:
-      - env:
-          - JULIA_VERSION=julianightlies
           - CROSS_VERSION=1
+        os: osx
 branches:
   only:
     - master
@@ -57,19 +43,21 @@ notifications:
 before_script:
   - echo ./ci/install-julia.sh "$JULIA_VERSION"
   - ./ci/install-julia.sh "$JULIA_VERSION"
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -qq -y; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install libpcre3-dev -y; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python-numpy python3-numpy -y; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python3" ]; then brew update; brew upgrade python || echo "Ignoring errors..."; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python2" ]; then brew update; brew list python@2 &>/dev/null || brew install python@2 || echo "Ignoring errors..."; fi
   # Ignoring errors from brew since it may actually be OK to do so.
   # Following which command will catch installation failure:
-  - which ${PYTHON:-python}
-script:
-  - julia -e 'Pkg.add("PyCall")'
-  - /usr/bin/python --version
   - PYTHON=${PYTHON:-python}
-  - echo $PYTHON
-  - $PYTHON --version
-  - if [ "$CROSS_VERSION" = "1" ]; then /usr/bin/python -m unittest discover; fi
-  - $PYTHON -m unittest discover
+  - which $PYTHON
+  - $PYTHON -m pip --version
+  - $PYTHON -m pip install --quiet tox
+  - julia -e 'Pkg.add("PyCall")'
+script:
+
+  # "py,py27" below would be redundant when the main interpreter is
+  # Python 2.7 but it simplifies the CI setup.
+  - if [ "$CROSS_VERSION" = "1" ]; then
+    $PYTHON -m tox -e py,py27;
+    fi
+
+  - PYJULIA_TEST_REBUILD=yes $PYTHON -m tox

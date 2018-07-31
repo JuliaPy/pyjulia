@@ -9,12 +9,12 @@ Experimenting with developing a better interface to [Julia language](https://jul
 to run the tests, execute from the toplevel directory
 
 ```shell
-python -m unittest discover
+tox
 ```
 
 **Note** You need to explicitly add julia to your `PATH`, an alias will not work.
 
-`pyjulia` is tested against Python versions 2.7 and 3.5.  Older versions of Python (than 2.7)  are not supported.
+`pyjulia` is tested against Python versions 2.7, 3.6, and 3.7.  Older versions of Python (than 2.7)  are not supported.
 
 Installation
 ------------
