@@ -1,14 +1,20 @@
+from __future__ import print_function
+
 import array
 import math
+import subprocess
 import unittest
+from types import ModuleType
 
 from julia import Julia, JuliaError
+from julia.core import jl_name, py_name
 import sys
 import os
 
 python_version = sys.version_info
 
 
+orig_env = os.environ.copy()
 julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"), debug=True)
 
 class JuliaTest(unittest.TestCase):
@@ -62,9 +68,73 @@ class JuliaTest(unittest.TestCase):
         else:
             pass
 
+    def test_import_julia_module_existing_function(self):
+        from julia import Base
+        assert Base.mod(2, 2) == 0
+
+    def test_from_import_existing_julia_function(self):
+        from julia.Base import divrem
+        assert divrem(7, 3) == (2, 1)
+
+    def test_import_julia_module_non_existing_name(self):
+        from julia import Base
+        try:
+            Base.spamspamspam
+            self.fail('No AttributeError')
+        except AttributeError:
+            pass
+
+    def test_from_import_non_existing_julia_name(self):
+        try:
+            from Base import spamspamspam
+        except ImportError:
+            pass
+        else:
+            assert not spamspamspam
+
+    def test_julia_module_bang(self):
+        from julia import Base
+        xs = [1, 2, 3]
+        ys = Base.scale_b(xs[:], 2)
+        assert all(x * 2 == y for x, y in zip(xs, ys))
+
+    def test_import_julia_submodule(self):
+        from julia.Base import Enums
+        assert isinstance(Enums, ModuleType)
+
+    def test_star_import_julia_module(self):
+        from . import _star_import
+        _star_import.Enum
+
+    def test_main_module(self):
+        from julia import Main
+        Main.x = x = 123456
+        assert julia.eval('x') == x
+
+    def test_module_all(self):
+        from julia import Base
+        assert 'resize_b' in Base.__all__
+
+    def test_module_dir(self):
+        from julia import Base
+        assert 'resize_b' in dir(Base)
+
+    def test_import_without_setup(self):
+        command = [sys.executable, '-c', 'from julia import Base']
+        print('Executing:', *command)
+        subprocess.check_call(command, env=orig_env)
+
     #TODO: this causes a segfault
     """
     def test_import_julia_modules(self):
         import julia.PyCall as pycall
         self.assertEquals(6, pycall.pyeval('2 * 3'))
     """
+
+    def test_jlpy_identity(self):
+        for name in ['normal', 'resize!']:
+            self.assertEqual(jl_name(py_name(name)), name)
+
+    def test_pyjl_identity(self):
+        for name in ['normal', 'resize_b']:
+            self.assertEqual(py_name(jl_name(name)), name)

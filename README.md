@@ -58,23 +58,71 @@ If you run into problems using `pyjulia`, first check the version of `PyCall.jl`
 
 Usage
 -----
-To call Julia functions from python, first import the library
+
+`pyjulia` provides a high-level interface which assumes a "normal"
+setup (e.g., `julia` is in your `PATH`) and a low-level interface
+which can be used in a customized setup.
+
+### High-level interface
+
+To call a Julia function in a Julia module, import the Julia module
+(say `Base`) with:
 
 ```python
-import julia
+from julia import Base
 ```
 
-then create a Julia object that makes a bridge to the Julia interpreter (assuming that `julia` is in your `PATH`)
+and then call Julia functions in `Base` from python, e.g.,
 
 ```python
-j = julia.Julia()
+Base.sind(90)
 ```
 
-You can then call Julia functions from python, e.g.
+Other variants of Python import syntax also work:
 
 ```python
-j.sind(90)
+import julia.Base
+from julia.Base import LinAlg   # import a submodule
+from julia.Base import sin      # import a function from a module
 ```
+
+The global namespace of Julia's interpreter can be accessed via a
+special module `julia.Main`:
+
+```python
+from julia import Main
+```
+
+You can set names in this module to send Python values to Julia:
+
+```python
+Main.xs = [1, 2, 3]
+```
+
+which allows it to be accessed directly from Julia code, e.g., it can
+be evaluated at Julia side using Julia syntax:
+
+```python
+Main.eval("sin.(xs)")
+```
+
+### Low-level interface
+
+If you need a custom setup for `pyjulia`, it must be done *before*
+importing any Julia modules.  For example, to use the Julia
+interpreter at `PATH/TO/MY/CUSTOM/julia`, run:
+
+```python
+from julia import Julia
+j = julia.Julia(jl_runtime_path="PATH/TO/MY/CUSTOM/julia")
+```
+
+You can then use, e.g.,
+
+```python
+from julia import Base
+```
+
 
 How it works
 ------------

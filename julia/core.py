@@ -14,7 +14,7 @@ Bridge Python and Julia by initializing the Julia interpreter inside Python.
 #-----------------------------------------------------------------------------
 
 # Stdlib
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 import ctypes
 import ctypes.util
 import os
@@ -22,6 +22,7 @@ import sys
 import keyword
 import subprocess
 import time
+import warnings
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
@@ -40,74 +41,135 @@ if python_version.major == 3:
 else:
     iteritems = dict.iteritems
 
-
 class JuliaError(Exception):
     pass
 
 
-class JuliaModule(ModuleType):
-    pass
+def remove_prefix(string, prefix):
+    return string[len(prefix):] if string.startswith(prefix) else string
 
+
+def jl_name(name):
+    if name.endswith('_b'):
+        return name[:-2] + '!'
+    return name
+
+
+def py_name(name):
+    if name.endswith('!'):
+        return name[:-1] + '_b'
+    return name
+
+
+class JuliaModule(ModuleType):
+
+    def __init__(self, loader, *args, **kwargs):
+        super(JuliaModule, self).__init__(*args, **kwargs)
+        self._julia = loader.julia
+        self.__loader__ = loader
+
+    @property
+    def __all__(self):
+        juliapath = remove_prefix(self.__name__, "julia.")
+        names = set(self._julia.eval("names({})".format(juliapath)))
+        names.discard(juliapath.rsplit('.', 1)[-1])
+        return [py_name(n) for n in names if is_accessible_name(n)]
+
+    def __dir__(self):
+        if python_version.major == 2:
+            names = set()
+        else:
+            names = set(super(JuliaModule, self).__dir__())
+        names.update(self.__all__)
+        return list(names)
+    # Override __dir__ method so that completing member names work
+    # well in Python REPLs like IPython.
+
+    def __getattr__(self, name):
+        try:
+            return self.__try_getattr(name)
+        except AttributeError:
+            if name.endswith("_b"):
+                try:
+                    return self.__try_getattr(jl_name(name))
+                except AttributeError:
+                    pass
+            raise
+
+    def __try_getattr(self, name):
+        jl_module = remove_prefix(self.__name__, "julia.")
+        jl_fullname = ".".join((jl_module, name))
+
+        # If `name` is a top-level module, don't import it as a
+        # submodule.  Note that it handles the case that `name` is
+        # `Base` and `Core`.
+        is_toplevel = isdefined(self._julia, 'Main', name)
+        if not is_toplevel and isamodule(self._julia, jl_fullname):
+            # FIXME: submodules from other modules still hit this code
+            # path and they are imported as submodules.
+            return self.__loader__.load_module(".".join((self.__name__, name)))
+
+        if isdefined(self._julia, jl_module, name):
+            return self._julia.eval(jl_fullname)
+
+        raise AttributeError(name)
+
+
+class JuliaMainModule(JuliaModule):
+
+    def __setattr__(self, name, value):
+        if name.startswith('_'):
+            super(JuliaMainModule, self).__setattr__(name, value)
+        else:
+            juliapath = remove_prefix(self.__name__, "julia.")
+            setter = '''
+            Main.PyCall.pyfunctionret(
+                (x) -> eval({}, :({} = $x)),
+                Any,
+                PyCall.PyAny)
+            '''.format(juliapath, jl_name(name))
+            self._julia.eval(setter)(value)
+
+    help = property(lambda self: self._julia.help)
+    eval = property(lambda self: self._julia.eval)
+    using = property(lambda self: self._julia.using)
 
 
 # add custom import behavior for the julia "module"
 class JuliaImporter(object):
-    def __init__(self, julia):
-        self.julia = julia
 
     # find_module was deprecated in v3.4
     def find_module(self, fullname, path=None):
-        if path is None:
-            pass
         if fullname.startswith("julia."):
-            return JuliaModuleLoader(self.julia)
+            return JuliaModuleLoader()
 
 
 class JuliaModuleLoader(object):
 
-    def __init__(self, julia):
-        self.julia = julia
+    @property
+    def julia(self):
+        self.__class__.julia = julia = Julia()
+        return julia
 
     # load module was deprecated in v3.4
     def load_module(self, fullname):
-        juliapath = fullname.lstrip("julia.")
-        if isamodule(self.julia, juliapath):
-            mod = sys.modules.setdefault(fullname, JuliaModule(fullname))
-            mod.__loader__ = self
-            names = self.julia.eval("names({}, true, false)".format(juliapath))
-            for name in names:
-                if (ismacro(name) or
-                    isoperator(name) or
-                    isprotected(name) or
-                    notascii(name)):
-                    continue
-                attrname = name
-                if name.endswith("!"):
-                    attrname = name.replace("!", "_b")
-                if keyword.iskeyword(name):
-                    attrname = "jl".join(name)
-                try:
-                    module_path = ".".join((juliapath, name))
-                    module_obj = self.julia.eval(module_path)
-                    is_module = self.julia.eval("isa({}, Module)"
-                                                .format(module_path))
-                    if is_module:
-                        split_path = module_path.split(".")
-                        is_base = split_path[-1] == "Base"
-                        recur_module = split_path[-1] == split_path[-2]
-                        if is_module and not is_base and not recur_module:
-                            newpath = ".".join((fullname, name))
-                            module_obj = self.load_module(newpath)
-                    setattr(mod, attrname, module_obj)
-                except Exception:
-                    if isafunction(self.julia, name, mod_name=juliapath):
-                        func = "{}.{}".format(juliapath, name)
-                        setattr(mod, name, self.julia.eval(func))
-            return mod
+        juliapath = remove_prefix(fullname, "julia.")
+        if juliapath == 'Main':
+            return sys.modules.setdefault(fullname,
+                                          JuliaMainModule(self, fullname))
         elif isafunction(self.julia, juliapath):
-            return getattr(self.julia, juliapath)
+            return self.julia.eval(juliapath)
+
+        try:
+            self.julia.eval("import {}".format(juliapath))
+        except JuliaError:
+            pass
         else:
-            raise ImportError("{} not found".format(juliapath))
+            if isamodule(self.julia, juliapath):
+                return sys.modules.setdefault(fullname,
+                                              JuliaModule(self, fullname))
+
+        raise ImportError("{} not found".format(juliapath))
 
 
 def ismacro(name):
@@ -137,19 +199,33 @@ def notascii(name):
         return True
 
 
+def is_accessible_name(name):
+    """
+    Check if a Julia variable `name` is (easily) accessible from Python.
+
+    Return `True` if `name` can be safely converted to a Python
+    identifier using `py_name` function.  For example,
+
+    >>> is_accessible_name('A_mul_B!')
+    True
+
+    Since it can be accessed as `A_mul_B_b` in Python.
+    """
+    return not (ismacro(name) or
+                isoperator(name) or
+                isprotected(name) or
+                notascii(name))
+
+
+def isdefined(julia, parent, member):
+    return julia.eval("isdefined({}, :({}))".format(parent, member))
+
+
 def isamodule(julia, julia_name):
     try:
-        ret = julia.eval("isa({}, Module)".format(julia_name))
-        return ret
-    except:
-        # try explicitly importing it..
-        try:
-            julia.eval("import {}".format(julia_name))
-            ret = julia.eval("isa({}, Module)".format(julia_name))
-            return ret
-        except:
-            pass
-    return False
+        return julia.eval("isa({}, Module)".format(julia_name))
+    except JuliaError:
+        return False  # assuming this is an `UndefVarError`
 
 
 def isafunction(julia, julia_name, mod_name=""):
@@ -161,36 +237,6 @@ def isafunction(julia, julia_name, mod_name=""):
     except:
         return False
 
-
-def module_functions(julia, module):
-    """Compute the function names in the julia module"""
-    bases = {}
-    names = julia.eval("names(%s)" % module)
-    for name in names:
-        if (ismacro(name) or
-            isoperator(name) or
-            isprotected(name) or
-            notascii(name)):
-            continue
-        try:
-            # skip undefined names
-            if not julia.eval("isdefined(:%s)" % name):
-                continue
-            # skip modules for now
-            if isamodule(julia, name):
-                continue
-            if name.startswith("_"):
-                continue
-            attr_name = name
-            if name.endswith("!"):
-                attr_name = name.replace("!", "_b")
-            if keyword.iskeyword(name):
-                attr_name = "jl".join(name)
-            julia_func = julia.eval(name)
-            bases[attr_name] = julia_func
-        except:
-            pass
-    return bases
 
 def determine_if_statically_linked():
     """Determines if this python executable is statically linked"""
@@ -383,13 +429,8 @@ class Julia(object):
         # reloads.
         _julia_runtime[0] = self.api
 
-        self.add_module_functions("Base")
-
-        sys.meta_path.append(JuliaImporter(self))
-
-    def add_module_functions(self, module):
-        for name, func in iteritems(module_functions(self, module)):
-            setattr(self, name, func)
+        self.sprint = self.eval('sprint')
+        self.showerror = self.eval('showerror')
 
     def _debug(self, msg):
         """
@@ -422,8 +463,8 @@ class Julia(object):
             return
 
         # If, theoretically, an exception happens in early stage of
-        # self.add_module_functions("Base"), showerror and sprint as
-        # below does not work.  Let's use jl_typeof_str in such case.
+        # self.__init__, showerror and sprint as below does not work.
+        # Let's use jl_typeof_str in such case.
         try:
             sprint = self.sprint
             showerror = self.showerror
@@ -477,4 +518,18 @@ class Julia(object):
     def using(self, module):
         """Load module in Julia by calling the `using module` command"""
         self.eval("using %s" % module)
-        self.add_module_functions(module)
+
+
+class LegacyJulia(Julia):
+
+    def __getattr__(self, name):
+        from julia import Main
+        warnings.warn(
+            "Accessing `Julia().<name>` to obtain Julia objects is"
+            " deprecated.  Use `from julia import Main; Main.<name>` or"
+            " `jl = Julia(); jl.eval('<name>')`.",
+            DeprecationWarning)
+        return getattr(Main, name)
+
+
+sys.meta_path.append(JuliaImporter())
