@@ -520,7 +520,12 @@ class Julia(object):
         self.eval("using %s" % module)
 
 
-class LegacyJulia(Julia):
+class LegacyJulia(object):
+    __doc__ = Julia.__doc__
+
+    def __init__(self, *args, **kwargs):
+        self.__julia = Julia(*args, **kwargs)
+    __init__.__doc__ = Julia.__init__.__doc__
 
     def __getattr__(self, name):
         from julia import Main
@@ -529,7 +534,10 @@ class LegacyJulia(Julia):
             " deprecated.  Use `from julia import Main; Main.<name>` or"
             " `jl = Julia(); jl.eval('<name>')`.",
             DeprecationWarning)
-        return getattr(Main, name)
+        try:
+            return getattr(self.__julia, name)
+        except AttributeError:
+            return getattr(Main, name)
 
 
 sys.meta_path.append(JuliaImporter())
