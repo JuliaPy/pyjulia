@@ -1,45 +1,36 @@
 environment:
+
+  TOXENV: py,py27
+  TOX_TESTENV_PASSENV: DISTUTILS_USE_SDK MSSdk INCLUDE LIB
+  # https://packaging.python.org/guides/supporting-windows-using-appveyor/#testing-with-tox
+
   # for more python versions have a look at
   # https://github.com/ogrisel/python-appveyor-demo/blob/master/appveyor.yml
   matrix:
-  # 64 julia-0.6 Python-27
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
-    PYTHONDIR: "C:\\Python27-x64"
-
-  # 32 julia-0.6 Python-27
+  # 32 julia-0.6 Python-35
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.6/julia-0.6-latest-win32.exe"
-    PYTHONDIR: "C:\\Python27"
+    PYTHONDIR: "C:\\Python35"
+    BATDIR: ci\appveyor\win32
+
+  # 32 julia latest Python-35
+  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
+    PYTHONDIR: "C:\\Python35"
+    BATDIR: ci\appveyor\win32
 
   # 64 julia-0.6 Python-35
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
-
-  # 32 julia-latest Python-27
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
-    PYTHONDIR: "C:\\Python27"
-
-  # 64 julia-latest Python-27
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
-    PYTHONDIR: "C:\\Python27-x64"
+    BATDIR: ci\appveyor\win64
 
   # 64 julia latest Python-35
   - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
-
-  # 64 julia latest Cross Version
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
-    PYTHONDIR: "C:\\Python35-x64"
-    CROSS_VERSION_PATH: "C:\\Python27-x64"
-
-  # 32 julia latest Cross Version
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
-    PYTHONDIR: "C:\\Python35"
-    CROSS_VERSION_PATH: "C:\\Python27"
+    BATDIR: ci\appveyor\win64
 
 matrix:
- allow_failures:
-  - CROSS_VERSION_PATH: "C:\\Python27-x64"
-  - CROSS_VERSION_PATH: "C:\\Python27"
+  allow_failures:
+    - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
+    - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
 
 branches:
   only:
@@ -71,11 +62,10 @@ build_script:
   # - C:\projects\julia\bin\julia -e "using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module"
   - "SET PYTHON=%PYTHONDIR%\\python.exe"
   - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\")"
+  - "%PYTHONDIR%\\python.exe -m pip install --quiet tox"
 
 test_script:
-  - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
-  - python --version
+  - "SET PATH=%cd%\\%BATDIR%;%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
   - dir
-  - ps: if (Test-Path Env:\CROSS_VERSION_PATH) { Invoke-Expression "$env:CROSS_VERSION_PATH -m unittest discover" }
-  # - python -c "import julia; julia.Julia(debug=True)"
-  - python -m unittest discover
+  - ps: if ($env:CROSS_VERSION -eq 1) { Invoke-Expression "tox" }
+  - tox
