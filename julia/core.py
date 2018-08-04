@@ -24,6 +24,7 @@ import subprocess
 import time
 import warnings
 
+from collections import namedtuple
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
 from ctypes import py_object
@@ -247,6 +248,32 @@ def determine_if_statically_linked():
     return not (b"libpython" in lddoutput)
 
 
+JuliaInfo = namedtuple(
+    'JuliaInfo',
+    ['JULIA_HOME', 'libjulia_path', 'image_file', 'pyprogramname'])
+
+
+def juliainfo(runtime='julia'):
+    output = subprocess.check_output(
+        [runtime, "-e",
+         """
+         println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
+         println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
+         println(unsafe_string(Base.JLOptions().image_file))
+         PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
+         if isfile(PyCall_depsfile)
+            eval(Module(:__anon__),
+                Expr(:toplevel,
+                 :(Main.Base.include($PyCall_depsfile)),
+                 :(println(pyprogramname))))
+         end
+         """])
+    args = output.decode("utf-8").rstrip().split("\n")
+    if len(args) == 3:
+        args.append(None)  # no pyprogramname set
+    return JuliaInfo(*args)
+
+
 _julia_runtime = [False]
 
 class Julia(object):
@@ -297,23 +324,7 @@ class Julia(object):
                 runtime = jl_runtime_path
             else:
                 runtime = 'julia'
-            juliainfo = subprocess.check_output(
-                [runtime, "-e",
-                 """
-                 println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
-                 println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
-                 println(unsafe_string(Base.JLOptions().image_file))
-                 PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
-                 if isfile(PyCall_depsfile)
-                    eval(Module(:__anon__),
-                        Expr(:toplevel,
-                         :(Main.Base.include($PyCall_depsfile)),
-                         :(println(pyprogramname))))
-                 else
-                    println("nowhere")
-                 end
-                 """])
-            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo.decode("utf-8").rstrip().split("\n")
+            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo()
             exe_differs = not depsjlexe == sys.executable
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):

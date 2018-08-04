@@ -4,18 +4,52 @@ import array
 import math
 import subprocess
 import unittest
+from contextlib import contextmanager
 from types import ModuleType
 
 from julia import Julia, JuliaError
-from julia.core import jl_name, py_name
+from julia.core import jl_name, py_name, juliainfo
 import sys
 import os
 
 python_version = sys.version_info
 
 
+@contextmanager
+def maybe_rebuild(jl_runtime_path=os.getenv('JULIA_EXE', 'julia')):
+    """
+    (Maybe) Re-build PyCall.jl to test ``exe_differs=False`` path.
+
+    ``Pkg.build("PyCall")`` is run on Julia side when the environment
+    variable `PYJULIA_TEST_REBUILD` is set to ``yes``.
+    """
+    if os.getenv('PYJULIA_TEST_REBUILD', 'no') == 'yes':
+        env = os.environ.copy()
+        info = juliainfo()
+
+        build = [jl_runtime_path, '-e', 'Pkg.build("PyCall")']
+        print('Building PyCall.jl for this Python interpreter...')
+        print(*build)
+        subprocess.check_call(build, env=dict(env, PYTHON=sys.executable))
+        try:
+            print('Setting up pyjulia...')
+            yield
+        finally:
+            print('Restoring previous PyCall.jl build...')
+            print(*build)
+            if info.pyprogramname:
+                env = dict(env, PYTHON=info.pyprogramname)
+            if 'PYTHON' in env:
+                print('PYTHON =', env['PYTHON'])
+            subprocess.check_call(build, env=env)
+    else:
+        yield
+
+
 orig_env = os.environ.copy()
-julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"), debug=True)
+with maybe_rebuild():
+    julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"), debug=True)
+
 
 class JuliaTest(unittest.TestCase):
 
