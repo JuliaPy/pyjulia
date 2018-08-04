@@ -57,7 +57,7 @@ script:
   # "py,py27" below would be redundant when the main interpreter is
   # Python 2.7 but it simplifies the CI setup.
   - if [ "$CROSS_VERSION" = "1" ]; then
-    $PYTHON -m tox -e py,py27;
+    $PYTHON -m tox -e py,py27 -- -s;
     fi
 
-  - PYJULIA_TEST_REBUILD=yes $PYTHON -m tox
+  - PYJULIA_TEST_REBUILD=yes $PYTHON -m tox -- -s

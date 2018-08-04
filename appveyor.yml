@@ -67,5 +67,5 @@ build_script:
 test_script:
   - "SET PATH=%cd%\\%BATDIR%;%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
   - dir
-  - ps: if ($env:CROSS_VERSION -eq 1) { Invoke-Expression "tox" }
-  - tox
+  - ps: if ($env:CROSS_VERSION -eq 1) { Invoke-Expression "tox -- -s" }
+  - tox -- -s
