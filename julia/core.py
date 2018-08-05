@@ -319,6 +319,8 @@ class Julia(object):
             self.api = _julia_runtime[0]
             return
 
+        self._debug()  # so that debug message is shown nicely w/ pytest
+
         if init_julia:
             if jl_runtime_path:
                 runtime = jl_runtime_path
