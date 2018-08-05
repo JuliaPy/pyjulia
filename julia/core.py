@@ -278,6 +278,12 @@ def juliainfo(runtime='julia'):
     return JuliaInfo(*args)
 
 
+def is_same_path(a, b):
+    a = os.path.normpath(os.path.normcase(a))
+    b = os.path.normpath(os.path.normcase(b))
+    return a == b
+
+
 _julia_runtime = [False]
 
 class Julia(object):
@@ -331,9 +337,10 @@ class Julia(object):
             else:
                 runtime = 'julia'
             JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo()
-            exe_differs = not depsjlexe == sys.executable
+            exe_differs = not is_same_path(depsjlexe, sys.executable)
             self._debug("pyprogramname =", depsjlexe)
             self._debug("sys.executable =", sys.executable)
+            self._debug("exe_differs =", exe_differs)
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
