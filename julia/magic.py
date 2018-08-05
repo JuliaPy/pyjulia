@@ -17,7 +17,7 @@ Usage
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 import sys
 
 from IPython.core.magic import Magics, magics_class, line_cell_magic
