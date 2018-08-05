@@ -451,6 +451,7 @@ class Julia(object):
         """
         if self.is_debugging:
             print(*msg, file=sys.stderr)
+            sys.stderr.flush()
 
     def _call(self, src):
         """
