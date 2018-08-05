@@ -42,7 +42,7 @@ def maybe_rebuild(rebuild, julia):
 def with_rebuilt(rebuild, julia, command):
     with maybe_rebuild(rebuild, julia):
         print('Execute:', *command)
-        subprocess.check_call(command)
+        return subprocess.call(command)
 
 
 def main(args=None):
@@ -66,7 +66,7 @@ def main(args=None):
         help='Command and arguments to run.')
     ns = parser.parse_args(args)
     ns.rebuild = ns.rebuild == 'yes'
-    with_rebuilt(**vars(ns))
+    sys.exit(with_rebuilt(**vars(ns)))
 
 
 if __name__ == '__main__':
