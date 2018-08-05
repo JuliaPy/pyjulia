@@ -24,7 +24,7 @@ def maybe_rebuild(rebuild, julia):
         info = juliainfo()
 
         build = [julia, '-e', 'Pkg.build("PyCall")']
-        print('Building PyCall.jl for this Python interpreter...')
+        print('Building PyCall.jl with PYTHON =', sys.executable)
         print(*build)
         subprocess.check_call(build, env=dict(env, PYTHON=sys.executable))
         try:

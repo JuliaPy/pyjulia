@@ -326,6 +326,8 @@ class Julia(object):
                 runtime = 'julia'
             JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo()
             exe_differs = not depsjlexe == sys.executable
+            self._debug("pyprogramname =", depsjlexe)
+            self._debug("sys.executable =", sys.executable)
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
@@ -443,12 +445,12 @@ class Julia(object):
         self.sprint = self.eval('sprint')
         self.showerror = self.eval('showerror')
 
-    def _debug(self, msg):
+    def _debug(self, *msg):
         """
         Print some debugging stuff, if enabled
         """
         if self.is_debugging:
-            print(msg, file=sys.stderr)
+            print(*msg, file=sys.stderr)
 
     def _call(self, src):
         """
