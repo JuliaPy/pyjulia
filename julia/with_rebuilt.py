@@ -24,6 +24,7 @@ def maybe_rebuild(rebuild, julia):
         build = [julia, '-e', 'Pkg.build("PyCall")']
         print('Building PyCall.jl with PYTHON =', sys.executable)
         print(*build)
+        sys.stdout.flush()
         subprocess.check_call(build, env=dict(env, PYTHON=sys.executable))
         try:
             yield
