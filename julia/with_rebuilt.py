@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 (Maybe) Re-build PyCall.jl to test ``exe_differs=False`` path.
 
@@ -7,14 +5,14 @@
 variable `PYJULIA_TEST_REBUILD` is set to ``yes``.
 """
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import os
 import subprocess
 import sys
 from contextlib import contextmanager
 
-from julia.core import juliainfo
+from .core import juliainfo
 
 
 @contextmanager
