@@ -19,7 +19,7 @@ from .core import juliainfo
 def maybe_rebuild(rebuild, julia):
     if rebuild:
         env = os.environ.copy()
-        info = juliainfo()
+        info = juliainfo(julia)
 
         build = [julia, '-e', 'Pkg.build("PyCall")']
         print('Building PyCall.jl with PYTHON =', sys.executable)
