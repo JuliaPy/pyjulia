@@ -31,7 +31,9 @@ def maybe_rebuild(rebuild, julia):
             print('Restoring previous PyCall.jl build...')
             print(*build)
             if info.pyprogramname:
-                env = dict(env, PYTHON=info.pyprogramname)
+                # Use str to avoid "TypeError: environment can only
+                # contain strings" in Python 2.7 + Windows:
+                env = dict(env, PYTHON=str(info.pyprogramname))
             if 'PYTHON' in env:
                 print('PYTHON =', env['PYTHON'])
             subprocess.check_call(build, env=env)
