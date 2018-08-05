@@ -12,6 +12,8 @@ to run the tests, execute from the toplevel directory
 tox
 ```
 
+See [Testing](#testing) below for details.
+
 **Note** You need to explicitly add julia to your `PATH`, an alias will not work.
 
 `pyjulia` is tested against Python versions 2.7, 3.6, and 3.7.  Older versions of Python (than 2.7)  are not supported.
@@ -138,3 +140,38 @@ Limitations
 ------------
 
 Not all valid Julia identifiers are valid Python identifiers.  Unicode identifiers are invalid in Python 2.7 and so `pyjulia` cannot call or access Julia methods/variables with names that are not ASCII only.  Additionally, it is a common idiom in Julia to append a `!` character to methods which mutate their arguments.  These method names are invalid Python identifers.  `pyjulia` renames these methods by subsituting `!` with `_b`.  For example, the Julia method `sum!` can be called in `pyjulia` using `sum_b(...)`.
+
+
+Testing
+-------
+
+The full syntax for invoking `tox` is
+
+```shell
+[PYJULIA_TEST_REBUILD=yes] [JULIA_EXE=<julia>] tox [options] [-- pytest options]
+```
+
+* `PYJULIA_TEST_REBUILD`: *Be careful using this environment
+  variable!* When it is set to `yes`, your `PyCall.jl` installation
+  will be rebuilt using the Python interpreter used for testing.  The
+  test suite tries to build back to the original configuration but the
+  precompilation would be in the stale state after the test.  Note
+  also that it does not work if you unconditionally set `PYTHON`
+  environment variable in your Julia startup file.
+
+* `JULIA_EXE`: `julia` executable to be used for testing.
+
+* Positional arguments after `--` are passed to `pytest`.
+
+For example,
+
+```shell
+PYJULIA_TEST_REBUILD=yes JULIA_EXE=~/julia/julia tox -e py37 -- -s
+```
+
+means to execute tests with
+
+* `pyjulia` in shared-cache mode
+* `julia` executable at `~/julia/julia`
+* Python 3.7
+* `pytest`'s capturing mode turned off
