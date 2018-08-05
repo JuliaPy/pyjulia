@@ -6,8 +6,9 @@ python:
   - "3.6"
 env:
   matrix:
-    - JULIA_VERSION=juliareleases CROSS_VERSION=1
-    - JULIA_VERSION=julianightlies
+    - JULIA_VERSION=0.6.4 CROSS_VERSION=1
+    - JULIA_VERSION=0.7.0-rc2
+    # - JULIA_VERSION=nightly
   global:
     - TOXENV=py
 matrix:
@@ -16,23 +17,25 @@ matrix:
       - language: generic
         env:
           - PYTHON=python2
-          - JULIA_VERSION=julianightlies
+          - JULIA_VERSION=0.7.0-rc2
+          # - JULIA_VERSION=nightly
         os: osx
       - language: generic
         env:
           - PYTHON=python2
-          - JULIA_VERSION=juliareleases
+          - JULIA_VERSION=0.6.4
           - CROSS_VERSION=1
         os: osx
       - language: generic
         env:
           - PYTHON=python3
-          - JULIA_VERSION=julianightlies
+          - JULIA_VERSION=0.7.0-rc2
+          # - JULIA_VERSION=nightly
         os: osx
       - language: generic
         env:
           - PYTHON=python3
-          - JULIA_VERSION=juliareleases
+          - JULIA_VERSION=0.6.4
           - CROSS_VERSION=1
         os: osx
 branches:
