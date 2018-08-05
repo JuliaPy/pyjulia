@@ -284,6 +284,12 @@ def is_same_path(a, b):
     return a == b
 
 
+def is_different_exe(pyprogramname, sys_executable):
+    if pyprogramname is None:
+        return True
+    return not is_same_path(pyprogramname, sys_executable)
+
+
 _julia_runtime = [False]
 
 class Julia(object):
@@ -337,9 +343,9 @@ class Julia(object):
             else:
                 runtime = 'julia'
             JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo()
-            exe_differs = not is_same_path(depsjlexe, sys.executable)
             self._debug("pyprogramname =", depsjlexe)
             self._debug("sys.executable =", sys.executable)
+            exe_differs = is_different_exe(depsjlexe, sys.executable)
             self._debug("exe_differs =", exe_differs)
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
