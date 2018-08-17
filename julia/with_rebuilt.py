@@ -8,6 +8,7 @@ variable `PYJULIA_TEST_REBUILD` is set to ``yes``.
 from __future__ import print_function, absolute_import
 
 import os
+import signal
 import subprocess
 import sys
 from contextlib import contextmanager
@@ -42,8 +43,17 @@ def maybe_rebuild(rebuild, julia):
         yield
 
 
+@contextmanager
+def ignoring(sig):
+    s = signal.signal(sig, signal.SIG_IGN)
+    try:
+        yield
+    finally:
+        signal.signal(sig, s)
+
+
 def with_rebuilt(rebuild, julia, command):
-    with maybe_rebuild(rebuild, julia):
+    with maybe_rebuild(rebuild, julia), ignoring(signal.SIGINT):
         print('Execute:', *command)
         return subprocess.call(command)
 
