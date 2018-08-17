@@ -344,6 +344,34 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     return py_libpython == jl_libpython
 
 
+def raise_separate_cache_error(runtime, pyprogramname):
+    message = """\
+It seems your Julia and PyJulia setup are not supported.
+
+Julia interpreter:
+    {runtime}
+Python interpreter used by PyCall.jl:
+    {pyprogramname}
+Python interpreter used to import PyJulia.
+    {sys.executable}
+
+In Julia >= 0.7, above two paths to the Python interpreters have to match
+exactly in order for PyJulia to work.  To configure PyCall.jl to use Python
+interpreter "{sys.executable}",
+run the following commands in the Julia interpreter:
+
+    ENV["PYTHON"] = "{sys.executable}"
+    using Pkg
+    Pkg.build("PyCall")
+
+For more information, see:
+    https://github.com/JuliaPy/pyjulia
+    https://github.com/JuliaPy/PyCall.jl
+    """.format(runtime=runtime, pyprogramname=pyprogramname,
+               sys=sys)
+    raise RuntimeError(message)
+
+
 _julia_runtime = [False]
 
 
@@ -498,14 +526,20 @@ class Julia(object):
         if init_julia:
             if use_separate_cache:
                 # First check that this is supported
-                self._call("""
-                    if VERSION < v"0.5-"
-                        error(\"""Using pyjulia with a statically-compiled version
-                                  of python or with a version of python that
-                                  differs from that used by PyCall.jl is not
-                                  supported on julia 0.4""\")
-                    end
-                """)
+                version_range = self._unbox_as(self._call("""
+                Int64(if VERSION < v"0.6-"
+                    2
+                elseif VERSION >= v"0.7-"
+                    1
+                else
+                    0
+                end)
+                """), "int64")
+                if version_range == 2:
+                    raise RuntimeError(
+                        "PyJulia does not support Julia < 0.6 anymore")
+                elif version_range == 1:
+                    raise_separate_cache_error(runtime, depsjlexe)
                 # Intercept precompilation
                 os.environ["PYCALL_PYTHON_EXE"] = sys.executable
                 os.environ["PYCALL_JULIA_HOME"] = PYCALL_JULIA_HOME
