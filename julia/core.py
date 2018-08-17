@@ -342,7 +342,7 @@ class Julia(object):
                 runtime = jl_runtime_path
             else:
                 runtime = 'julia'
-            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo()
+            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo(runtime)
             self._debug("pyprogramname =", depsjlexe)
             self._debug("sys.executable =", sys.executable)
             exe_differs = is_different_exe(depsjlexe, sys.executable)
