@@ -63,7 +63,15 @@ build_script:
   # - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.init(); Pkg.resolve()"
   # - C:\projects\julia\bin\julia -e "using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module"
   - "SET PYTHON=%PYTHONDIR%\\python.exe"
-  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\")"
+  - C:\projects\julia\bin\julia -e "
+      if VERSION >= v\"0.7.0-DEV.3630\";
+          using InteractiveUtils;
+          versioninfo(verbose=true);
+      else
+          versioninfo(true);
+      end;
+      VERSION >= v\"0.7.0-DEV.5183\" && using Pkg;
+      Pkg.add(\"PyCall\")"
   - "%PYTHONDIR%\\python.exe -m pip install --quiet tox"
 
 test_script:
