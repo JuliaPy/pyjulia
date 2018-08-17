@@ -1,30 +1,23 @@
-#!/bin/sh
-# install julia release: ./install-julia.sh juliareleases
-# install julia nightly: ./install-julia.sh julianightlies
-
-VERSION="0.6.2"
-SHORTVERSION="0.6"
+#!/bin/bash
+# install julia vX.Y.Z:  ./install-julia.sh X.Y.Z
+# install julia nightly: ./install-julia.sh nightly
 
 # stop on error
 set -e
-# default to juliareleases
-if [ $# -ge 1 ]; then
-  JULIAVERSION=$1
-elif [ -z "$JULIAVERSION" ]; then
-  JULIAVERSION=juliareleases
-fi
+VERSION="$1"
 
-case "$JULIAVERSION" in
-  julianightlies)
+case "$VERSION" in
+  nightly)
     BASEURL="https://julialangnightlies-s3.julialang.org/bin"
     JULIANAME="julia-latest"
     ;;
-  juliareleases)
+  [0-9]*)
     BASEURL="https://julialang-s3.julialang.org/bin"
+    SHORTVERSION="$(echo "$VERSION" | grep -Eo '^[0-9]+\.[0-9]+')"
     JULIANAME="$SHORTVERSION/julia-$VERSION"
     ;;
   *)
-    echo "Unrecognized JULIAVERSION=$JULIAVERSION, exiting"
+    echo "Unrecognized VERSION=$VERSION, exiting"
     exit 1
     ;;
 esac
@@ -34,22 +27,22 @@ case $(uname) in
     case $(uname -m) in
       x86_64)
         ARCH="x64"
-        case "$JULIAVERSION" in
-          julianightlies)
+        case "$JULIANAME" in
+          julia-latest)
             SUFFIX="linux64"
             ;;
-          juliareleases)
+          *)
             SUFFIX="linux-x86_64"
             ;;
         esac
         ;;
       i386 | i486 | i586 | i686)
         ARCH="x86"
-        case "$JULIAVERSION" in
-          julianightlies)
+        case "$JULIANAME" in
+          julia-latest)
             SUFFIX="linux32"
             ;;
-          juliareleases)
+          *)
             SUFFIX="linux-i686"
             ;;
         esac

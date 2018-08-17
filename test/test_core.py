@@ -4,6 +4,7 @@ import array
 import math
 import subprocess
 import unittest
+from contextlib import contextmanager
 from types import ModuleType
 
 from julia import Julia, JuliaError
@@ -16,6 +17,7 @@ python_version = sys.version_info
 
 orig_env = os.environ.copy()
 julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"), debug=True)
+
 
 class JuliaTest(unittest.TestCase):
 

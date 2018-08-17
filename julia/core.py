@@ -24,6 +24,7 @@ import subprocess
 import time
 import warnings
 
+from collections import namedtuple
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
 from ctypes import py_object
@@ -141,6 +142,10 @@ class JuliaImporter(object):
     # find_module was deprecated in v3.4
     def find_module(self, fullname, path=None):
         if fullname.startswith("julia."):
+            pypath = os.path.join(os.path.dirname(__file__),
+                                  "{}.py".format(fullname[len("julia."):]))
+            if os.path.isfile(pypath):
+                return
             return JuliaModuleLoader()
 
 
@@ -247,6 +252,44 @@ def determine_if_statically_linked():
     return not (b"libpython" in lddoutput)
 
 
+JuliaInfo = namedtuple(
+    'JuliaInfo',
+    ['JULIA_HOME', 'libjulia_path', 'image_file', 'pyprogramname'])
+
+
+def juliainfo(runtime='julia'):
+    output = subprocess.check_output(
+        [runtime, "-e",
+         """
+         println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
+         println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
+         println(unsafe_string(Base.JLOptions().image_file))
+         PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
+         if isfile(PyCall_depsfile)
+            eval(Module(:__anon__),
+                Expr(:toplevel,
+                 :(Main.Base.include($PyCall_depsfile)),
+                 :(println(pyprogramname))))
+         end
+         """])
+    args = output.decode("utf-8").rstrip().split("\n")
+    if len(args) == 3:
+        args.append(None)  # no pyprogramname set
+    return JuliaInfo(*args)
+
+
+def is_same_path(a, b):
+    a = os.path.normpath(os.path.normcase(a))
+    b = os.path.normpath(os.path.normcase(b))
+    return a == b
+
+
+def is_different_exe(pyprogramname, sys_executable):
+    if pyprogramname is None:
+        return True
+    return not is_same_path(pyprogramname, sys_executable)
+
+
 _julia_runtime = [False]
 
 class Julia(object):
@@ -292,29 +335,18 @@ class Julia(object):
             self.api = _julia_runtime[0]
             return
 
+        self._debug()  # so that debug message is shown nicely w/ pytest
+
         if init_julia:
             if jl_runtime_path:
                 runtime = jl_runtime_path
             else:
                 runtime = 'julia'
-            juliainfo = subprocess.check_output(
-                [runtime, "-e",
-                 """
-                 println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
-                 println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
-                 println(unsafe_string(Base.JLOptions().image_file))
-                 PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
-                 if isfile(PyCall_depsfile)
-                    eval(Module(:__anon__),
-                        Expr(:toplevel,
-                         :(Main.Base.include($PyCall_depsfile)),
-                         :(println(pyprogramname))))
-                 else
-                    println("nowhere")
-                 end
-                 """])
-            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo.decode("utf-8").rstrip().split("\n")
-            exe_differs = not depsjlexe == sys.executable
+            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo()
+            self._debug("pyprogramname =", depsjlexe)
+            self._debug("sys.executable =", sys.executable)
+            exe_differs = is_different_exe(depsjlexe, sys.executable)
+            self._debug("exe_differs =", exe_differs)
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
@@ -432,12 +464,13 @@ class Julia(object):
         self.sprint = self.eval('sprint')
         self.showerror = self.eval('showerror')
 
-    def _debug(self, msg):
+    def _debug(self, *msg):
         """
         Print some debugging stuff, if enabled
         """
         if self.is_debugging:
-            print(msg, file=sys.stderr)
+            print(*msg, file=sys.stderr)
+            sys.stderr.flush()
 
     def _call(self, src):
         """

@@ -17,7 +17,7 @@ Usage
 # Imports
 #-----------------------------------------------------------------------------
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 import sys
 
 from IPython.core.magic import Magics, magics_class, line_cell_magic
@@ -46,7 +46,7 @@ class JuliaMagics(Magics):
               end='')
         # Flush, otherwise the Julia startup will keep stdout buffered
         sys.stdout.flush()
-        self.julia = Julia(init_julia=True)
+        self._julia = Julia(init_julia=True)
         print()
 
     @line_cell_magic
@@ -58,9 +58,9 @@ class JuliaMagics(Magics):
         src = compat.unicode_type(line if cell is None else cell)
 
         try:
-            ans = self.julia.eval(src)
+            ans = self._julia.eval(src)
         except JuliaError as e:
-            print(e.message, file=sys.stderr)
+            print(e, file=sys.stderr)
             ans = None
 
         return ans
