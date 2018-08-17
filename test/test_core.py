@@ -56,7 +56,7 @@ class JuliaTest(unittest.TestCase):
         self.assertTrue(all(x == y for x, y in zip([11, 11, 11],
                          julia.map(lambda x: x + 1,
                                    array.array('I', [10, 10, 10])))))
-        self.assertEqual(6, julia.foldr(add, 0, [1, 2, 3]))
+        self.assertEqual(6, julia.reduce(add, [1, 2, 3]))
 
     def test_call_python_with_julia_args(self):
         self.assertEqual(6, sum(julia.eval('(1, 2, 3)')))
@@ -97,8 +97,8 @@ class JuliaTest(unittest.TestCase):
     def test_julia_module_bang(self):
         from julia import Base
         xs = [1, 2, 3]
-        ys = Base.scale_b(xs[:], 2)
-        assert all(x * 2 == y for x, y in zip(xs, ys))
+        ys = Base.fill_b(xs[:], 10)
+        assert all(y == 10 for y in ys)
 
     def test_import_julia_submodule(self):
         from julia.Base import Enums
