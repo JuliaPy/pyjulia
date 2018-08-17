@@ -22,7 +22,12 @@ def maybe_rebuild(rebuild, julia):
         env = os.environ.copy()
         info = juliainfo(julia)
 
-        build = [julia, '-e', 'Pkg.build("PyCall")']
+        build = [julia, '-e', """
+        if VERSION >= v"0.7.0-DEV.3630"
+            using Pkg
+        end
+        Pkg.build("PyCall")
+        """]
         print('Building PyCall.jl with PYTHON =', sys.executable)
         print(*build)
         sys.stdout.flush()
@@ -30,6 +35,7 @@ def maybe_rebuild(rebuild, julia):
         try:
             yield
         finally:
+            print()  # clear out messages from py.test
             print('Restoring previous PyCall.jl build...')
             print(*build)
             if info.pyprogramname:
