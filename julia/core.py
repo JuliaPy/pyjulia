@@ -346,6 +346,22 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
 
 _julia_runtime = [False]
 
+
+UNBOXABLE_TYPES = (
+    'bool',
+    'int8',
+    'uint8',
+    'int16',
+    'uint16',
+    'int32',
+    'uint32',
+    'int64',
+    'uint64',
+    'float32',
+    'float64',
+)
+
+
 class Julia(object):
     """
     Implements a bridge to the Julia interpreter or library.
@@ -460,6 +476,17 @@ class Julia(object):
         self.api.jl_unbox_voidpointer.argtypes = [void_p]
         self.api.jl_unbox_voidpointer.restype = py_object
 
+        for c_type in UNBOXABLE_TYPES:
+            jl_unbox = getattr(self.api, "jl_unbox_{}".format(c_type))
+            jl_unbox.argtypes = [void_p]
+            jl_unbox.restype = getattr(ctypes, "c_{}".format({
+                "float32": "float",
+                "float64": "double",
+            }.get(c_type, c_type)))
+
+        self.api.jl_typeof.argtypes = [void_p]
+        self.api.jl_typeof.restype = void_p
+
         self.api.jl_exception_clear.restype = None
         self.api.jl_stderr_obj.argtypes = []
         self.api.jl_stderr_obj.restype = void_p
@@ -556,6 +583,29 @@ class Julia(object):
         self.check_exception(src)
 
         return ans
+
+    @staticmethod
+    def _check_unboxable(c_type):
+        if c_type not in UNBOXABLE_TYPES:
+            raise ValueError("Julia value cannot be unboxed as c_type={!r}.\n"
+                             "c_type supported by PyJulia are:\n"
+                             "{}".format(c_type, "\n".join(UNBOXABLE_TYPES)))
+
+    def _is_unboxable_as(self, pointer, c_type):
+        self._check_unboxable(c_type)
+        jl_type = getattr(self.api, 'jl_{}_type'.format(c_type))
+        desired = ctypes.cast(jl_type, ctypes.POINTER(ctypes.c_void_p))[0]
+        actual = self.api.jl_typeof(pointer)
+        return actual == desired
+
+    def _unbox_as(self, pointer, c_type):
+        self._check_unboxable(c_type)
+        jl_unbox = getattr(self.api, 'jl_unbox_{}'.format(c_type))
+        if self._is_unboxable_as(pointer, c_type):
+            return jl_unbox(pointer)
+        else:
+            raise TypeError("Cannot unbox pointer {} as {}"
+                            .format(pointer, c_type))
 
     def check_exception(self, src="<unknown code>"):
         exoc = self.api.jl_exception_occurred()
