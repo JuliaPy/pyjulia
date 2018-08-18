@@ -18,7 +18,7 @@ python_version = sys.version_info
 
 
 orig_env = os.environ.copy()
-julia = Julia(jl_runtime_path=os.getenv("JULIA_EXE"), debug=True)
+julia = Julia(runtime=os.getenv("JULIA_EXE"), debug=True)
 
 
 class JuliaTest(unittest.TestCase):
