@@ -12,6 +12,8 @@ from julia.core import jl_name, py_name
 import sys
 import os
 
+import pytest
+
 python_version = sys.version_info
 
 
@@ -121,6 +123,10 @@ class JuliaTest(unittest.TestCase):
         from julia import Base
         assert 'resize_b' in dir(Base)
 
+    @pytest.mark.skipif(
+        "JULIA_EXE" in orig_env,
+        reason=("cannot be tested with custom Julia executable;"
+                " JULIA_EXE is set to {}".format(orig_env.get("JULIA_EXE"))))
     def test_import_without_setup(self):
         command = [sys.executable, '-c', 'from julia import Base']
         print('Executing:', *command)
