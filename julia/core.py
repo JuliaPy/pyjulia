@@ -504,9 +504,7 @@ class Julia(object):
         except AttributeError:
             res = None
         else:
-            res = self.api.jl_call2(void_p(self.api.convert),
-                                    void_p(self.api.PyObject),
-                                    void_p(exoc))
+            res = self.api.jl_call2(self.api.convert, self.api.PyObject, exoc)
         if res is None:
             exception = self.api.jl_typeof_str(exoc).decode('utf-8')
         else:
@@ -532,7 +530,7 @@ class Julia(object):
         ans = self._call(src)
         if not ans:
             return None
-        res = self.api.jl_call2(void_p(self.api.convert), void_p(self.api.PyObject), void_p(ans))
+        res = self.api.jl_call2(self.api.convert, self.api.PyObject, ans)
 
         if res is None:
             self.check_exception("convert(PyCall.PyObject, {})".format(src))
