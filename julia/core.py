@@ -407,8 +407,10 @@ class Julia(object):
         self.api.jl_typeof_str.restype = char_p
         self.api.jl_call2.argtypes = [void_p, void_p, void_p]
         self.api.jl_call2.restype = void_p
+        self.api.jl_get_field.argtypes = [void_p, char_p]
         self.api.jl_get_field.restype = void_p
         self.api.jl_typename_str.restype = char_p
+        self.api.jl_unbox_voidpointer.argtypes = [void_p]
         self.api.jl_unbox_voidpointer.restype = py_object
 
         self.api.jl_exception_clear.restype = None
@@ -539,8 +541,8 @@ class Julia(object):
     def _as_pyobj(self, res):
         if res == 0:
             return None
-        boxed_obj = self.api.jl_get_field(void_p(res), b'o')
-        pyobj = self.api.jl_unbox_voidpointer(void_p(boxed_obj))
+        boxed_obj = self.api.jl_get_field(res, b'o')
+        pyobj = self.api.jl_unbox_voidpointer(boxed_obj)
         # make sure we incref it before returning it,
         # as this is a borrowed reference
         ctypes.pythonapi.Py_IncRef(ctypes.py_object(pyobj))
