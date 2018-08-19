@@ -420,9 +420,6 @@ class Julia(object):
         self.api.jl_printf.restype = ctypes.c_int
         self.api.jl_exception_clear()
 
-        # We use show() for displaying uncaught exceptions.
-        self.api.show = self._call("Base.show")
-
         if init_julia:
             if use_separate_cache:
                 # First check that this is supported
@@ -459,9 +456,6 @@ class Julia(object):
         # they can survive across reinitializations.
         self.api.PyObject = self._call("PyCall.PyObject")
         self.api.convert = self._call("convert")
-
-        # We use show() for displaying uncaught exceptions.
-        self.api.show = self._call("Base.show")
 
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
