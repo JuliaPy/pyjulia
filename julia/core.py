@@ -409,7 +409,6 @@ class Julia(object):
         self.api.jl_call2.restype = void_p
         self.api.jl_get_field.restype = void_p
         self.api.jl_typename_str.restype = char_p
-        self.api.jl_typeof_str.restype = char_p
         self.api.jl_unbox_voidpointer.restype = py_object
 
         self.api.jl_exception_clear.restype = None
