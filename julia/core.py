@@ -494,7 +494,7 @@ class Julia(object):
 
         return ans
 
-    def check_exception(self, src=None):
+    def check_exception(self, src="<unknown code>"):
         exoc = self.api.jl_exception_occurred()
         self._debug("exception occured? " + str(exoc))
         if not exoc:
@@ -542,10 +542,10 @@ class Julia(object):
         res = self.api.jl_call2(void_p(self.api.convert), void_p(self.api.PyObject), void_p(ans))
 
         if res is None:
-            self.check_exception(src)
-        return self._as_pyobj(res, "convert(PyCall.PyObject, {})".format(src))
+            self.check_exception("convert(PyCall.PyObject, {})".format(src))
+        return self._as_pyobj(res)
 
-    def _as_pyobj(self, res, src=None):
+    def _as_pyobj(self, res):
         if res == 0:
             return None
         boxed_obj = self.api.jl_get_field(void_p(res), b'o')
