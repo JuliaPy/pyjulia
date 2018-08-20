@@ -268,7 +268,12 @@ def juliainfo(runtime='julia'):
          end
          println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
          println(unsafe_string(Base.JLOptions().image_file))
-         PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
+         if VERSION < v"0.7.0"
+             PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
+         else
+             modpath = Base.locate_package(Base.identify_package("PyCall"))
+             PyCall_depsfile = joinpath(dirname(modpath),"..","deps","deps.jl")
+         end
          if isfile(PyCall_depsfile)
              include(PyCall_depsfile)
              println(pyprogramname)
