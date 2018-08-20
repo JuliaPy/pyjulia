@@ -274,7 +274,7 @@ def juliainfo(runtime='julia'):
              modpath = Base.locate_package(Base.identify_package("PyCall"))
              PyCall_depsfile = joinpath(dirname(modpath),"..","deps","deps.jl")
          end
-         if isfile(PyCall_depsfile)
+         if PyCall_depsfile !== nothing && isfile(PyCall_depsfile)
              include(PyCall_depsfile)
              println(pyprogramname)
          end
