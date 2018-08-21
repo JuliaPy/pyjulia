@@ -124,7 +124,7 @@ class JuliaMainModule(JuliaModule):
         else:
             juliapath = remove_prefix(self.__name__, "julia.")
             setter = '''
-            Main.PyCall.pyfunctionret(
+            PyCall.pyfunctionret(
                 (x) -> eval({}, :({} = $x)),
                 Any,
                 PyCall.PyAny)
