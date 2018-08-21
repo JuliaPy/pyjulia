@@ -97,10 +97,12 @@ class JuliaTest(unittest.TestCase):
             assert not spamspamspam
 
     def test_julia_module_bang(self):
-        from julia import Base
-        xs = [1, 2, 3]
-        ys = Base.fill_b(xs[:], 10)
-        assert all(y == 10 for y in ys)
+        from julia.Base import Channel, put_b, take_b
+        chan = Channel(1)
+        sent = 123
+        put_b(chan, sent)
+        received = take_b(chan)
+        assert sent == received
 
     def test_import_julia_submodule(self):
         from julia.Base import Enums
