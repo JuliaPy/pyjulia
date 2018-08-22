@@ -42,6 +42,12 @@ if python_version.major == 3:
 else:
     iteritems = dict.iteritems
 
+
+# As setting up Julia modifies os.environ, we need to cache it for
+# launching subprocesses later in the original environment.
+_enviorn = os.environ.copy()
+
+
 class JuliaError(Exception):
     pass
 
@@ -278,7 +284,11 @@ def juliainfo(runtime='julia'):
              include(PyCall_depsfile)
              println(pyprogramname)
          end
-         """])
+         """],
+        # Use the original environment variables to avoid a cryptic
+        # error "fake-julia/../lib/julia/sys.so: cannot open shared
+        # object file: No such file or directory":
+        env=_enviorn)
     args = output.decode("utf-8").rstrip().split("\n")
     if len(args) == 3:
         args.append(None)  # no pyprogramname set
