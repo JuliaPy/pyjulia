@@ -451,16 +451,37 @@ class Julia(object):
                 # configuration and so do any packages that depend on it.
                 self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
                     "\"lib\", \"pyjulia%s-v$(VERSION.major).$(VERSION.minor)\"))" % sys.version_info[0])
-                # If PyCall.ji does not exist, create an empty file to force
-                # recompilation
+
+                # If PyCall.jl is already pre-compiled, for the global
+                # environment, hide it while we are loading PyCall.jl
+                # for PyJulia which has to compile a new cache if it
+                # does not exist.  However, Julia does not compile a
+                # new cache if it exists in Base.LOAD_CACHE_PATH[2:end].
+                # https://github.com/JuliaPy/pyjulia/issues/92#issuecomment-289303684
                 self._call(u"""
-                    isdir(Base.LOAD_CACHE_PATH[1]) ||
-                        mkpath(Base.LOAD_CACHE_PATH[1])
-                    depsfile = joinpath(Base.LOAD_CACHE_PATH[1],"PyCall.ji")
-                    isfile(depsfile) || touch(depsfile)
+                for path in Base.LOAD_CACHE_PATH[2:end]
+                    cache = joinpath(path, "PyCall.ji")
+                    backup = joinpath(path, "PyCall.ji.backup")
+                    if isfile(cache)
+                        mv(cache, backup; remove_destination=true)
+                    end
+                end
                 """)
 
             self._call(u"using PyCall")
+
+            if use_separate_cache:
+                self._call(u"""
+                for path in Base.LOAD_CACHE_PATH[2:end]
+                    cache = joinpath(path, "PyCall.ji")
+                    backup = joinpath(path, "PyCall.ji.backup")
+                    if !isfile(cache) && isfile(backup)
+                        mv(backup, cache)
+                    end
+                    rm(backup; force=true)
+                end
+                """)
+
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject and the convert function. Since these will be
         # needed on every call, we hold them in the Julia object itself so
