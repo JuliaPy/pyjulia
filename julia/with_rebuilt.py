@@ -8,6 +8,7 @@ variable `PYJULIA_TEST_REBUILD` is set to ``yes``.
 from __future__ import print_function, absolute_import
 
 import os
+import signal
 import subprocess
 import sys
 from contextlib import contextmanager
@@ -21,7 +22,12 @@ def maybe_rebuild(rebuild, julia):
         env = os.environ.copy()
         info = juliainfo(julia)
 
-        build = [julia, '-e', 'Pkg.build("PyCall")']
+        build = [julia, '-e', """
+        if VERSION >= v"0.7.0-DEV.3630"
+            using Pkg
+        end
+        Pkg.build("PyCall")
+        """]
         print('Building PyCall.jl with PYTHON =', sys.executable)
         print(*build)
         sys.stdout.flush()
@@ -29,6 +35,7 @@ def maybe_rebuild(rebuild, julia):
         try:
             yield
         finally:
+            print()  # clear out messages from py.test
             print('Restoring previous PyCall.jl build...')
             print(*build)
             if info.pyprogramname:
@@ -42,8 +49,29 @@ def maybe_rebuild(rebuild, julia):
         yield
 
 
+@contextmanager
+def ignoring(sig):
+    """
+    Context manager for ignoring signal `sig`.
+
+    For example,::
+
+        with ignoring(signal.SIGINT):
+            do_something()
+
+    would ignore user's ctrl-c during ``do_something()``.  This is
+    useful when launching interactive program (in which ctrl-c is a
+    valid keybinding) from Python.
+    """
+    s = signal.signal(sig, signal.SIG_IGN)
+    try:
+        yield
+    finally:
+        signal.signal(sig, s)
+
+
 def with_rebuilt(rebuild, julia, command):
-    with maybe_rebuild(rebuild, julia):
+    with maybe_rebuild(rebuild, julia), ignoring(signal.SIGINT):
         print('Execute:', *command)
         return subprocess.call(command)
 

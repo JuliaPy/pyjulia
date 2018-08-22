@@ -262,14 +262,21 @@ def juliainfo(runtime='julia'):
         [runtime, "-e",
          """
          println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
+         if VERSION >= v"0.7.0-DEV.3630"
+             using Libdl
+             using Pkg
+         end
          println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
          println(unsafe_string(Base.JLOptions().image_file))
-         PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
-         if isfile(PyCall_depsfile)
-            eval(Module(:__anon__),
-                Expr(:toplevel,
-                 :(Main.Base.include($PyCall_depsfile)),
-                 :(println(pyprogramname))))
+         if VERSION < v"0.7.0"
+             PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
+         else
+             modpath = Base.locate_package(Base.identify_package("PyCall"))
+             PyCall_depsfile = joinpath(dirname(modpath),"..","deps","deps.jl")
+         end
+         if PyCall_depsfile !== nothing && isfile(PyCall_depsfile)
+             include(PyCall_depsfile)
+             println(pyprogramname)
          end
          """])
     args = output.decode("utf-8").rstrip().split("\n")
@@ -342,7 +349,7 @@ class Julia(object):
                 runtime = jl_runtime_path
             else:
                 runtime = 'julia'
-            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo()
+            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo(runtime)
             self._debug("pyprogramname =", depsjlexe)
             self._debug("sys.executable =", sys.executable)
             exe_differs = is_different_exe(depsjlexe, sys.executable)

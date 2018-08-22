@@ -12,6 +12,8 @@ from julia.core import jl_name, py_name
 import sys
 import os
 
+import pytest
+
 python_version = sys.version_info
 
 
@@ -56,7 +58,7 @@ class JuliaTest(unittest.TestCase):
         self.assertTrue(all(x == y for x, y in zip([11, 11, 11],
                          julia.map(lambda x: x + 1,
                                    array.array('I', [10, 10, 10])))))
-        self.assertEqual(6, julia.foldr(add, 0, [1, 2, 3]))
+        self.assertEqual(6, julia.reduce(add, [1, 2, 3]))
 
     def test_call_python_with_julia_args(self):
         self.assertEqual(6, sum(julia.eval('(1, 2, 3)')))
@@ -95,10 +97,12 @@ class JuliaTest(unittest.TestCase):
             assert not spamspamspam
 
     def test_julia_module_bang(self):
-        from julia import Base
-        xs = [1, 2, 3]
-        ys = Base.scale_b(xs[:], 2)
-        assert all(x * 2 == y for x, y in zip(xs, ys))
+        from julia.Base import Channel, put_b, take_b
+        chan = Channel(1)
+        sent = 123
+        put_b(chan, sent)
+        received = take_b(chan)
+        assert sent == received
 
     def test_import_julia_submodule(self):
         from julia.Base import Enums
@@ -121,6 +125,10 @@ class JuliaTest(unittest.TestCase):
         from julia import Base
         assert 'resize_b' in dir(Base)
 
+    @pytest.mark.skipif(
+        "JULIA_EXE" in orig_env,
+        reason=("cannot be tested with custom Julia executable;"
+                " JULIA_EXE is set to {}".format(orig_env.get("JULIA_EXE"))))
     def test_import_without_setup(self):
         command = [sys.executable, '-c', 'from julia import Base']
         print('Executing:', *command)
