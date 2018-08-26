@@ -53,7 +53,7 @@ before_script:
   - PYTHON=${PYTHON:-python}
   - which $PYTHON
   - $PYTHON -m pip --version
-  - $PYTHON -m pip install --quiet tox
+  - $PYTHON -m pip install --quiet tox coveralls
   - julia --color=yes -e 'VERSION >= v"0.7.0-DEV.5183" && using Pkg; Pkg.add("PyCall")'
 script:
 
@@ -63,4 +63,7 @@ script:
     $PYTHON -m tox -e py,py27 -- -s;
     fi
 
-  - PYJULIA_TEST_REBUILD=yes $PYTHON -m tox -- -s
+  - PYJULIA_TEST_REBUILD=yes $PYTHON -m tox -- --cov=julia -s
+
+after_success:
+  - coveralls
