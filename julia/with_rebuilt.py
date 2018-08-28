@@ -85,6 +85,13 @@ def main(args=None):
         '--rebuild', default=os.getenv('PYJULIA_TEST_REBUILD', 'no'),
         choices=('yes', 'no'),
         help="""
+        *Be careful using this option!* When it is set to `yes`, your
+        `PyCall.jl` installation will be rebuilt using the Python
+        interpreter used for testing.  The test suite tries to build
+        back to the original configuration but the precompilation
+        would be in the stale state after the test.  Note also that it
+        does not work if you unconditionally set `PYTHON` environment
+        variable in your Julia startup file.
         """)
     parser.add_argument(
         '--julia', default=os.getenv('JULIA_EXE', 'julia'),

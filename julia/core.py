@@ -124,7 +124,7 @@ class JuliaMainModule(JuliaModule):
         else:
             juliapath = remove_prefix(self.__name__, "julia.")
             setter = '''
-            Main.PyCall.pyfunctionret(
+            PyCall.pyfunctionret(
                 (x) -> eval({}, :({} = $x)),
                 Any,
                 PyCall.PyAny)
@@ -407,9 +407,10 @@ class Julia(object):
         self.api.jl_typeof_str.restype = char_p
         self.api.jl_call2.argtypes = [void_p, void_p, void_p]
         self.api.jl_call2.restype = void_p
+        self.api.jl_get_field.argtypes = [void_p, char_p]
         self.api.jl_get_field.restype = void_p
         self.api.jl_typename_str.restype = char_p
-        self.api.jl_typeof_str.restype = char_p
+        self.api.jl_unbox_voidpointer.argtypes = [void_p]
         self.api.jl_unbox_voidpointer.restype = py_object
 
         self.api.jl_exception_clear.restype = None
@@ -419,9 +420,6 @@ class Julia(object):
         self.api.jl_stderr_stream.restype = void_p
         self.api.jl_printf.restype = ctypes.c_int
         self.api.jl_exception_clear()
-
-        # We use show() for displaying uncaught exceptions.
-        self.api.show = self._call("Base.show")
 
         if init_julia:
             if use_separate_cache:
@@ -460,9 +458,6 @@ class Julia(object):
         self.api.PyObject = self._call("PyCall.PyObject")
         self.api.convert = self._call("convert")
 
-        # We use show() for displaying uncaught exceptions.
-        self.api.show = self._call("Base.show")
-
         # Flag process-wide that Julia is initialized and store the actual
         # runtime interpreter, so we can reuse it across calls and module
         # reloads.
@@ -494,7 +489,7 @@ class Julia(object):
 
         return ans
 
-    def check_exception(self, src=None):
+    def check_exception(self, src="<unknown code>"):
         exoc = self.api.jl_exception_occurred()
         self._debug("exception occured? " + str(exoc))
         if not exoc:
@@ -511,9 +506,7 @@ class Julia(object):
         except AttributeError:
             res = None
         else:
-            res = self.api.jl_call2(void_p(self.api.convert),
-                                    void_p(self.api.PyObject),
-                                    void_p(exoc))
+            res = self.api.jl_call2(self.api.convert, self.api.PyObject, exoc)
         if res is None:
             exception = self.api.jl_typeof_str(exoc).decode('utf-8')
         else:
@@ -539,17 +532,17 @@ class Julia(object):
         ans = self._call(src)
         if not ans:
             return None
-        res = self.api.jl_call2(void_p(self.api.convert), void_p(self.api.PyObject), void_p(ans))
+        res = self.api.jl_call2(self.api.convert, self.api.PyObject, ans)
 
         if res is None:
-            self.check_exception(src)
-        return self._as_pyobj(res, "convert(PyCall.PyObject, {})".format(src))
+            self.check_exception("convert(PyCall.PyObject, {})".format(src))
+        return self._as_pyobj(res)
 
-    def _as_pyobj(self, res, src=None):
+    def _as_pyobj(self, res):
         if res == 0:
             return None
-        boxed_obj = self.api.jl_get_field(void_p(res), b'o')
-        pyobj = self.api.jl_unbox_voidpointer(void_p(boxed_obj))
+        boxed_obj = self.api.jl_get_field(res, b'o')
+        pyobj = self.api.jl_unbox_voidpointer(boxed_obj)
         # make sure we incref it before returning it,
         # as this is a borrowed reference
         ctypes.pythonapi.Py_IncRef(ctypes.py_object(pyobj))
