@@ -21,10 +21,12 @@ SHLIB_SUFFIX = sysconfig.get_config_var("SHLIB_SUFFIX")
 if SHLIB_SUFFIX is None:
     if is_windows:
         SHLIB_SUFFIX = ".dll"
-    elif is_apple:
-        SHLIB_SUFFIX = ".dylib"
     else:
         SHLIB_SUFFIX = ".so"
+if is_apple:
+    # sysconfig.get_config_var("SHLIB_SUFFIX") can be ".so" in macOS.
+    # Let's not use the value from sysconfig.
+    SHLIB_SUFFIX = ".dylib"
 
 
 def linked_libpython():
@@ -157,7 +159,7 @@ def libpython_candidates(suffix=SHLIB_SUFFIX):
         yield ctypes.util.find_library(library_name(basename))
 
 
-def normalize_path(path, suffix=SHLIB_SUFFIX):
+def normalize_path(path, suffix=SHLIB_SUFFIX, is_apple=is_apple):
     """
     Normalize shared library `path` to a real path.
 
@@ -178,7 +180,29 @@ def normalize_path(path, suffix=SHLIB_SUFFIX):
         return os.path.realpath(path)
     if os.path.exists(path + suffix):
         return os.path.realpath(path + suffix)
+    if is_apple:
+        return normalize_path(_remove_suffix_apple(path),
+                              suffix=".so", is_apple=False)
     return None
+
+
+def _remove_suffix_apple(path):
+    """
+    Strip off .so or .dylib.
+
+    >>> _remove_suffix_apple("libpython.so")
+    'libpython'
+    >>> _remove_suffix_apple("libpython.dylib")
+    'libpython'
+    >>> _remove_suffix_apple("libpython3.7")
+    'libpython3.7'
+    """
+    if path.endswith(".dylib"):
+        return path[:-len(".dylib")]
+    if path.endswith(".so"):
+        return path[:-len(".so")]
+    return path
+
 
 
 def finding_libpython():
