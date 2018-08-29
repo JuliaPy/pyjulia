@@ -264,9 +264,7 @@ JuliaInfo = namedtuple(
     'JuliaInfo',
     ['JULIA_HOME', 'libjulia_path', 'image_file',
      # Variables in PyCall/deps/deps.jl:
-     'pyprogramname', 'libpython'],
-    # PyCall/deps/deps.jl may not exist; The variables are then set to None:
-    defaults=[None, None])
+     'pyprogramname', 'libpython'])
 
 
 def juliainfo(runtime='julia'):
@@ -297,6 +295,7 @@ def juliainfo(runtime='julia'):
         # object file: No such file or directory":
         env=_enviorn)
     args = output.decode("utf-8").rstrip().split("\n")
+    args.extend([None] * (len(JuliaInfo._fields) - len(args)))
     return JuliaInfo(*args)
 
 
