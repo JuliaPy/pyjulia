@@ -15,7 +15,14 @@ import sysconfig
 
 logger = getLogger("find_libpython")
 
-SHLIB_SUFFIX = sysconfig.get_config_var("SHLIB_SUFFIX") or ".so"
+SHLIB_SUFFIX = sysconfig.get_config_var("SHLIB_SUFFIX")
+if SHLIB_SUFFIX is None:
+    if platform.system() == "Windows":
+        SHLIB_SUFFIX = ".dll"
+    elif platform.system() == "Darwin":
+        SHLIB_SUFFIX = ".dylib"
+    else:
+        SHLIB_SUFFIX = ".so"
 
 
 def linked_libpython():
