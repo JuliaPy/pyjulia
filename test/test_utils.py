@@ -4,8 +4,6 @@ Unit tests which can be done without loading `libjulia`.
 
 import platform
 
-import pytest
-
 from julia.find_libpython import finding_libpython, linked_libpython
 from julia.core import determine_if_statically_linked
 
@@ -22,8 +20,6 @@ def test_finding_libpython_yield_type():
 # let's just check returned type of finding_libpython.
 
 
-@pytest.mark.xfail(platform.system() == "Windows",
-                   reason="linked_libpython is not implemented for Windows")
 def test_linked_libpython():
     if determine_if_statically_linked():
         assert linked_libpython() is not None
