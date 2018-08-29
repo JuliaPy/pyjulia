@@ -299,6 +299,12 @@ def juliainfo(runtime='julia'):
     return JuliaInfo(*args)
 
 
+def is_same_path(a, b):
+    a = os.path.realpath(os.path.normcase(a))
+    b = os.path.realpath(os.path.normcase(b))
+    return a == b
+
+
 def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     """
     Determine if Python used by PyCall.jl is compatible with this Python.
@@ -322,6 +328,14 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     if determine_if_statically_linked():
         _debug(sys.executable, "is statically linked.")
         return False
+
+    # Note that the following check is OK since statically linked case
+    # is already excluded.
+    if is_same_path(jlinfo.pyprogramname, sys.executable):
+        # In macOS and Windows, find_libpython does not work as good
+        # as in Linux.  We add this shortcut so that PyJulia can work
+        # in those environments.
+        return True
 
     py_libpython = find_libpython()
     jl_libpython = normalize_path(jlinfo.libpython)
