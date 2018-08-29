@@ -32,6 +32,8 @@ from ctypes import py_object
 # this is python 3.3 specific
 from types import ModuleType, FunctionType
 
+from .find_libpython import find_libpython, normalize_path
+
 #-----------------------------------------------------------------------------
 # Classes and funtions
 #-----------------------------------------------------------------------------
@@ -41,6 +43,12 @@ if python_version.major == 3:
     def iteritems(d): return iter(d.items())
 else:
     iteritems = dict.iteritems
+
+
+# As setting up Julia modifies os.environ, we need to cache it for
+# launching subprocesses later in the original environment.
+_enviorn = os.environ.copy()
+
 
 class JuliaError(Exception):
     pass
@@ -254,7 +262,9 @@ def determine_if_statically_linked():
 
 JuliaInfo = namedtuple(
     'JuliaInfo',
-    ['JULIA_HOME', 'libjulia_path', 'image_file', 'pyprogramname'])
+    ['JULIA_HOME', 'libjulia_path', 'image_file',
+     # Variables in PyCall/deps/deps.jl:
+     'pyprogramname', 'libpython'])
 
 
 def juliainfo(runtime='julia'):
@@ -277,24 +287,61 @@ def juliainfo(runtime='julia'):
          if PyCall_depsfile !== nothing && isfile(PyCall_depsfile)
              include(PyCall_depsfile)
              println(pyprogramname)
+             println(libpython)
          end
-         """])
+         """],
+        # Use the original environment variables to avoid a cryptic
+        # error "fake-julia/../lib/julia/sys.so: cannot open shared
+        # object file: No such file or directory":
+        env=_enviorn)
     args = output.decode("utf-8").rstrip().split("\n")
-    if len(args) == 3:
-        args.append(None)  # no pyprogramname set
+    args.extend([None] * (len(JuliaInfo._fields) - len(args)))
     return JuliaInfo(*args)
 
 
 def is_same_path(a, b):
-    a = os.path.normpath(os.path.normcase(a))
-    b = os.path.normpath(os.path.normcase(b))
+    a = os.path.realpath(os.path.normcase(a))
+    b = os.path.realpath(os.path.normcase(b))
     return a == b
 
 
-def is_different_exe(pyprogramname, sys_executable):
-    if pyprogramname is None:
+def is_compatible_exe(jlinfo, _debug=lambda *_: None):
+    """
+    Determine if Python used by PyCall.jl is compatible with this Python.
+
+    Current Python executable is considered compatible if it is dynamically
+    linked to libpython (usually the case in macOS and Windows) and
+    both of them are using identical libpython.  If this function returns
+    `True`, PyJulia use the same precompilation cache of PyCall.jl used by
+    Julia itself.
+
+    Parameters
+    ----------
+    jlinfo : JuliaInfo
+        A `JuliaInfo` object returned by `juliainfo` function.
+    """
+    _debug("jlinfo.libpython =", jlinfo.libpython)
+    if jlinfo.libpython is None:
+        _debug("libpython cannot be read from PyCall/deps/deps.jl")
+        return False
+
+    if determine_if_statically_linked():
+        _debug(sys.executable, "is statically linked.")
+        return False
+
+    # Note that the following check is OK since statically linked case
+    # is already excluded.
+    if is_same_path(jlinfo.pyprogramname, sys.executable):
+        # In macOS and Windows, find_libpython does not work as good
+        # as in Linux.  We add this shortcut so that PyJulia can work
+        # in those environments.
         return True
-    return not is_same_path(pyprogramname, sys_executable)
+
+    py_libpython = find_libpython()
+    jl_libpython = normalize_path(jlinfo.libpython)
+    _debug("py_libpython =", py_libpython)
+    _debug("jl_libpython =", jl_libpython)
+    return py_libpython == jl_libpython
 
 
 _julia_runtime = [False]
@@ -349,11 +396,10 @@ class Julia(object):
                 runtime = jl_runtime_path
             else:
                 runtime = 'julia'
-            JULIA_HOME, libjulia_path, image_file, depsjlexe = juliainfo(runtime)
+            jlinfo = juliainfo(runtime)
+            JULIA_HOME, libjulia_path, image_file, depsjlexe = jlinfo[:4]
             self._debug("pyprogramname =", depsjlexe)
             self._debug("sys.executable =", sys.executable)
-            exe_differs = is_different_exe(depsjlexe, sys.executable)
-            self._debug("exe_differs =", exe_differs)
             self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
@@ -371,7 +417,8 @@ class Julia(object):
                 else:
                     jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
 
-            use_separate_cache = exe_differs or determine_if_statically_linked()
+            use_separate_cache = not is_compatible_exe(jlinfo, _debug=self._debug)
+            self._debug("use_separate_cache =", use_separate_cache)
             if use_separate_cache:
                 PYCALL_JULIA_HOME = os.path.join(
                     os.path.dirname(os.path.realpath(__file__)),"fake-julia").replace("\\","\\\\")
@@ -441,16 +488,37 @@ class Julia(object):
                 # configuration and so do any packages that depend on it.
                 self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
                     "\"lib\", \"pyjulia%s-v$(VERSION.major).$(VERSION.minor)\"))" % sys.version_info[0])
-                # If PyCall.ji does not exist, create an empty file to force
-                # recompilation
+
+                # If PyCall.jl is already pre-compiled, for the global
+                # environment, hide it while we are loading PyCall.jl
+                # for PyJulia which has to compile a new cache if it
+                # does not exist.  However, Julia does not compile a
+                # new cache if it exists in Base.LOAD_CACHE_PATH[2:end].
+                # https://github.com/JuliaPy/pyjulia/issues/92#issuecomment-289303684
                 self._call(u"""
-                    isdir(Base.LOAD_CACHE_PATH[1]) ||
-                        mkpath(Base.LOAD_CACHE_PATH[1])
-                    depsfile = joinpath(Base.LOAD_CACHE_PATH[1],"PyCall.ji")
-                    isfile(depsfile) || touch(depsfile)
+                for path in Base.LOAD_CACHE_PATH[2:end]
+                    cache = joinpath(path, "PyCall.ji")
+                    backup = joinpath(path, "PyCall.ji.backup")
+                    if isfile(cache)
+                        mv(cache, backup; remove_destination=true)
+                    end
+                end
                 """)
 
             self._call(u"using PyCall")
+
+            if use_separate_cache:
+                self._call(u"""
+                for path in Base.LOAD_CACHE_PATH[2:end]
+                    cache = joinpath(path, "PyCall.ji")
+                    backup = joinpath(path, "PyCall.ji.backup")
+                    if !isfile(cache) && isfile(backup)
+                        mv(backup, cache)
+                    end
+                    rm(backup; force=true)
+                end
+                """)
+
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject and the convert function. Since these will be
         # needed on every call, we hold them in the Julia object itself so
