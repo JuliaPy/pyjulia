@@ -4,7 +4,7 @@
 Locate libpython associated with this Python executable.
 """
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 from logging import getLogger
 import ctypes.util
