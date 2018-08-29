@@ -18,6 +18,48 @@ logger = getLogger("find_libpython")
 SHLIB_SUFFIX = sysconfig.get_config_var("SHLIB_SUFFIX") or ".so"
 
 
+def linked_libpython():
+    """
+    Find the linked libpython using dladdr (in *nix).
+
+    Calling this in Windows always return `None` at the moment.
+
+    Returns
+    -------
+    path : str or None
+        A path to linked libpython.  Return `None` if statically linked.
+    """
+    if platform.system() == "Windows":
+        return None
+    return _linked_libpython_unix()
+
+
+class Dl_info(ctypes.Structure):
+    _fields_ = [
+        ("dli_fname", ctypes.c_char_p),
+        ("dli_fbase", ctypes.c_void_p),
+        ("dli_sname", ctypes.c_char_p),
+        ("dli_saddr", ctypes.c_void_p),
+    ]
+
+
+def _linked_libpython_unix():
+    libdl = ctypes.CDLL(ctypes.util.find_library("dl"))
+    libdl.dladdr.argtypes = [ctypes.c_void_p, ctypes.POINTER(Dl_info)]
+    libdl.dladdr.restype = ctypes.c_int
+
+    dlinfo = Dl_info()
+    retcode = libdl.dladdr(
+        ctypes.cast(ctypes.pythonapi.Py_GetVersion, ctypes.c_void_p),
+        ctypes.pointer(dlinfo))
+    if retcode == 0:  # means error
+        return None
+    path = os.path.realpath(dlinfo.dli_fname.decode())
+    if path == os.path.realpath(sys.executable):
+        return None
+    return path
+
+
 def library_name(name, suffix=SHLIB_SUFFIX,
                  is_windows=platform.system() == "Windows"):
     """
@@ -54,6 +96,9 @@ def libpython_candidates(suffix=SHLIB_SUFFIX):
         Candidate path to libpython.  The path may not be a fullpath
         and may not exist.
     """
+
+    yield linked_libpython()
+
     is_windows = platform.system() == "Windows"
 
     # List candidates for libpython basenames
