@@ -13,10 +13,15 @@ environment:
     BATDIR: ci\appveyor\win32
     CROSS_VERSION: 1
 
-  # 32 julia latest Python-35
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
+  # 32 julia-1.0 Python-35
+  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/1.0/julia-1.0-latest-win32.exe"
     PYTHONDIR: "C:\\Python35"
     BATDIR: ci\appveyor\win32
+
+  # 32 julia latest Python-35
+  # - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
+  #   PYTHONDIR: "C:\\Python35"
+  #   BATDIR: ci\appveyor\win32
 
   # 64 julia-0.6 Python-35
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
@@ -24,10 +29,15 @@ environment:
     BATDIR: ci\appveyor\win64
     CROSS_VERSION: 1
 
-  # 64 julia latest Python-35
-  - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
+  # 64 julia-1.0 Python-35
+  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/1.0/julia-1.0-latest-win64.exe"
     PYTHONDIR: "C:\\Python35-x64"
     BATDIR: ci\appveyor\win64
+
+  # 64 julia latest Python-35
+  # - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
+  #   PYTHONDIR: "C:\\Python35-x64"
+  #   BATDIR: ci\appveyor\win64
 
 matrix:
   allow_failures:
