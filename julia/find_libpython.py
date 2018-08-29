@@ -119,12 +119,15 @@ def libpython_candidates(suffix=SHLIB_SUFFIX):
     dlprefix = "" if is_windows else "lib"
     sysdata = dict(
         v=sys.version_info,
-        abiflags=(sysconfig.get_config_var("ABIFLAGS") or
+        # VERSION is X.Y in Linux/macOS and XY in Windows:
+        VERSION=(sysconfig.get_config_var("VERSION") or
+                 "{v.major}.{v.minor}".format(v=sys.version_info)),
+        ABIFLAGS=(sysconfig.get_config_var("ABIFLAGS") or
                   sysconfig.get_config_var("abiflags") or ""),
     )
     lib_basenames.extend(dlprefix + p + suffix for p in [
-        "python{v.major}.{v.minor}{abiflags}".format(**sysdata),
-        "python{v.major}.{v.minor}".format(**sysdata),
+        "python{VERSION}{ABIFLAGS}".format(**sysdata),
+        "python{VERSION}".format(**sysdata),
         "python{v.major}".format(**sysdata),
         "python",
     ])
