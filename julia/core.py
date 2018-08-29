@@ -299,7 +299,7 @@ def juliainfo(runtime='julia'):
     return JuliaInfo(*args)
 
 
-def is_compatible_exe(jlinfo):
+def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     """
     Determine if Python used by PyCall.jl is compatible with this Python.
 
@@ -315,12 +315,18 @@ def is_compatible_exe(jlinfo):
         A `JuliaInfo` object returned by `juliainfo` function.
     """
     if jlinfo.libpython is None:
+        _debug("libpython cannot be read from PyCall/deps/deps.jl")
         return False
 
     if determine_if_statically_linked():
+        _debug(sys.executable, "is statically linked.")
         return False
 
-    return find_libpython() == normalize_path(jlinfo.libpython)
+    py_libpython = find_libpython()
+    jl_libpython = normalize_path(jlinfo.libpython)
+    _debug("py_libpython =", py_libpython)
+    _debug("jl_libpython =", jl_libpython)
+    return py_libpython == jl_libpython
 
 
 _julia_runtime = [False]
@@ -396,7 +402,7 @@ class Julia(object):
                 else:
                     jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
 
-            use_separate_cache = not is_compatible_exe(jlinfo)
+            use_separate_cache = not is_compatible_exe(jlinfo, _debug=self._debug)
             self._debug("use_separate_cache =", use_separate_cache)
             if use_separate_cache:
                 PYCALL_JULIA_HOME = os.path.join(
