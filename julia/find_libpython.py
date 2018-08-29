@@ -9,17 +9,19 @@ from __future__ import print_function, absolute_import
 from logging import getLogger
 import ctypes.util
 import os
-import platform
 import sys
 import sysconfig
 
 logger = getLogger("find_libpython")
 
+is_windows = os.name == "nt"
+is_apple = sys.platform == "darwin"
+
 SHLIB_SUFFIX = sysconfig.get_config_var("SHLIB_SUFFIX")
 if SHLIB_SUFFIX is None:
-    if platform.system() == "Windows":
+    if is_windows:
         SHLIB_SUFFIX = ".dll"
-    elif platform.system() == "Darwin":
+    elif is_apple:
         SHLIB_SUFFIX = ".dylib"
     else:
         SHLIB_SUFFIX = ".so"
@@ -36,7 +38,7 @@ def linked_libpython():
     path : str or None
         A path to linked libpython.  Return `None` if statically linked.
     """
-    if platform.system() == "Windows":
+    if is_windows:
         return None
     return _linked_libpython_unix()
 
@@ -67,8 +69,7 @@ def _linked_libpython_unix():
     return path
 
 
-def library_name(name, suffix=SHLIB_SUFFIX,
-                 is_windows=platform.system() == "Windows"):
+def library_name(name, suffix=SHLIB_SUFFIX, is_windows=is_windows):
     """
     Convert a file basename `name` to a library name (no "lib" and ".so" etc.)
 
@@ -105,8 +106,6 @@ def libpython_candidates(suffix=SHLIB_SUFFIX):
     """
 
     yield linked_libpython()
-
-    is_windows = platform.system() == "Windows"
 
     # List candidates for libpython basenames
     lib_basenames = []
@@ -194,6 +193,8 @@ def finding_libpython():
     path : str
         Existing path to a libpython.
     """
+    logger.debug("is_windows = %s", is_windows)
+    logger.debug("is_apple = %s", is_apple)
     for path in libpython_candidates():
         logger.debug("Candidate: %s", path)
         normalized = normalize_path(path)
