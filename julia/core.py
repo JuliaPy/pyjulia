@@ -274,7 +274,12 @@ JuliaInfo = namedtuple(
      'pyprogramname', 'libpython'])
 
 
-def juliainfo(runtime='julia'):
+def juliainfo(runtime='julia', **popen_kwargs):
+    # Use the original environment variables to avoid a cryptic
+    # error "fake-julia/../lib/julia/sys.so: cannot open shared
+    # object file: No such file or directory":
+    popen_kwargs.setdefault("env", _enviorn)
+
     output = subprocess.check_output(
         [runtime, "-e",
          """
@@ -289,7 +294,11 @@ def juliainfo(runtime='julia'):
              PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
          else
              modpath = Base.locate_package(Base.identify_package("PyCall"))
-             PyCall_depsfile = joinpath(dirname(modpath),"..","deps","deps.jl")
+             if modpath == nothing
+                 PyCall_depsfile = nothing
+             else
+                 PyCall_depsfile = joinpath(dirname(modpath),"..","deps","deps.jl")
+             end
          end
          if PyCall_depsfile !== nothing && isfile(PyCall_depsfile)
              include(PyCall_depsfile)
@@ -297,10 +306,7 @@ def juliainfo(runtime='julia'):
              println(libpython)
          end
          """],
-        # Use the original environment variables to avoid a cryptic
-        # error "fake-julia/../lib/julia/sys.so: cannot open shared
-        # object file: No such file or directory":
-        env=_enviorn)
+        **popen_kwargs)
     args = output.decode("utf-8").rstrip().split("\n")
     args.extend([None] * (len(JuliaInfo._fields) - len(args)))
     return JuliaInfo(*args)
