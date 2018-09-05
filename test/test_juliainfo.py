@@ -25,17 +25,24 @@ def test_juliainfo_without_pycall(tmpdir):
 
     runtime = os.getenv("JULIA_EXE", "julia")
 
-    JULIA_DEPOT_PATH = subprocess.check_output(
-        [runtime, "-e", """
-        paths = [ARGS[1], DEPOT_PATH[2:end]...]
-        print(join(paths, Sys.iswindows() ? ';' : ':'))
+    env_var = subprocess.check_output(
+        [runtime, "--startup-file=no", "-e", """
+        if VERSION < v"0.7-"
+            println("JULIA_PKGDIR")
+            print(ARGS[1])
+        else
+            paths = [ARGS[1], DEPOT_PATH[2:end]...]
+            println("JULIA_DEPOT_PATH")
+            print(join(paths, Sys.iswindows() ? ';' : ':'))
+        end
         """, str(tmpdir)],
         env=_enviorn,
         universal_newlines=True)
+    name, val = env_var.split("\n", 1)
 
     jlinfo = juliainfo(
         runtime,
-        env=dict(_enviorn, JULIA_DEPOT_PATH=JULIA_DEPOT_PATH))
+        env=dict(_enviorn, **{name: val}))
 
     check_core_juliainfo(jlinfo)
     assert jlinfo.pyprogramname is None
