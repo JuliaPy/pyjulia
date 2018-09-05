@@ -27,6 +27,16 @@ def maybe_rebuild(rebuild, julia):
             using Pkg
         end
         Pkg.build("PyCall")
+        if VERSION < v"0.7.0"
+            pkgdir = Pkg.dir("PyCall")
+        else
+            modpath = Base.locate_package(Base.identify_package("PyCall"))
+            pkgdir = joinpath(dirname(modpath), "..")
+        end
+        logfile = joinpath(pkgdir, "deps", "build.log")
+        if isfile(logfile)
+            print(read(logfile, String))
+        end
         """]
         print('Building PyCall.jl with PYTHON =', sys.executable)
         print(*build)
