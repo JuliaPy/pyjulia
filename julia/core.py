@@ -385,9 +385,12 @@ run the following commands in the Julia interpreter:
 """
 
 
-def raise_separate_cache_error(runtime, jlinfo):
+def raise_separate_cache_error(
+        runtime, jlinfo,
+        # For test:
+        _determine_if_statically_linked=determine_if_statically_linked):
     template = _separate_cache_error_common_header
-    if determine_if_statically_linked():
+    if _determine_if_statically_linked():
         template += _separate_cache_error_statically_linked
     else:
         template += _separate_cache_error_incompatible_libpython
