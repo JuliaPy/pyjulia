@@ -344,31 +344,60 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     return py_libpython == jl_libpython
 
 
-def raise_separate_cache_error(runtime, pyprogramname):
-    message = """\
+_separate_cache_error_common_header = """\
 It seems your Julia and PyJulia setup are not supported.
 
 Julia interpreter:
     {runtime}
-Python interpreter used by PyCall.jl:
-    {pyprogramname}
-Python interpreter used to import PyJulia.
+Python interpreter and libpython used by PyCall.jl:
+    {jlinfo.pyprogramname}
+    {jl_libpython}
+Python interpreter used to import PyJulia and its libpython.
     {sys.executable}
+    {py_libpython}
+"""
 
-In Julia >= 0.7, above two paths to the Python interpreters have to match
-exactly in order for PyJulia to work.  To configure PyCall.jl to use Python
+
+_separate_cache_error_common_footer = """
+For more information, see:
+    https://github.com/JuliaPy/pyjulia
+    https://github.com/JuliaPy/PyCall.jl
+"""
+
+
+_separate_cache_error_statically_linked = """
+Your Python interpreter "{sys.executable}"
+is statically linked to libpython.  Currently, PyJulia does not support
+such Python interpreter.  For available workarounds, see:
+    https://github.com/JuliaPy/pyjulia/issues/185
+"""
+
+
+_separate_cache_error_incompatible_libpython = """
+In Julia >= 0.7, above two paths to `libpython` have to match exactly
+in order for PyJulia to work.  To configure PyCall.jl to use Python
 interpreter "{sys.executable}",
 run the following commands in the Julia interpreter:
 
     ENV["PYTHON"] = "{sys.executable}"
     using Pkg
     Pkg.build("PyCall")
+"""
 
-For more information, see:
-    https://github.com/JuliaPy/pyjulia
-    https://github.com/JuliaPy/PyCall.jl
-    """.format(runtime=runtime, pyprogramname=pyprogramname,
-               sys=sys)
+
+def raise_separate_cache_error(runtime, jlinfo):
+    template = _separate_cache_error_common_header
+    if determine_if_statically_linked():
+        template += _separate_cache_error_statically_linked
+    else:
+        template += _separate_cache_error_incompatible_libpython
+    template += _separate_cache_error_common_footer
+    message = template.format(
+        runtime=runtime,
+        jlinfo=jlinfo,
+        py_libpython=find_libpython(),
+        jl_libpython=normalize_path(jlinfo.libpython),
+        sys=sys)
     raise RuntimeError(message)
 
 
@@ -539,7 +568,7 @@ class Julia(object):
                     raise RuntimeError(
                         "PyJulia does not support Julia < 0.6 anymore")
                 elif version_range == 1:
-                    raise_separate_cache_error(runtime, depsjlexe)
+                    raise_separate_cache_error(runtime, jlinfo)
                 # Intercept precompilation
                 os.environ["PYCALL_PYTHON_EXE"] = sys.executable
                 os.environ["PYCALL_JULIA_HOME"] = PYCALL_JULIA_HOME
