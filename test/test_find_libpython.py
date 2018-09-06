@@ -1,7 +1,3 @@
-"""
-Unit tests which can be done without loading `libjulia`.
-"""
-
 import platform
 
 import pytest
