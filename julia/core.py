@@ -351,7 +351,83 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     return py_libpython == jl_libpython
 
 
+_separate_cache_error_common_header = """\
+It seems your Julia and PyJulia setup are not supported.
+
+Julia interpreter:
+    {runtime}
+Python interpreter and libpython used by PyCall.jl:
+    {jlinfo.pyprogramname}
+    {jl_libpython}
+Python interpreter used to import PyJulia and its libpython.
+    {sys.executable}
+    {py_libpython}
+"""
+
+
+_separate_cache_error_common_footer = """
+For more information, see:
+    https://github.com/JuliaPy/pyjulia
+    https://github.com/JuliaPy/PyCall.jl
+"""
+
+
+_separate_cache_error_statically_linked = """
+Your Python interpreter "{sys.executable}"
+is statically linked to libpython.  Currently, PyJulia does not support
+such Python interpreter.  For available workarounds, see:
+    https://github.com/JuliaPy/pyjulia/issues/185
+"""
+
+
+_separate_cache_error_incompatible_libpython = """
+In Julia >= 0.7, above two paths to `libpython` have to match exactly
+in order for PyJulia to work.  To configure PyCall.jl to use Python
+interpreter "{sys.executable}",
+run the following commands in the Julia interpreter:
+
+    ENV["PYTHON"] = "{sys.executable}"
+    using Pkg
+    Pkg.build("PyCall")
+"""
+
+
+def raise_separate_cache_error(
+        runtime, jlinfo,
+        # For test:
+        _determine_if_statically_linked=determine_if_statically_linked):
+    template = _separate_cache_error_common_header
+    if _determine_if_statically_linked():
+        template += _separate_cache_error_statically_linked
+    else:
+        template += _separate_cache_error_incompatible_libpython
+    template += _separate_cache_error_common_footer
+    message = template.format(
+        runtime=runtime,
+        jlinfo=jlinfo,
+        py_libpython=find_libpython(),
+        jl_libpython=normalize_path(jlinfo.libpython),
+        sys=sys)
+    raise RuntimeError(message)
+
+
 _julia_runtime = [False]
+
+
+UNBOXABLE_TYPES = (
+    'bool',
+    'int8',
+    'uint8',
+    'int16',
+    'uint16',
+    'int32',
+    'uint32',
+    'int64',
+    'uint64',
+    'float32',
+    'float64',
+)
+
 
 class Julia(object):
     """
@@ -483,6 +559,17 @@ class Julia(object):
         self.api.jl_unbox_voidpointer.argtypes = [void_p]
         self.api.jl_unbox_voidpointer.restype = py_object
 
+        for c_type in UNBOXABLE_TYPES:
+            jl_unbox = getattr(self.api, "jl_unbox_{}".format(c_type))
+            jl_unbox.argtypes = [void_p]
+            jl_unbox.restype = getattr(ctypes, "c_{}".format({
+                "float32": "float",
+                "float64": "double",
+            }.get(c_type, c_type)))
+
+        self.api.jl_typeof.argtypes = [void_p]
+        self.api.jl_typeof.restype = void_p
+
         self.api.jl_exception_clear.restype = None
         self.api.jl_stderr_obj.argtypes = []
         self.api.jl_stderr_obj.restype = void_p
@@ -494,14 +581,20 @@ class Julia(object):
         if init_julia:
             if use_separate_cache:
                 # First check that this is supported
-                self._call("""
-                    if VERSION < v"0.5-"
-                        error(\"""Using pyjulia with a statically-compiled version
-                                  of python or with a version of python that
-                                  differs from that used by PyCall.jl is not
-                                  supported on julia 0.4""\")
-                    end
-                """)
+                version_range = self._unbox_as(self._call("""
+                Int64(if VERSION < v"0.6-"
+                    2
+                elseif VERSION >= v"0.7-"
+                    1
+                else
+                    0
+                end)
+                """), "int64")
+                if version_range == 2:
+                    raise RuntimeError(
+                        "PyJulia does not support Julia < 0.6 anymore")
+                elif version_range == 1:
+                    raise_separate_cache_error(runtime, jlinfo)
                 # Intercept precompilation
                 os.environ["PYCALL_PYTHON_EXE"] = sys.executable
                 os.environ["PYCALL_JULIA_HOME"] = PYCALL_JULIA_HOME
@@ -579,6 +672,29 @@ class Julia(object):
         self.check_exception(src)
 
         return ans
+
+    @staticmethod
+    def _check_unboxable(c_type):
+        if c_type not in UNBOXABLE_TYPES:
+            raise ValueError("Julia value cannot be unboxed as c_type={!r}.\n"
+                             "c_type supported by PyJulia are:\n"
+                             "{}".format(c_type, "\n".join(UNBOXABLE_TYPES)))
+
+    def _is_unboxable_as(self, pointer, c_type):
+        self._check_unboxable(c_type)
+        jl_type = getattr(self.api, 'jl_{}_type'.format(c_type))
+        desired = ctypes.cast(jl_type, ctypes.POINTER(ctypes.c_void_p))[0]
+        actual = self.api.jl_typeof(pointer)
+        return actual == desired
+
+    def _unbox_as(self, pointer, c_type):
+        self._check_unboxable(c_type)
+        jl_unbox = getattr(self.api, 'jl_unbox_{}'.format(c_type))
+        if self._is_unboxable_as(pointer, c_type):
+            return jl_unbox(pointer)
+        else:
+            raise TypeError("Cannot unbox pointer {} as {}"
+                            .format(pointer, c_type))
 
     def check_exception(self, src="<unknown code>"):
         exoc = self.api.jl_exception_occurred()
