@@ -29,6 +29,13 @@ from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
 from ctypes import py_object
 
+try:
+    from shutil import which
+except ImportError:
+    # For Python < 3.3; it should behave more-or-less similar to
+    # shutil.which when used with single argument.
+    from distutils.spawn import find_executable as which
+
 # this is python 3.3 specific
 from types import ModuleType, FunctionType
 
@@ -353,8 +360,8 @@ class Julia(object):
     full access to the entire Julia interpreter.
     """
 
-    def __init__(self, init_julia=True, jl_runtime_path=None, jl_init_path=None,
-                 debug=False):
+    def __init__(self, init_julia=True, jl_init_path=None, runtime=None,
+                 jl_runtime_path=None, debug=False):
         """Create a Python object that represents a live Julia interpreter.
 
         Parameters
@@ -365,8 +372,8 @@ class Julia(object):
             being called from inside an already running Julia, the flag should
             be passed as False so the interpreter isn't re-initialized.
 
-        jl_runtime_path : str (optional)
-            Path to your Julia binary, e.g. "/usr/local/bin/julia"
+        runtime : str (optional)
+            Custom Julia binary, e.g. "/usr/local/bin/julia" or "julia-1.0.0".
 
         jl_init_path : str (optional)
             Path to give to jl_init relative to which we find sys.so,
@@ -389,13 +396,29 @@ class Julia(object):
             self.api = _julia_runtime[0]
             return
 
+        if jl_runtime_path is not None:
+            warnings.warn(
+                "`jl_runtime_path` is deprecated. Please use `runtime`.",
+                DeprecationWarning)
+
+        if runtime is None:
+            if jl_runtime_path is None:
+                runtime = "julia"
+            else:
+                runtime = jl_runtime_path
+        else:
+            if jl_runtime_path is None:
+                jl_runtime_path = which(runtime)
+                if jl_runtime_path is None:
+                    raise RuntimeError("Julia runtime {} cannot be found"
+                                       .format(runtime))
+            else:
+                raise TypeError(
+                    "Both `runtime` and `jl_runtime_path` are specified.")
+
         self._debug()  # so that debug message is shown nicely w/ pytest
 
         if init_julia:
-            if jl_runtime_path:
-                runtime = jl_runtime_path
-            else:
-                runtime = 'julia'
             jlinfo = juliainfo(runtime)
             JULIA_HOME, libjulia_path, image_file, depsjlexe = jlinfo[:4]
             self._debug("pyprogramname =", depsjlexe)

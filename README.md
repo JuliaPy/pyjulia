@@ -112,11 +112,11 @@ Main.eval("sin.(xs)")
 
 If you need a custom setup for `pyjulia`, it must be done *before*
 importing any Julia modules.  For example, to use the Julia
-interpreter at `PATH/TO/MY/CUSTOM/julia`, run:
+executable named `custom_julia`, run:
 
 ```python
 from julia import Julia
-j = julia.Julia(jl_runtime_path="PATH/TO/MY/CUSTOM/julia")
+jl = julia.Julia(runtime="custom_julia")
 ```
 
 You can then use, e.g.,
