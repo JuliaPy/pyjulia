@@ -16,10 +16,13 @@ JULIA = os.environ.get("JULIA_EXE")
     ["--julia", "false", "-h"],
     ["--julia", "false", "-i", "--help"],
 ])
-def test_help_option(cli_args):
+def test_help_option(cli_args, capsys):
     with pytest.raises(SystemExit) as exc_info:
         parse_pyjl_args(cli_args)
     assert exc_info.value.code == 0
+
+    captured = capsys.readouterr()
+    assert "usage:" in captured.out
 
 
 quick_pass_cli_args = [
