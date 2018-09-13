@@ -6,6 +6,8 @@ import pytest
 from julia.core import which
 from julia.python_jl import parse_pyjl_args
 
+is_windows = os.name == "nt"
+
 PYJULIA_TEST_REBUILD = os.environ.get("PYJULIA_TEST_REBUILD", "no") == "yes"
 JULIA = os.environ.get("JULIA_EXE")
 
@@ -50,6 +52,9 @@ def test_cli_quick_pass_no_julia(cli_args):
     )
 
 
+@pytest.mark.skipif(
+    is_windows,
+    reason="python-jl is not supported in Windows")
 @pytest.mark.skipif(
     not PYJULIA_TEST_REBUILD,
     reason="PYJULIA_TEST_REBUILD=yes is not set")
