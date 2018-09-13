@@ -2,13 +2,21 @@
 Python interpreter inside a Julia process.
 
 This command line interface mimics a basic subset of Python program so that
-Python program involving calls to Julia functions can be run without setting
-up PyJulia (which is currently hard for some platforms).
+Python program involving calls to Julia functions can be run in a *Julia*
+process.  This avoids the known problem with pre-compilation cache in
+Deiban-based distribution such as Ubuntu and Python executable installed by
+Conda in Linux.
 
 Although this script has -i option and it can do a basic REPL, contrl-c may
-crash the whole process.  Consider using IPython >= 7 which can be launched by:
+crash the whole process.  Consider using IPython >= 7 which can be launched
+by::
 
-    python -m IPython
+    python-jl -m IPython
+
+.. NOTE::
+
+   For this command to work, Python environment with which PyCall.jl is
+   configured has to have PyJulia installed.
 """
 
 import os
