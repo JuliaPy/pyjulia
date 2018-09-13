@@ -7,6 +7,10 @@ process.  This avoids the known problem with pre-compilation cache in
 Deiban-based distribution such as Ubuntu and Python executable installed by
 Conda in Linux.
 
+In Windows and macOS, this CLI is not necessary because those platforms do
+not have the pre-compilation issue mentioned above.  In fact, this CLI is
+known to not work on Windows at the moment.
+
 Although this script has -i option and it can do a basic REPL, contrl-c may
 crash the whole process.  Consider using IPython >= 7 which can be launched
 by::
