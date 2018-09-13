@@ -12,12 +12,12 @@ import sys
 import traceback
 
 
-def python(module, command, script, script_args, interactive):
+def python(module, command, script, args, interactive):
     if command:
         sys.argv[0] = "-c"
     elif script:
         sys.argv[0] = script
-    sys.argv[1:] = script_args
+    sys.argv[1:] = args
 
     banner = ""
     try:
@@ -90,64 +90,19 @@ def make_parser(description=__doc__):
     parser.add_argument(
         "script", nargs="?",
         help="path to file")
+    parser.add_argument(
+        "args", nargs=argparse.REMAINDER,
+        help="arguments passed to program in sys.argv[1:]")
 
     return parser
-
-
-def split_args(args):
-    """
-    Split arguments to Python and `sys.argv[1:]` to be used inside "script".
-
-    >>> split_args(["-i", "script.py", "arg"])
-    (['-i', 'script.py'], ['arg'])
-    >>> split_args(["-c", "1/0"])
-    (['-c', '1/0'], [])
-    >>> split_args(["-mjson.tool", "-h"])
-    (['-mjson.tool'], ['-h'])
-    """
-    it = iter(args)
-    py_args = []
-    for a in it:
-        if a in ("-c", "-m"):
-            py_args.append(a)
-            try:
-                a = next(it)
-            except StopIteration:
-                break
-            py_args.append(a)
-            break
-        elif a == "-":
-            py_args.append(a)
-            break
-        elif a.startswith("-"):
-            py_args.append(a)
-            if a[1] in ("c", "m"):  # -mjson.tool
-                break
-            if "=" not in a:  # --option value
-                try:
-                    a = next(it)
-                except StopIteration:
-                    break
-                py_args.append(a)
-        else:  # script
-            py_args.append(a)
-            break
-    return py_args, list(it)
-
-
-def parse_args(args):
-    parser = make_parser()
-    py_args, script_args = split_args(args)
-    ns = parser.parse_args(py_args)
-    ns.script_args = script_args
-    return ns
 
 
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
+    parser = make_parser()
     try:
-        ns = parse_args(args)
+        ns = parser.parse_args(args)
         python(**vars(ns))
     except SystemExit as err:
         return err.code
