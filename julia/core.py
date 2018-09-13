@@ -569,7 +569,7 @@ class Julia(object):
         else:
             # we're assuming here we're fully inside a running Julia process,
             # so we're fishing for symbols in our own process table
-            self.api = ctypes.PyDLL('')
+            self.api = ctypes.PyDLL(None)
 
         # Store the running interpreter reference so we can start using it via self.call
         self.api.jl_.argtypes = [void_p]
