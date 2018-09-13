@@ -32,7 +32,7 @@ quick_pass_cli_args = [
 
 @pytest.mark.parametrize("cli_args", quick_pass_cli_args)
 def test_cli_quick_pass(cli_args):
-    subprocess.check_call(
+    subprocess.check_output(
         ["python-jl"] + cli_args,
     )
 
@@ -42,7 +42,7 @@ def test_cli_quick_pass(cli_args):
     reason="false command not found")
 @pytest.mark.parametrize("cli_args", quick_pass_cli_args)
 def test_cli_quick_pass_no_julia(cli_args):
-    subprocess.check_call(
+    subprocess.check_output(
         ["python-jl", "--julia", "false"] + cli_args,
     )
 
