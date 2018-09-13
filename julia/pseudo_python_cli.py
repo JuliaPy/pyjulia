@@ -5,6 +5,8 @@ It tries to mimic a subset of Python CLI:
 https://docs.python.org/3/using/cmdline.html
 """
 
+from __future__ import print_function, absolute_import
+
 import argparse
 import code
 import runpy
