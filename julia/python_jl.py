@@ -14,7 +14,7 @@ crash the whole process.  Consider using IPython >= 7 which can be launched by:
 import os
 import sys
 
-from .pseudo_python_cli import make_parser, split_args
+from .pseudo_python_cli import make_parser
 
 script_jl = """
 import PyCall
@@ -92,11 +92,8 @@ def parse_pyjl_args(args):
         Julia interpreter to be used.
         """)
 
-    py_args, script_args = split_args(args)
-    ns = parser.parse_args(py_args)
-
-    unused_args = list(remove_julia_options(py_args))
-    unused_args.extend(script_args)
+    ns = parser.parse_args(args)
+    unused_args = list(remove_julia_options(args))
     return ns, unused_args
 
 
