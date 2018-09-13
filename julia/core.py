@@ -399,7 +399,14 @@ For more information, see:
 _separate_cache_error_statically_linked = """
 Your Python interpreter "{sys.executable}"
 is statically linked to libpython.  Currently, PyJulia does not support
-such Python interpreter.  For available workarounds, see:
+such Python interpreter.  One easy workaround is to run your Python
+script with `python-jl` command bundled in PyJulia.  You can simply do:
+
+    python-jl PATH/TO/YOUR/SCRIPT.py
+
+See `python-jl --help` for more information.
+
+For other available workarounds, see:
     https://github.com/JuliaPy/pyjulia/issues/185
 """
 
