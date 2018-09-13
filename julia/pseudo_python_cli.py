@@ -121,8 +121,14 @@ def split_args(args):
             break
         elif a.startswith("-"):
             py_args.append(a)
-            if a[1] in ("c", "m"):
+            if a[1] in ("c", "m"):  # -mjson.tool
                 break
+            if "=" not in a:  # --option value
+                try:
+                    a = next(it)
+                except StopIteration:
+                    break
+                py_args.append(a)
         else:  # script
             py_args.append(a)
             break
