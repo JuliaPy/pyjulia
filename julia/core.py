@@ -645,6 +645,7 @@ class Julia(object):
                 end
                 """)
 
+            # This is mainly for initiating the precompilation:
             self._call(u"using PyCall")
 
             if use_separate_cache:
@@ -658,6 +659,10 @@ class Julia(object):
                     rm(backup; force=true)
                 end
                 """)
+
+        # Currently, PyJulia assumes that `Main.PyCall` exsits.  Thus, we need
+        # to import `PyCall` again here in case `init_julia=False` is passed:
+        self._call(u"using PyCall")
 
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject and the convert function. Since these will be
