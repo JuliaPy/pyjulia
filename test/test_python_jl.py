@@ -1,3 +1,4 @@
+from textwrap import dedent
 import os
 import subprocess
 
@@ -59,10 +60,22 @@ def test_cli_quick_pass_no_julia(cli_args):
     not PYJULIA_TEST_REBUILD,
     reason="PYJULIA_TEST_REBUILD=yes is not set")
 def test_cli_import():
-    cli_args = ["-c", "from julia import Base; Base.banner()"]
+    cli_args = ["-c", dedent("""
+    from julia import Base
+    Base.banner()
+    from julia import Main
+    Main.x = 1
+    assert Main.x == 1
+    """)]
     if JULIA:
         cli_args = ["--julia", JULIA] + cli_args
     output = subprocess.check_output(
         ["python-jl"] + cli_args,
         universal_newlines=True)
     assert "julialang.org" in output
+
+# Embedded julia does not have usual the Main.eval and Main.include.
+# Main.eval is Core.eval.  Let's test that we are not relying on this
+# special behavior.
+#
+# See also: https://github.com/JuliaLang/julia/issues/28825
