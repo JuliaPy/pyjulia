@@ -28,7 +28,7 @@ from __future__ import print_function, absolute_import
 import os
 import sys
 
-from .pseudo_python_cli import make_parser
+from .pseudo_python_cli import make_parser, parse_args_with
 
 script_jl = """
 import PyCall
@@ -106,7 +106,7 @@ def parse_pyjl_args(args):
         Julia interpreter to be used.
         """)
 
-    ns = parser.parse_args(args)
+    ns = parse_args_with(parser, args)
     unused_args = list(remove_julia_options(args))
     return ns, unused_args
 
