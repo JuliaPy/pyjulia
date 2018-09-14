@@ -140,7 +140,7 @@ class JuliaMainModule(JuliaModule):
             juliapath = remove_prefix(self.__name__, "julia.")
             setter = '''
             PyCall.pyfunctionret(
-                (x) -> eval({}, :({} = $x)),
+                (x) -> Base.eval({}, :({} = $x)),
                 Any,
                 PyCall.PyAny)
             '''.format(juliapath, jl_name(name))
