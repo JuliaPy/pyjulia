@@ -99,12 +99,51 @@ def make_parser(description=__doc__):
     return parser
 
 
+def parse_args_with(parser, args):
+    ns = parser.parse_args(list(preprocess_args(args)))
+    if (ns.command or ns.module) and ns.script:
+        ns.args = [ns.script] + ns.args
+        ns.script = None
+    return ns
+
+
+def parse_args(args):
+    return parse_args_with(make_parser(), args)
+
+
+def preprocess_args(args):
+    """
+    Insert "--" after "[-c cmd | -m mod | script | -]"
+
+    This is required for the following to work:
+
+    >>> ns = parse_args(["-mjson.tool", "-h"])
+    >>> ns.args
+    ['-h']
+    """
+    it = iter(args)
+    for a in it:
+        yield a
+
+        if a in ("-m", "-c"):
+            try:
+                yield next(it)
+            except StopIteration:
+                return
+            yield "--"
+        elif a == "-":
+            yield "--"
+        elif a.startswith("-"):
+            if a[1] in ("m", "c"):
+                yield "--"
+            # otherwise, it's some
+
+
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
-    parser = make_parser()
     try:
-        ns = parser.parse_args(args)
+        ns = parse_args(args)
         python(**vars(ns))
     except SystemExit as err:
         return err.code
