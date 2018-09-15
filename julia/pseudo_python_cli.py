@@ -133,7 +133,9 @@ class PyArgumentParser(object):
                 "Positional arguments are not supported."
                 " All positional arguments will be stored in `ns.args`.")
         if terminal and action is not None:
-            raise NotImplementedError("Terminal option has to have argument.")
+            raise NotImplementedError(
+                "Terminal option is assumed to have argument."
+                " Non-`None` action={} is not supported".format())
 
         if nargs is not None and action is not None:
             raise TypeError("`nargs` and `action` are mutually exclusive")
@@ -194,7 +196,7 @@ class PyArgumentParser(object):
                 if dest in seen:
                     self._usage_and_error(
                         "{} provided more than twice"
-                        .format(" ".join(res.option.argdest.names)))
+                        .format(", ".join(res.option.argdest.names)))
                 seen.add(dest)
 
                 while len(res.values) < res.option.nargs:
@@ -216,6 +218,13 @@ class PyArgumentParser(object):
                     return
 
     def _find_matches(self, arg):
+        """
+        Return a list of `.Result`.
+
+        If value presents in `arg` (i.e., ``--long-option=value``), it
+        becomes the element of `.Result.values` (a list).  Otherwise,
+        this list has to be filled by the caller (`_parse_until_terminal`).
+        """
         for opt in self._options:
             if arg == opt.name:
                 return [Result(opt, [])]
