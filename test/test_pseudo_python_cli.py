@@ -13,6 +13,8 @@ def make_dict(**kwargs):
 @pytest.mark.parametrize("args, desired", [
     ("-m json.tool -h", make_dict(module="json.tool", args=["-h"])),
     ("-mjson.tool -h", make_dict(module="json.tool", args=["-h"])),
+    ("-imjson.tool -h",
+     make_dict(interactive=True, module="json.tool", args=["-h"])),
     ("-m ipykernel install --user --name NAME --display-name DISPLAY_NAME",
      make_dict(module="ipykernel",
                args=shlex.split("install --user --name NAME"
@@ -24,6 +26,9 @@ def make_dict(**kwargs):
     ("- a", make_dict(script="-", args=["a"])),
     ("script", make_dict(script="script")),
     ("script a", make_dict(script="script", args=["a"])),
+    ("script -m", make_dict(script="script", args=["-m"])),
+    ("script -c 1", make_dict(script="script", args=["-c", "1"])),
+    ("script -h 1", make_dict(script="script", args=["-h", "1"])),
 ])
 def test_valid_args(args, desired):
     ns = parse_args(shlex.split(args))
@@ -35,10 +40,8 @@ def test_valid_args(args, desired):
     "-m",
     "-c",
     "-i -m",
-    # They are invalid in python CLI but works in argparse (which is
-    # probably OK):
-    pytest.mark.xfail("-V -m"),
-    pytest.mark.xfail("-h -m"),
+    "-h -m",
+    "-V -m",
 ])
 def test_invalid_args(args, capsys):
     with pytest.raises(SystemExit) as exc_info:
@@ -47,21 +50,44 @@ def test_invalid_args(args, capsys):
 
     captured = capsys.readouterr()
     assert "usage:" in captured.err
+    assert not captured.out
 
 
-@pytest.mark.parametrize("cli_args", [
-    ["-h"],
-    ["-i", "--help"],
-    ["-h", "-i"],
-    ["-hi"],
-    ["-ih"],
-    ["-h", "-m", "json.tool"],
-    ["-h", "-mjson.tool"],
+@pytest.mark.parametrize("args", [
+    "-h",
+    "-i --help",
+    "-h -i",
+    "-hi",
+    "-ih",
+    "-Vh",
+    "-hV",
+    "-h -m json.tool",
+    "-h -mjson.tool",
 ])
-def test_help_option(cli_args, capsys):
+def test_help_option(args, capsys):
     with pytest.raises(SystemExit) as exc_info:
-        parse_args(cli_args)
+        parse_args(shlex.split(args))
     assert exc_info.value.code == 0
 
     captured = capsys.readouterr()
     assert "usage:" in captured.out
+    assert not captured.err
+
+
+@pytest.mark.parametrize("args", [
+    "-V",
+    "--version",
+    "-V -i",
+    "-Vi",
+    "-iV",
+    "-V script",
+    "-V script -h",
+])
+def test_version_option(args, capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        parse_args(shlex.split(args))
+    assert exc_info.value.code == 0
+
+    captured = capsys.readouterr()
+    assert "Python " in captured.out
+    assert not captured.err

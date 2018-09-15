@@ -28,7 +28,11 @@ from __future__ import print_function, absolute_import
 import os
 import sys
 
-from .pseudo_python_cli import make_parser, parse_args_with
+from .pseudo_python_cli import make_parser, parse_args_with, ARGUMENT_HELP
+
+PYJL_ARGUMENT_HELP = ARGUMENT_HELP + """
+  --julia JULIA  Julia interpreter to be used. (default: julia)
+"""
 
 script_jl = """
 import PyCall
@@ -99,12 +103,8 @@ def parse_pyjl_args(args):
     # parse error right now without initiating Julia interpreter and
     # importing PyCall.jl etc. to get an extra speedup for the
     # abnormal case (including -h/--help and -V/--version).
-    parser = make_parser(description=__doc__)
-    parser.add_argument(
-        "--julia", default="julia",
-        help="""
-        Julia interpreter to be used.
-        """)
+    parser = make_parser(description=__doc__ + PYJL_ARGUMENT_HELP)
+    parser.add_argument("--julia", default="julia")
 
     ns = parse_args_with(parser, args)
     unused_args = list(remove_julia_options(args))
