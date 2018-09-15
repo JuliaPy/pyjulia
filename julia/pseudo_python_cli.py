@@ -141,9 +141,7 @@ class PyArgumentParser(object):
             raise TypeError("`nargs` and `action` are mutually exclusive")
         if action == "store_true":
             nargs = 0
-        if nargs is None:
-            nargs = 1
-        assert isinstance(nargs, int)
+        assert nargs is None or isinstance(nargs, int)
         assert action in (None, "store_true")
 
         assert dest not in self._dests
@@ -199,7 +197,10 @@ class PyArgumentParser(object):
                         .format(", ".join(res.option.argdest.names)))
                 seen.add(dest)
 
-                while len(res.values) < res.option.nargs:
+                num_args = res.option.nargs
+                if num_args is None:
+                    num_args = 1
+                while len(res.values) < num_args:
                     try:
                         res.values.append(next(args_iter))
                     except StopIteration:
@@ -209,7 +210,7 @@ class PyArgumentParser(object):
                     setattr(ns, dest, True)
                 else:
                     value = res.values
-                    if res.option.nargs == 1:
+                    if res.option.nargs is None:
                         value, = value
                     setattr(ns, dest, value)
 
@@ -233,7 +234,7 @@ class PyArgumentParser(object):
                 if opt.is_long and arg[len(opt.name)] == "=":
                     return [Result(opt, [arg[len(opt.name) + 1:]])]
                 elif not opt.is_long:
-                    if opt.nargs > 0:
+                    if opt.nargs != 0:
                         return [Result(opt, [arg[len(opt.name):]])]
                     else:
                         results = [Result(opt, [])]
