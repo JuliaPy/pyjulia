@@ -686,6 +686,10 @@ class Julia(object):
         self.sprint = self.eval('sprint')
         self.showerror = self.eval('showerror')
 
+        if self.eval('VERSION >= v"0.7-"'):
+            self.eval("@eval Main import Base.MainInclude: eval, include")
+            # https://github.com/JuliaLang/julia/issues/28825
+
     def _debug(self, *msg):
         """
         Print some debugging stuff, if enabled
