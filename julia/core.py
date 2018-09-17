@@ -273,7 +273,7 @@ def juliainfo(runtime='julia', **popen_kwargs):
     # object file: No such file or directory":
     popen_kwargs.setdefault("env", _enviorn)
 
-    output = subprocess.check_output(
+    proc = subprocess.Popen(
         [runtime, "-e",
          """
          println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
@@ -299,8 +299,26 @@ def juliainfo(runtime='julia', **popen_kwargs):
              println(libpython)
          end
          """],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
         **popen_kwargs)
-    args = output.decode("utf-8").rstrip().split("\n")
+
+    stdout, stderr = proc.communicate()
+    retcode = proc.wait()
+    if retcode != 0:
+        raise subprocess.CalledProcessError(
+            retcode,
+            [runtime, "-e", "..."],
+            stdout,
+            stderr,
+        )
+
+    stderr = stderr.strip()
+    if stderr:
+        warnings.warn("{} warned:\n{}".format(runtime, stderr))
+
+    args = stdout.rstrip().split("\n")
     args.extend([None] * (len(JuliaInfo._fields) - len(args)))
     return JuliaInfo(*args)
 
