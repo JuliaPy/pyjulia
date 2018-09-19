@@ -274,7 +274,7 @@ def juliainfo(runtime='julia', **popen_kwargs):
     popen_kwargs.setdefault("env", _enviorn)
 
     proc = subprocess.Popen(
-        [runtime, "-e",
+        [runtime, "--startup-file=no", "-e",
          """
          println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
          if VERSION >= v"0.7.0-DEV.3630"
