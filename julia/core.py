@@ -667,6 +667,8 @@ class Julia(object):
                 end
                 """)
 
+            self.api.jl_sigatomic_begin()
+
         # Currently, PyJulia assumes that `Main.PyCall` exsits.  Thus, we need
         # to import `PyCall` again here in case `init_julia=False` is passed:
         self._call(u"using PyCall")
