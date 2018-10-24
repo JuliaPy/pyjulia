@@ -393,7 +393,7 @@ script with `python-jl` command bundled in PyJulia.  You can simply do:
 See `python-jl --help` for more information.
 
 For other available workarounds, see:
-    https://github.com/JuliaPy/pyjulia/issues/185
+    https://github.com/JuliaPy/pyjulia#troubleshooting
 """
 
 
