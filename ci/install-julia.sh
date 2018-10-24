@@ -11,10 +11,15 @@ case "$VERSION" in
     BASEURL="https://julialangnightlies-s3.julialang.org/bin"
     JULIANAME="julia-latest"
     ;;
-  [0-9]*)
+  [0-9]*.[0-9]*.[0-9]*)
     BASEURL="https://julialang-s3.julialang.org/bin"
     SHORTVERSION="$(echo "$VERSION" | grep -Eo '^[0-9]+\.[0-9]+')"
     JULIANAME="$SHORTVERSION/julia-$VERSION"
+    ;;
+  [0-9]*.[0-9])
+    BASEURL="https://julialang-s3.julialang.org/bin"
+    SHORTVERSION="$(echo "$VERSION" | grep -Eo '^[0-9]+\.[0-9]+')"
+    JULIANAME="$SHORTVERSION/julia-$VERSION-latest"
     ;;
   *)
     echo "Unrecognized VERSION=$VERSION, exiting"
