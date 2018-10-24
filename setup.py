@@ -1,23 +1,41 @@
 #!/usr/bin/env python
-"""Julia/Python bridge with IPython support.
-"""
 
 from setuptools import setup
-import sys
+import os
 
-doc = __doc__
+
+def pyload(name):
+    ns = {}
+    with open(name) as f:
+        exec(compile(f.read(), name, "exec"), ns)
+    return ns
+
+# In case it's Python 2:
 try:
-    import pypandoc
-    with open('README.md') as f:
-        desc = f.read()
-    print('will convert description from markdown to rst.')
-    doc = pypandoc.convert(desc, 'rst', format='markdown')
-except Exception:
-    print('Unable to convert markdown to rst. Please install `pypandoc` and `pandoc` to use markdown long description.')
+    execfile
+except NameError:
+    pass
+else:
+    def pyload(path):
+        ns = {}
+        execfile(path, ns)
+        return ns
+
+
+repo_root = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(repo_root, "README.md")) as f:
+    long_description = f.read()
+# https://packaging.python.org/guides/making-a-pypi-friendly-readme/
+
+ns = pyload(os.path.join(repo_root, "julia", "release.py"))
+version = ns["__version__"]
 
 setup(name='julia',
-      version='0.1.5',
-      description=doc,
+      version=version,
+      description="Julia/Python bridge with IPython support.",
+      long_description=long_description,
+      long_description_content_type="text/markdown",
       author='The Julia and IPython development teams.',
       author_email='julia@julialang.org',
       license='MIT',
@@ -42,6 +60,7 @@ setup(name='julia',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
       ],
       url='http://julialang.org',
       packages=['julia'],
@@ -51,4 +70,8 @@ setup(name='julia',
               "python-jl = julia.python_jl:main",
           ],
       },
+      # We bundle Julia scripts etc. inside `julia` directory.  Thus,
+      # this directory must exist in the file system (not in a zip
+      # file):
+      zip_safe=False,
       )
