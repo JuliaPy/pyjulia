@@ -6,57 +6,70 @@ PyJulia
 
 Experimenting with developing a better interface to [Julia language](https://julialang.org/) that works with [Python](https://www.python.org/) 2 & 3 and Julia v0.6+.
 
-to run the tests, execute from the toplevel directory
-
-```shell
-tox
-```
-
-See [Testing](#testing) below for details.
-
-**Note** You need to explicitly add julia to your `PATH`, an alias will not work.
-
 `pyjulia` is tested against Python versions 2.7, 3.6, and 3.7.  Older versions of Python (than 2.7)  are not supported.
 
 Installation
 ------------
+
+**Note:** If you are using Python installed with Ubuntu or `conda`,
+PyJulia does not work by default with standard Python interpreter and
+Julia ≥ 0.7.  For workarounds, see [Troubleshooting](#troubleshooting)
+below.  Same caution applies to other Debian-based and possibly other
+GNU/Linux distributions.
+
 You will need to install PyCall in your existing Julia installation
 
 ```julia
+using Pkg  # for julia ≥ 0.7
 Pkg.add("PyCall")
 ```
 
 Your python installation must be able to call Julia.  If your installer
 does not add the Julia binary directory to your `PATH`, you will have to
-add it.
+add it.  _An alias will not work._
 
 Then finally you have to install pyjulia.
 
+**Note:** If you are not familiar with `pip` and have some troubles
+with the following installation steps, we recommend to go through
+[Tutorials in Python Packaging User Guide](https://packaging.python.org/tutorials/).
+
 To get released versions you can use:
 
+```sh
+python3 -m pip install --user julia
+python2 -m pip install --user julia  # If you need Python 2
 ```
-pip install julia
+
+where `--user` should be omitted if you are using virtual environment
+(`virtualenv`, `venv`, `conda`, etc.).
+
+If you are interested in using the development version, you can
+install PyJulia directly from GitHub:
+
+```sh
+python3 -m pip install --user 'https://github.com/JuliaPy/pyjulia/archive/master.zip#egg=julia'
 ```
 
 You may clone it directly to your home directory.
 
 ```
 git clone https://github.com/JuliaPy/pyjulia
-
 ```
+
 then inside the pyjulia directory you need to run the python setup file
 
 ```
-[sudo] pip install [-e] .
+cd pyjulia
+python3 -m pip install --user .
+python3 -m pip install --user -e .  # If you want "development install"
 ```
 
-The `-e` flag makes a development install meaning that any change to pyjulia
+The `-e` flag makes a development install, meaning that any change to pyjulia
 source tree will take effect at next python interpreter restart without having
 to reissue an install command.
 
-`pyjulia` is known to work with `PyCall.jl` ≥ `v0.7.2`.
-
-If you run into problems using `pyjulia`, first check the version of `PyCall.jl` you have installed by running `Pkg.installed("PyCall")`.
+See [Testing](#testing) below for how to run tests.
 
 Usage
 -----
@@ -126,6 +139,84 @@ from julia import Base
 ```
 
 
+Troubleshooting
+---------------
+
+### Your Python interpreter is statically linked to libpython
+
+If you use Python installed with Debian-based Linux distribution such
+as Ubuntu or install Python by `conda`, you might have noticed that
+PyJulia cannot be initialized properly with Julia ≥ 0.7.  This is
+because those Python executables are statically linked to libpython.
+(See [Limitations](#limitations) below for why that's a problem.)
+
+If you are unsure if your `python` has this problem, you can quickly
+check it by:
+
+```console
+$ ldd $(which python) | grep libpython
+        libpython3.7m.so.1.0 => /usr/lib/libpython3.7m.so.1.0 (0x00007f17c12c4000)
+```
+
+If it does not print the path to libpython like above, you need to use
+one of the workaround below.
+
+The easiest workaround is to use the `python-jl` command bundled in
+PyJulia.  This can be used instead of normal `python` command for
+basic use-cases such as:
+
+```console
+$ python-jl your_script.py
+$ python-jl -c 'from julia.Base import banner; banner()'
+$ python-jl -m IPython
+```
+
+See `python-jl --help` for more information.
+
+Note that `python-jl` works by launching Python interpreter inside
+Julia.  If you are comfortable with working in Julia REPL, you can
+simply do:
+
+```julia
+julia> using PyCall
+
+julia> py"""
+       from julia import Julia
+       Julia(init_julia=False)
+
+       from your_module_using_pyjulia import function
+       function()
+       """
+```
+
+Alternatively, you can use [pyenv](https://github.com/pyenv/pyenv) to
+build
+[`--enable-shared` option](https://github.com/pyenv/pyenv/wiki#how-to-build-cpython-with---enable-shared).
+Of course, manually building from Python source distribution with the
+same configuration also works.
+
+```console
+$ PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.6.6
+Downloading Python-3.6.6.tar.xz...
+-> https://www.python.org/ftp/python/3.6.6/Python-3.6.6.tar.xz
+Installing Python-3.6.6...
+Installed Python-3.6.6 to /home/USER/.pyenv/versions/3.6.6
+
+$ ldd ~/.pyenv/versions/3.6.6/bin/python3.6 | grep libpython
+        libpython3.6m.so.1.0 => /home/USER/.pyenv/versions/3.6.6/lib/libpython3.6m.so.1.0 (0x00007fca44c8b000)
+```
+
+For more discussion, see:
+https://github.com/JuliaPy/pyjulia/issues/185
+
+### Segmentation fault in IPython
+
+You may experience segmentation fault when using PyJulia in old
+versions of IPython.  You can avoid this issue by updating IPython to
+7.0 or above.  Alternatively, you can use IPython via Jupyter (e.g.,
+`jupyter console`) to workaround the problem.
+
+
 How it works
 ------------
 PyJulia loads the `libjulia` library and executes the statements therein.
@@ -139,7 +230,50 @@ when reference count drops to zero, so that the Julia object may be freed).
 Limitations
 ------------
 
-Not all valid Julia identifiers are valid Python identifiers.  Unicode identifiers are invalid in Python 2.7 and so `pyjulia` cannot call or access Julia methods/variables with names that are not ASCII only.  Additionally, it is a common idiom in Julia to append a `!` character to methods which mutate their arguments.  These method names are invalid Python identifers.  `pyjulia` renames these methods by subsituting `!` with `_b`.  For example, the Julia method `sum!` can be called in `pyjulia` using `sum_b(...)`.
+### Mismatch in valid set of identifiers
+
+Not all valid Julia identifiers are valid Python identifiers.  Unicode
+identifiers are invalid in Python 2.7 and so `pyjulia` cannot call or
+access Julia methods/variables with names that are not ASCII only.
+Although Python 3 allows Unicode identifiers, they are more
+aggressively normalized than Julia.  For example, `ϵ` (GREEK LUNATE
+EPSILON SYMBOL) and `ε` (GREEK SMALL LETTER EPSILON) are identical in
+Python 3 but different in Julia.  Additionally, it is a common idiom
+in Julia to append a `!` character to methods which mutate their
+arguments.  These method names are invalid Python identifers.
+`pyjulia` renames these methods by subsituting `!` with `_b`.  For
+example, the Julia method `sum!` can be called in `pyjulia` using
+`sum_b(...)`.
+
+### Pre-compilation mechanism in Julia 1.0
+
+There was a major overhaul in the module loading system between Julia
+0.6 and 1.0.  As a result,
+[the hack](https://github.com/JuliaPy/pyjulia/tree/master/julia/fake-julia)
+supporting the PyJulia to load PyCall.
+
+To understand the issue, you need to understand a bit of details in
+PyCall implementation.  PyCall uses Julia's precompilation mechanism
+to reduce JIT compilation required while Julia is loading it.  This
+results in encoding the path to libpython used by PyCall when it's
+loaded from `julia`.  Furthermore, libpython ABI such as C struct
+layout varies across Python versions.  Currently, this is determined
+while precompiling PyJulia and cannot be changed at run-time.
+Consequently, PyCall only works if it loads the same libpython in
+Julia and Python.  This is why PyJulia has to be imported in a Python
+executable dynamically linked to libpython when using the same PyCall
+precompilation cache.
+
+The aforementioned hack worked by monkey-patching Julia's
+precompilation mechanism to emit the precompilation cache file to
+other directory when PyCall is used via PyJulia.  However, as Juila's
+internal for module loading was changed after Juila 0.6, this
+monkey-patch does not work anymore.  Similar monkey-patch in Julia 1.0
+can be done by using `Base.DEPOT_PATH` although it would waste more
+disk space than the similar hack for Julia 0.6.
+
+For the update on this problem, see:
+https://github.com/JuliaLang/julia/issues/28518
 
 
 Testing
