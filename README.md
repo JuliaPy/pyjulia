@@ -20,8 +20,8 @@ GNU/Linux distributions.
 You will need to install PyCall in your existing Julia installation
 
 ```julia
-using Pkg  # for julia ≥ 0.7
-Pkg.add("PyCall")
+julia> using Pkg  # for julia ≥ 0.7
+julia> Pkg.add("PyCall")
 ```
 
 Your python installation must be able to call Julia.  If your installer
@@ -36,9 +36,9 @@ with the following installation steps, we recommend to go through
 
 To get released versions you can use:
 
-```sh
-python3 -m pip install --user julia
-python2 -m pip install --user julia  # If you need Python 2
+```console
+$ python3 -m pip install --user julia
+$ python2 -m pip install --user julia  # If you need Python 2
 ```
 
 where `--user` should be omitted if you are using virtual environment
@@ -47,22 +47,22 @@ where `--user` should be omitted if you are using virtual environment
 If you are interested in using the development version, you can
 install PyJulia directly from GitHub:
 
-```sh
-python3 -m pip install --user 'https://github.com/JuliaPy/pyjulia/archive/master.zip#egg=julia'
+```console
+$ python3 -m pip install --user 'https://github.com/JuliaPy/pyjulia/archive/master.zip#egg=julia'
 ```
 
 You may clone it directly to your home directory.
 
-```
-git clone https://github.com/JuliaPy/pyjulia
+```console
+$ git clone https://github.com/JuliaPy/pyjulia
 ```
 
 then inside the pyjulia directory you need to run the python setup file
 
-```
-cd pyjulia
-python3 -m pip install --user .
-python3 -m pip install --user -e .  # If you want "development install"
+```console
+$ cd pyjulia
+$ python3 -m pip install --user .
+$ python3 -m pip install --user -e .  # If you want "development install"
 ```
 
 The `-e` flag makes a development install, meaning that any change to pyjulia
@@ -83,42 +83,42 @@ which can be used in a customized setup.
 To call a Julia function in a Julia module, import the Julia module
 (say `Base`) with:
 
-```python
-from julia import Base
+```pycon
+>>> from julia import Base
 ```
 
 and then call Julia functions in `Base` from python, e.g.,
 
-```python
-Base.sind(90)
+```pycon
+>>> Base.sind(90)
 ```
 
 Other variants of Python import syntax also work:
 
-```python
-import julia.Base
-from julia.Base import LinAlg   # import a submodule
-from julia.Base import sin      # import a function from a module
+```pycon
+>>> import julia.Base
+>>> from julia.Base import LinAlg   # import a submodule
+>>> from julia.Base import sin      # import a function from a module
 ```
 
 The global namespace of Julia's interpreter can be accessed via a
 special module `julia.Main`:
 
-```python
-from julia import Main
+```pycon
+>>> from julia import Main
 ```
 
 You can set names in this module to send Python values to Julia:
 
-```python
-Main.xs = [1, 2, 3]
+```pycon
+>>> Main.xs = [1, 2, 3]
 ```
 
 which allows it to be accessed directly from Julia code, e.g., it can
 be evaluated at Julia side using Julia syntax:
 
-```python
-Main.eval("sin.(xs)")
+```pycon
+>>> Main.eval("sin.(xs)")
 ```
 
 ### Low-level interface
@@ -127,15 +127,15 @@ If you need a custom setup for `pyjulia`, it must be done *before*
 importing any Julia modules.  For example, to use the Julia
 executable named `custom_julia`, run:
 
-```python
-from julia import Julia
-jl = julia.Julia(runtime="custom_julia")
+```pycon
+>>> from julia import Julia
+>>> jl = julia.Julia(runtime="custom_julia")
 ```
 
 You can then use, e.g.,
 
-```python
-from julia import Base
+```pycon
+>>> from julia import Base
 ```
 
 
