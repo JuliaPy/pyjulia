@@ -39,7 +39,7 @@ except ImportError:
 # this is python 3.3 specific
 from types import ModuleType, FunctionType
 
-from .find_libpython import find_libpython, normalize_path
+from .find_libpython import find_libpython, linked_libpython, normalize_path
 
 #-----------------------------------------------------------------------------
 # Classes and funtions
@@ -260,11 +260,7 @@ def isafunction(julia, julia_name, mod_name=""):
 
 def determine_if_statically_linked():
     """Determines if this python executable is statically linked"""
-    # Windows and OS X are generally always dynamically linked
-    if not sys.platform.startswith('linux'):
-        return False
-    lddoutput = subprocess.check_output(["ldd",sys.executable])
-    return not (b"libpython" in lddoutput)
+    return linked_libpython() is None
 
 
 JuliaInfo = namedtuple(
@@ -355,18 +351,6 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     if jlinfo.libpython is None:
         _debug("libpython cannot be read from PyCall/deps/deps.jl")
         return False
-
-    if determine_if_statically_linked():
-        _debug(sys.executable, "is statically linked.")
-        return False
-
-    # Note that the following check is OK since statically linked case
-    # is already excluded.
-    if is_same_path(jlinfo.pyprogramname, sys.executable):
-        # In macOS and Windows, find_libpython does not work as good
-        # as in Linux.  We add this shortcut so that PyJulia can work
-        # in those environments.
-        return True
 
     py_libpython = find_libpython()
     jl_libpython = normalize_path(jlinfo.libpython)
