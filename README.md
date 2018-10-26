@@ -6,7 +6,7 @@ PyJulia
 
 Experimenting with developing a better interface to [Julia language](https://julialang.org/) that works with [Python](https://www.python.org/) 2 & 3 and Julia v0.6+.
 
-`pyjulia` is tested against Python versions 2.7, 3.6, and 3.7.  Older versions of Python (than 2.7)  are not supported.
+PyJulia is tested against Python versions 2.7, 3.6, and 3.7.  Older versions of Python (than 2.7)  are not supported.
 
 Installation
 ------------
@@ -28,7 +28,7 @@ Your python installation must be able to call Julia.  If your installer
 does not add the Julia binary directory to your `PATH`, you will have to
 add it.  _An alias will not work._
 
-Then finally you have to install pyjulia.
+Then finally you have to install PyJulia.
 
 **Note:** If you are not familiar with `pip` and have some troubles
 with the following installation steps, we recommend to go through
@@ -57,7 +57,7 @@ You may clone it directly to your home directory.
 $ git clone https://github.com/JuliaPy/pyjulia
 ```
 
-then inside the pyjulia directory you need to run the python setup file
+then inside the `pyjulia` directory you need to run the python setup file
 
 ```console
 $ cd pyjulia
@@ -65,7 +65,7 @@ $ python3 -m pip install --user .
 $ python3 -m pip install --user -e .  # If you want "development install"
 ```
 
-The `-e` flag makes a development install, meaning that any change to pyjulia
+The `-e` flag makes a development install, meaning that any change to PyJulia
 source tree will take effect at next python interpreter restart without having
 to reissue an install command.
 
@@ -74,7 +74,7 @@ See [Testing](#testing) below for how to run tests.
 Usage
 -----
 
-`pyjulia` provides a high-level interface which assumes a "normal"
+PyJulia provides a high-level interface which assumes a "normal"
 setup (e.g., `julia` is in your `PATH`) and a low-level interface
 which can be used in a customized setup.
 
@@ -123,7 +123,7 @@ be evaluated at Julia side using Julia syntax:
 
 ### Low-level interface
 
-If you need a custom setup for `pyjulia`, it must be done *before*
+If you need a custom setup for PyJulia, it must be done *before*
 importing any Julia modules.  For example, to use the Julia
 executable named `custom_julia`, run:
 
@@ -276,7 +276,7 @@ Limitations
 ### Mismatch in valid set of identifiers
 
 Not all valid Julia identifiers are valid Python identifiers.  Unicode
-identifiers are invalid in Python 2.7 and so `pyjulia` cannot call or
+identifiers are invalid in Python 2.7 and so PyJulia cannot call or
 access Julia methods/variables with names that are not ASCII only.
 Although Python 3 allows Unicode identifiers, they are more
 aggressively normalized than Julia.  For example, `ϵ` (GREEK LUNATE
@@ -284,8 +284,8 @@ EPSILON SYMBOL) and `ε` (GREEK SMALL LETTER EPSILON) are identical in
 Python 3 but different in Julia.  Additionally, it is a common idiom
 in Julia to append a `!` character to methods which mutate their
 arguments.  These method names are invalid Python identifers.
-`pyjulia` renames these methods by subsituting `!` with `_b`.  For
-example, the Julia method `sum!` can be called in `pyjulia` using
+PyJulia renames these methods by subsituting `!` with `_b`.  For
+example, the Julia method `sum!` can be called in PyJulia using
 `sum_b(...)`.
 
 ### Pre-compilation mechanism in Julia 1.0
@@ -392,7 +392,7 @@ PYJULIA_TEST_REBUILD=yes JULIA_EXE=~/julia/julia tox -e py37 -- -s
 
 means to execute tests with
 
-* `pyjulia` in shared-cache mode
+* PyJulia in shared-cache mode
 * `julia` executable at `~/julia/julia`
 * Python 3.7
 * `pytest`'s capturing mode turned off
