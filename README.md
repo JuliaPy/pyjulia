@@ -24,9 +24,9 @@ julia> using Pkg  # for julia ≥ 0.7
 julia> Pkg.add("PyCall")
 ```
 
-Your python installation must be able to call Julia.  If your installer
-does not add the Julia binary directory to your `PATH`, you will have to
-add it.  _An alias will not work._
+Your python installation must be able to call command line program
+`julia`.  If your installer does not add the Julia binary directory to
+your `PATH`, you will have to add it.  _An alias will not work._
 
 Then finally you have to install PyJulia.
 
@@ -51,7 +51,7 @@ install PyJulia directly from GitHub:
 $ python3 -m pip install --user 'https://github.com/JuliaPy/pyjulia/archive/master.zip#egg=julia'
 ```
 
-You may clone it directly to your home directory.
+You may clone it directly to (say) your home directory.
 
 ```console
 $ git clone https://github.com/JuliaPy/pyjulia
@@ -97,7 +97,7 @@ Other variants of Python import syntax also work:
 
 ```pycon
 >>> import julia.Base
->>> from julia.Base import LinAlg   # import a submodule
+>>> from julia.Base import Enums    # import a submodule
 >>> from julia.Base import sin      # import a function from a module
 ```
 
@@ -163,8 +163,8 @@ In [2]: %%julia
 
 PyJulia can be used in Python virtual environments created by
 `virtualenv`, `venv`, and any tools wrapping them such as `pipenv`
-provided that Python executable used in such environments are
-identical to the one configured with PyCall.  If this is not the case,
+provided that Python executable used in such environments are linked
+to identical libpython used by PyCall.  If this is not the case,
 initializing PyJulia (e.g., `import julia.Main`) prints an informative
 error message with detected paths to libjulia.  See
 [PyCall documentation](https://github.com/JuliaPy/PyCall.jl) for how
@@ -293,7 +293,7 @@ example, the Julia method `sum!` can be called in PyJulia using
 There was a major overhaul in the module loading system between Julia
 0.6 and 1.0.  As a result,
 [the hack](https://github.com/JuliaPy/pyjulia/tree/master/julia/fake-julia)
-supporting the PyJulia to load PyCall.
+supporting the PyJulia to load PyCall stopped working.
 
 To understand the issue, you need to understand a bit of details in
 PyCall implementation.  PyCall uses Julia's precompilation mechanism
@@ -304,8 +304,8 @@ layout varies across Python versions.  Currently, this is determined
 while precompiling PyJulia and cannot be changed at run-time.
 Consequently, PyCall only works if it loads the same libpython in
 Julia and Python.  This is why PyJulia has to be imported in a Python
-executable dynamically linked to libpython when using the same PyCall
-precompilation cache.
+executable dynamically linked to libpython, if it shares the same
+PyCall precompilation cache.
 
 The aforementioned hack worked by monkey-patching Julia's
 precompilation mechanism to emit the precompilation cache file to
