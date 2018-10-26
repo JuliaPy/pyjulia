@@ -352,11 +352,11 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
         _debug("libpython cannot be read from PyCall/deps/deps.jl")
         return False
 
-    py_libpython = find_libpython()
+    py_libpython = linked_libpython()
     jl_libpython = normalize_path(jlinfo.libpython)
     _debug("py_libpython =", py_libpython)
     _debug("jl_libpython =", jl_libpython)
-    return py_libpython == jl_libpython
+    return py_libpython == jl_libpython and py_libpython is not None
 
 
 _separate_cache_error_common_header = """\
