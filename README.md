@@ -296,6 +296,22 @@ disk space than the similar hack for Julia 0.6.
 For the update on this problem, see:
 https://github.com/JuliaLang/julia/issues/28518
 
+### <kbd>Ctrl-C</kbd> does not work / terminates the whole Python process
+
+Currently, initializing PyJulia (e.g., by `from julia import Main`)
+disables `KeyboardInterrupt` handling in the Python process.  If you
+are using normal `python` interpreter, it means that canceling the
+input by <kbd>Ctrl-C</kbd> does not work and repeatedly providing
+<kbd>Ctrl-C</kbd> terminates the whole Python process with the error
+message `WARNING: Force throwing a SIGINT`.  Using IPython 7.0 or
+above is recommended to avoid such accidental shutdown.
+
+It also means that there is no safe way to cancel long-running
+computations or I/O at the moment.  Sending SIGINT with
+<kbd>Ctrl-C</kbd> will terminate the whole Python process.
+
+For the update on this problem, see:
+https://github.com/JuliaPy/pyjulia/issues/211
 
 Testing
 -------
