@@ -337,10 +337,9 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     Determine if Python used by PyCall.jl is compatible with this Python.
 
     Current Python executable is considered compatible if it is dynamically
-    linked to libpython (usually the case in macOS and Windows) and
-    both of them are using identical libpython.  If this function returns
-    `True`, PyJulia use the same precompilation cache of PyCall.jl used by
-    Julia itself.
+    linked to libpython and both of them are using identical libpython.  If
+    this function returns `True`, PyJulia use the same precompilation cache
+    of PyCall.jl used by Julia itself.
 
     Parameters
     ----------
@@ -353,6 +352,11 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     _debug("py_libpython =", py_libpython)
     _debug("jl_libpython =", jl_libpython)
     return py_libpython == jl_libpython and py_libpython is not None
+    # `py_libpython is not None` here for checking if this Python
+    # executable is dynamically linked or not (`py_libpython is None`
+    # if it's statically linked).  `jl_libpython` may be `None` if
+    # libpython used for PyCall is removed so we can't expect
+    # `jl_libpython` to be a `str` always.
 
 
 _separate_cache_error_common_header = """\
