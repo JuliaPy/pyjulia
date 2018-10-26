@@ -159,6 +159,18 @@ In [2]: %%julia
 |__/                   |
 ```
 
+### Virtual environments
+
+PyJulia can be used in Python virtual environments created by
+`virtualenv`, `venv`, and any tools wrapping them such as `pipenv`
+provided that Python executable used in such environments are
+identical to the one configured with PyCall.  If this is not the case,
+initializing PyJulia (e.g., `import julia.Main`) prints an informative
+error message with detected paths to libjulia.  See
+[PyCall documentation](https://github.com/JuliaPy/PyCall.jl) for how
+to configure Python executable.
+
+Note that Python environment created by `conda` is not supported.
 
 Troubleshooting
 ---------------
