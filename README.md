@@ -138,6 +138,27 @@ You can then use, e.g.,
 >>> from julia import Base
 ```
 
+### IPython magic
+
+In IPython (and therefore in Jupyter), you can directly execute Julia
+code using `%%julia` magic:
+
+```
+In [1]: %load_ext julia.magic
+Initializing Julia interpreter. This may take some time...
+
+In [2]: %%julia
+   ...: Base.banner(IOContext(stdout, :color=>true))
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.0.1 (2018-09-29)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
+|__/                   |
+```
+
 
 Troubleshooting
 ---------------
