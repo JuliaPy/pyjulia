@@ -323,6 +323,34 @@ computations or I/O at the moment.  Sending SIGINT with
 For the update on this problem, see:
 https://github.com/JuliaPy/pyjulia/issues/211
 
+### No threading support
+
+PyJulia cannot be used in different threads since libjulia is not
+thread safe.  However, you can
+[use thread within Julia](https://docs.julialang.org/en/v1.0/manual/parallel-computing/#Multi-Threading-(Experimental)-1).
+For example, start IPython by `JULIA_NUM_THREADS=4 ipython` and then
+run:
+
+```julia
+In [1]: %load_ext julia.magic
+Initializing Julia interpreter. This may take some time...
+
+In [2]: %%julia
+   ...: a = zeros(10)
+   ...: Threads.@threads for i = 1:10
+   ...:     a[i] = Threads.threadid()
+   ...: end
+   ...: a
+Out[3]: array([1., 1., 1., 2., 2., 2., 3., 3., 4., 4.])
+```
+
+### PyJulia does not release GIL
+
+PyJulia (or rather PyCall) does not release GIL while calling Julia
+functions.  It means that Python code and Julia code cannot run in
+parallel.
+
+
 Testing
 -------
 
