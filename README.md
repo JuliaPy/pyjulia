@@ -175,12 +175,22 @@ If you are unsure if your `python` has this problem, you can quickly
 check it by:
 
 ```console
-$ ldd $(which python) | grep libpython
-        libpython3.7m.so.1.0 => /usr/lib/libpython3.7m.so.1.0 (0x00007f17c12c4000)
+$ ldd /usr/bin/python
+        linux-vdso.so.1 (0x00007ffd73f7c000)
+        libpthread.so.0 => /usr/lib/libpthread.so.0 (0x00007f10ef84e000)
+        libc.so.6 => /usr/lib/libc.so.6 (0x00007f10ef68a000)
+        libpython3.7m.so.1.0 => /usr/lib/libpython3.7m.so.1.0 (0x00007f10ef116000)
+        /lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007f10efaa4000)
+        libdl.so.2 => /usr/lib/libdl.so.2 (0x00007f10ef111000)
+        libutil.so.1 => /usr/lib/libutil.so.1 (0x00007f10ef10c000)
+        libm.so.6 => /usr/lib/libm.so.6 (0x00007f10eef87000)
 ```
 
-If it does not print the path to libpython like above, you need to use
-one of the workaround below.
+in Linux where `/usr/bin/python` should be replaced with the path to
+your `python` command (use `which python` to find it out).  In macOS,
+use `otool -L` instead of `ldd`.  If it does not print the path to
+libpython like `/usr/lib/libpython3.7m.so.1.0` in above, you need to
+use one of the workaround below.
 
 The easiest workaround is to use the `python-jl` command bundled in
 PyJulia.  This can be used instead of normal `python` command for
