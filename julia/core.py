@@ -348,10 +348,6 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
         A `JuliaInfo` object returned by `juliainfo` function.
     """
     _debug("jlinfo.libpython =", jlinfo.libpython)
-    if jlinfo.libpython is None:
-        _debug("libpython cannot be read from PyCall/deps/deps.jl")
-        return False
-
     py_libpython = linked_libpython()
     jl_libpython = normalize_path(jlinfo.libpython)
     _debug("py_libpython =", py_libpython)
