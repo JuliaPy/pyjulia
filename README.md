@@ -339,7 +339,7 @@ https://github.com/JuliaPy/pyjulia/issues/211
 
 PyJulia cannot be used in different threads since libjulia is not
 thread safe.  However, you can
-[use thread within Julia](https://docs.julialang.org/en/v1.0/manual/parallel-computing/#Multi-Threading-(Experimental)-1).
+[use multiple threads within Julia](https://docs.julialang.org/en/v1.0/manual/parallel-computing/#Multi-Threading-(Experimental)-1).
 For example, start IPython by `JULIA_NUM_THREADS=4 ipython` and then
 run:
 
