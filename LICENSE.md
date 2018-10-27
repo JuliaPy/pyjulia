@@ -1,4 +1,4 @@
-Copyright &copy; 2013 by Steven G. Johnson, Fernando Perez, Jeff Bezanson, Stefan Karpinski, Keno Fischer, Jake Bolewski, and other contributors.
+Copyright &copy; 2013 by Steven G. Johnson, Fernando Perez, Jeff Bezanson, Stefan Karpinski, Keno Fischer, Jake Bolewski, Takafumi Arakaki, and other contributors.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
