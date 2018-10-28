@@ -3,9 +3,11 @@ Unit tests which can be done without loading `libjulia`.
 """
 
 import os
+import sys
 
 import pytest
 
+from .test_compatible_exe import runcode
 from julia.core import raise_separate_cache_error
 
 try:
@@ -40,3 +42,25 @@ def test_raise_separate_cache_error_dynamically_linked():
             runtime, jlinfo,
             _determine_if_statically_linked=lambda: False)
     assert "have to match exactly" in str(excinfo.value)
+
+
+def test_atexit():
+    proc = runcode(
+        sys.executable,
+        '''
+        import os
+        from julia import Julia
+        jl = Julia(runtime=os.getenv("JULIA_EXE"), debug=True)
+
+        jl_atexit = jl.eval("""
+        function(f)
+            atexit(() -> f())
+        end
+        """)
+
+        @jl_atexit
+        def _():
+            print("atexit called")
+        ''',
+    )
+    assert "atexit called" in proc.stdout

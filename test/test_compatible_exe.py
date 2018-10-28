@@ -7,7 +7,6 @@ import textwrap
 
 import pytest
 
-from .test_core import julia
 from julia.core import _enviorn, which
 
 is_linux = sys.platform.startswith("linux")
@@ -46,9 +45,9 @@ except ImportError:
     run = _run_fallback
 
 
-def runcode(python, code):
+def runcode(python, code, check=False):
     """Run `code` in `python`."""
-    return run(
+    proc = run(
         [python],
         input=textwrap.dedent(code),
         stdout=subprocess.PIPE,
@@ -60,6 +59,10 @@ def runcode(python, code):
             PYTHONPATH=os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
         ),
     )
+    print_completed_proc(proc)
+    if check:
+        assert proc.returncode == 0
+    return proc
 
 
 def print_completed_proc(proc):
@@ -116,6 +119,8 @@ def is_dynamically_linked(executable):
 
 @pytest.mark.parametrize("python", incompatible_pythons)
 def test_incompatible_python(python):
+    from .test_core import julia
+
     if julia.eval("(VERSION.major, VERSION.minor)") == (0, 6):
         # Julia 0.6 implements mixed version
         return
@@ -129,7 +134,6 @@ def test_incompatible_python(python):
         Julia(runtime=os.getenv("JULIA_EXE"), debug=True)
         """,
     )
-    print_completed_proc(proc)
 
     assert proc.returncode == 1
     assert "It seems your Julia and PyJulia setup are not supported." in proc.stderr
@@ -157,7 +161,7 @@ def test_statically_linked(python):
     it.
     """
     python = which(python)
-    proc = runcode(
+    runcode(
         python,
         """
         from __future__ import print_function
@@ -169,6 +173,5 @@ def test_statically_linked(python):
 
         assert not is_compatible_exe(jlinfo, _debug=print)
         """,
+        check=True,
     )
-    print_completed_proc(proc)
-    assert proc.returncode == 0
