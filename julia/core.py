@@ -15,6 +15,7 @@ Bridge Python and Julia by initializing the Julia interpreter inside Python.
 
 # Stdlib
 from __future__ import print_function, absolute_import
+import atexit
 import ctypes
 import ctypes.util
 import os
@@ -651,6 +652,10 @@ class Julia(object):
                     rm(backup; force=true)
                 end
                 """)
+
+            jl_atexit_hook = self.api.jl_atexit_hook
+            jl_atexit_hook.argtypes = [ctypes.c_int]
+            atexit.register(jl_atexit_hook, 0)
 
         # Currently, PyJulia assumes that `Main.PyCall` exsits.  Thus, we need
         # to import `PyCall` again here in case `init_julia=False` is passed:
