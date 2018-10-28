@@ -28,10 +28,12 @@ incompatible_pythons = _get_paths(os.getenv("PYJULIA_TEST_INCOMPATIBLE_PYTHONS",
 try:
     from types import SimpleNamespace
 except ImportError:
+    # Python 2:
     from argparse import Namespace as SimpleNamespace
 
 
 def _run_fallback(args, input=None, **kwargs):
+    # A port of subprocess.run just enough to run the tests.
     process = subprocess.Popen(args, stdin=subprocess.PIPE, **kwargs)
     stdout, stderr = process.communicate(input)
     retcode = process.wait()
@@ -73,6 +75,20 @@ def print_completed_proc(proc):
 
 
 def is_dynamically_linked(executable):
+    """
+    Check if Python `executable` is (likely to be) dynamically linked.
+
+    It returns three possible values:
+
+    * `True`: Likely that it's dynamically linked.
+    * `False`: Likely that it's statically linked.
+    * `None`: Unsupported platform.
+
+    It's only "likely" since the check is by simple occurrence of a
+    some substrings like "libpython".  For example, if there is
+    another library existing on the path containing "libpython", this
+    function may return false-positive.
+    """
     path = which(executable)
     assert os.path.exists(path)
     if is_linux and which("ldd"):
