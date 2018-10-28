@@ -12,10 +12,9 @@ Installation
 ------------
 
 **Note:** If you are using Python installed with Ubuntu or `conda`,
-PyJulia does not work by default with standard Python interpreter and
-Julia ≥ 0.7.  For workarounds, see [Troubleshooting](#troubleshooting)
-below.  Same caution applies to other Debian-based and possibly other
-GNU/Linux distributions.
+PyJulia may not work with Julia ≥ 0.7.  For workarounds, see
+[Troubleshooting](#troubleshooting) below.  Same caution applies to
+other Debian-based and possibly other GNU/Linux distributions.
 
 You will need to install PyCall in your existing Julia installation
 
@@ -298,14 +297,15 @@ supporting the PyJulia to load PyCall stopped working.
 To understand the issue, you need to understand a bit of details in
 PyCall implementation.  PyCall uses Julia's precompilation mechanism
 to reduce JIT compilation required while Julia is loading it.  This
-results in encoding the path to libpython used by PyCall when it's
-loaded from `julia`.  Furthermore, libpython ABI such as C struct
+results in embedding the path to libpython used by PyCall to its
+precompilation cache.  Furthermore, libpython ABI such as C struct
 layout varies across Python versions.  Currently, this is determined
 while precompiling PyJulia and cannot be changed at run-time.
-Consequently, PyCall only works if it loads the same libpython in
-Julia and Python.  This is why PyJulia has to be imported in a Python
-executable dynamically linked to libpython, if it shares the same
-PyCall precompilation cache.
+Consequently, PyJulia can use the precompilation cache of PyCall
+created by standard Julia module loader only if the PyCall cache is
+compiled with the libjulia used by the current Python process.  This
+is why PyJulia has to be imported in a Python executable dynamically
+linked to libpython.
 
 The aforementioned hack worked by monkey-patching Julia's
 precompilation mechanism to emit the precompilation cache file to
