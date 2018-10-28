@@ -351,7 +351,8 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     jl_libpython = normalize_path(jlinfo.libpython)
     _debug("py_libpython =", py_libpython)
     _debug("jl_libpython =", jl_libpython)
-    return py_libpython == jl_libpython and py_libpython is not None
+    dynamically_linked = py_libpython is not None
+    return dynamically_linked and py_libpython == jl_libpython
     # `py_libpython is not None` here for checking if this Python
     # executable is dynamically linked or not (`py_libpython is None`
     # if it's statically linked).  `jl_libpython` may be `None` if
