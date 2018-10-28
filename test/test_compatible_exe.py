@@ -16,7 +16,7 @@ is_apple = sys.platform == "darwin"
 
 
 def _get_paths(path):
-    return filter(None, path.split(":"))
+    return list(filter(None, path.split(":")))
 
 
 # Environment variable PYJULIA_TEST_INCOMPATIBLE_PYTHONS is the
@@ -134,3 +134,37 @@ def test_incompatible_python(python):
         assert "`libpython` have to match" in proc.stderr
     elif dynamic is False:
         assert "is statically linked to libpython" in proc.stderr
+
+
+@pytest.mark.parametrize(
+    "python",
+    [
+        p
+        for p in filter(None, map(which, incompatible_pythons))
+        if is_dynamically_linked(p) is False
+    ],
+)
+def test_statically_linked(python):
+    """
+    Simulate the case PyCall is configured with statically linked Python.
+
+    In this case, `find_libpython()` would return the path identical
+    to the one in PyCall's deps.jl.  `is_compatible_exe` should reject
+    it.
+    """
+    python = which(python)
+    proc = runcode(
+        python,
+        """
+        from __future__ import print_function
+        from julia.find_libpython import find_libpython
+        from julia.core import is_compatible_exe
+
+        class jlinfo:
+            libpython = find_libpython()
+
+        assert not is_compatible_exe(jlinfo, _debug=print)
+        """,
+    )
+    print_completed_proc(proc)
+    assert proc.returncode == 0
