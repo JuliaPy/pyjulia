@@ -91,9 +91,9 @@ test_script:
   # Run cross-version tests but ignore the failures (from Python 2).
   # Once cross-version in Windows is fmixed, stop using
   # Invoke-Expression (which ignores the exit status).
-  - ps: if ($env:CROSS_VERSION -eq 1) { Invoke-Expression "tox -- -s" }
-  # - ps: if ($env:CROSS_VERSION -eq 1) { tox -- -s }
+  - ps: if ($env:CROSS_VERSION -eq 1) { Invoke-Expression "tox -- -v" }
+  # - ps: if ($env:CROSS_VERSION -eq 1) { tox -- -v }
 
   # Rebuild PyCall.ji for each Python interpreter before testing:
   - "SET PYJULIA_TEST_REBUILD=yes"
-  - tox -- -s
+  - tox -- -v
