@@ -105,7 +105,11 @@ def is_dynamically_linked(executable):
             universal_newlines=True,
         )
         print_completed_proc(proc)
-        return "libpython" in proc.stdout or "/Python" in proc.stdout
+        return (
+            "libpython" in proc.stdout
+            or "/Python" in proc.stdout
+            or "/.Python" in proc.stdout
+        )
     # TODO: support Windows
     return None
 
