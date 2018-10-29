@@ -366,6 +366,12 @@ parallel.
 Testing
 -------
 
+PyJulia can be tested by simply running [`tox`](http://tox.readthedocs.io):
+
+```console
+$ tox
+```
+
 The full syntax for invoking `tox` is
 
 ```shell
