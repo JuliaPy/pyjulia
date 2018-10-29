@@ -14,7 +14,7 @@ Installation
 **Note:** If you are using Python installed with Ubuntu or `conda`,
 PyJulia may not work with Julia ≥ 0.7.  For workarounds, see
 [Troubleshooting](#troubleshooting) below.  Same caution applies to
-other Debian-based and possibly other GNU/Linux distributions.
+any Debian-based and possibly other GNU/Linux distributions.
 
 You will need to install PyCall in your existing Julia installation
 
@@ -30,7 +30,7 @@ your `PATH`, you will have to add it.  _An alias will not work._
 Then finally you have to install PyJulia.
 
 **Note:** If you are not familiar with `pip` and have some troubles
-with the following installation steps, we recommend to go through
+with the following installation steps, we recommend going through the
 [Tutorials in Python Packaging User Guide](https://packaging.python.org/tutorials/).
 
 To get released versions you can use:
@@ -73,8 +73,8 @@ See [Testing](#testing) below for how to run tests.
 Usage
 -----
 
-PyJulia provides a high-level interface which assumes a "normal"
-setup (e.g., `julia` is in your `PATH`) and a low-level interface
+PyJulia provides a high-level interface which assumes a "normal" setup
+(e.g., `julia` program is in your `PATH`) and a low-level interface
 which can be used in a customized setup.
 
 ### High-level interface
@@ -161,7 +161,7 @@ In [2]: %%julia
 ### Virtual environments
 
 PyJulia can be used in Python virtual environments created by
-`virtualenv`, `venv`, and any tools wrapping them such as `pipenv`
+`virtualenv`, `venv`, and any tools wrapping them such as `pipenv`,
 provided that Python executable used in such environments are linked
 to identical libpython used by PyCall.  If this is not the case,
 initializing PyJulia (e.g., `import julia.Main`) prints an informative
@@ -200,8 +200,8 @@ $ ldd /usr/bin/python
 in Linux where `/usr/bin/python` should be replaced with the path to
 your `python` command (use `which python` to find it out).  In macOS,
 use `otool -L` instead of `ldd`.  If it does not print the path to
-libpython like `/usr/lib/libpython3.7m.so.1.0` in above, you need to
-use one of the workaround below.
+libpython like `/usr/lib/libpython3.7m.so.1.0` in above example, you
+need to use one of the workaround below.
 
 The easiest workaround is to use the `python-jl` command bundled in
 PyJulia.  This can be used instead of normal `python` command for
