@@ -392,8 +392,8 @@ The full syntax for invoking `tox` is
 
 For example,
 
-```shell
-PYJULIA_TEST_REBUILD=yes JULIA_EXE=~/julia/julia tox -e py37 -- -s
+```console
+$ PYJULIA_TEST_REBUILD=yes JULIA_EXE=~/julia/julia tox -e py37 -- -s
 ```
 
 means to execute tests with
