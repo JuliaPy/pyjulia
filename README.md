@@ -290,30 +290,9 @@ example, the Julia method `sum!` can be called in PyJulia using
 ### Pre-compilation mechanism in Julia 1.0
 
 There was a major overhaul in the module loading system between Julia
-0.6 and 1.0.  As a result,
-[the hack](https://github.com/JuliaPy/pyjulia/tree/master/julia/fake-julia)
-supporting the PyJulia to load PyCall stopped working.
-
-To understand the issue, you need to understand a bit of details in
-PyCall implementation.  PyCall uses Julia's precompilation mechanism
-to reduce JIT compilation required while Julia is loading it.  This
-results in embedding the path to libpython used by PyCall to its
-precompilation cache.  Furthermore, libpython ABI such as C struct
-layout varies across Python versions.  Currently, this is determined
-while precompiling PyJulia and cannot be changed at run-time.
-Consequently, PyJulia can use the precompilation cache of PyCall
-created by standard Julia module loader only if the PyCall cache is
-compiled with the libjulia used by the current Python process.  This
-is why PyJulia has to be imported in a Python executable dynamically
-linked to libpython.
-
-The aforementioned hack worked by monkey-patching Julia's
-precompilation mechanism to emit the precompilation cache file to
-other directory when PyCall is used via PyJulia.  However, as Juila's
-internal for module loading was changed after Juila 0.6, this
-monkey-patch does not work anymore.  Similar monkey-patch in Julia 1.0
-can be done by using `Base.DEPOT_PATH` although it would waste more
-disk space than the similar hack for Julia 0.6.
+0.6 and 1.0.  As a result, the "hack" supporting the PyJulia to load
+PyCall stopped working.  For the implementation detail of the hack,
+see: https://github.com/JuliaPy/pyjulia/tree/master/julia/fake-julia
 
 For the update on this problem, see:
 https://github.com/JuliaLang/julia/issues/28518
