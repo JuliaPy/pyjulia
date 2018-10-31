@@ -337,8 +337,9 @@ Out[3]: array([1., 1., 1., 2., 2., 2., 3., 3., 4., 4.])
 
 ### PyJulia does not release GIL
 
-PyJulia (or rather PyCall) does not release GIL while calling Julia
-functions.  It means that Python code and Julia code cannot run in
+PyJulia does not release the Global Interpreter Lock (GIL) while
+calling Julia functions since PyCall expects the GIL to be acquired
+always.  It means that Python code and Julia code cannot run in
 parallel.
 
 
