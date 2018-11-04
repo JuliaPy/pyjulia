@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+from io import open  # for Python 2 (identical to builtin in Python 3)
 from setuptools import setup
 import os
 
 
 def pyload(name):
     ns = {}
-    with open(name) as f:
+    with open(name, encoding="utf-8") as f:
         exec(compile(f.read(), name, "exec"), ns)
     return ns
 
@@ -24,7 +25,7 @@ else:
 
 repo_root = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(repo_root, "README.md")) as f:
+with open(os.path.join(repo_root, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 # https://packaging.python.org/guides/making-a-pypi-friendly-readme/
 
