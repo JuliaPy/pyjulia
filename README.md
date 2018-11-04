@@ -216,8 +216,19 @@ $ python-jl -m IPython
 See `python-jl --help` for more information.
 
 Note that `python-jl` works by launching Python interpreter inside
-Julia.  If you are comfortable with working in Julia REPL, you can
-simply do:
+Julia.  Importantly, it means that PyJulia has to be installed in the
+Python environment with which PyCall is configured.  That is to say,
+following commands must work for `python-jl` to be usable:
+
+```julia
+julia> using PyCall
+
+julia> pyimport("julia")
+PyObject <module 'julia' from '/.../julia/__init__.py'>
+```
+
+In fact, you can simply use PyJulia inside the Julia REPL, if you are
+comfortable with working in it:
 
 ```julia
 julia> using PyCall
@@ -232,7 +243,7 @@ julia> py"""
 ```
 
 Alternatively, you can use [pyenv](https://github.com/pyenv/pyenv) to
-build
+build Python with
 [`--enable-shared` option](https://github.com/pyenv/pyenv/wiki#how-to-build-cpython-with---enable-shared).
 Of course, manually building from Python source distribution with the
 same configuration also works.
