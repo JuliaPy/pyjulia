@@ -6,7 +6,7 @@ PyJulia
 
 Experimenting with developing a better interface to [Julia language](https://julialang.org/) that works with [Python](https://www.python.org/) 2 & 3 and Julia v0.6+.
 
-PyJulia is tested against Python versions 2.7, 3.6, and 3.7.  Older versions of Python (than 2.7)  are not supported.
+PyJulia is tested against Python versions 2.7, 3.5, 3.6, and 3.7.
 
 Installation
 ------------
