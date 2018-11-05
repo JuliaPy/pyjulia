@@ -165,7 +165,7 @@ PyJulia can be used in Python virtual environments created by
 provided that Python executable used in such environments are linked
 to identical libpython used by PyCall.  If this is not the case,
 initializing PyJulia (e.g., `import julia.Main`) prints an informative
-error message with detected paths to libjulia.  See
+error message with detected paths to libpython.  See
 [PyCall documentation](https://github.com/JuliaPy/PyCall.jl) for how
 to configure Python executable.
 
