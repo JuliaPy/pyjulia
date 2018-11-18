@@ -269,6 +269,34 @@ versions of IPython.  You can avoid this issue by updating IPython to
 7.0 or above.  Alternatively, you can use IPython via Jupyter (e.g.,
 `jupyter console`) to workaround the problem.
 
+### Error due to `libstdc++` version
+
+When you use PyJulia with another Python extension, you may see an
+error like ``version `GLIBCXX_3.4.22' not found`` (Linux) or `The
+procedure entry point ... could not be located in the dynamic link
+library libstdc++6.dll` (Windows).  In this case, you might have
+observed that initializing PyJulia first fixes the problem.  This is
+because Julia (or likely its dependencies like LLVM) requires a recent
+version of `libstdc++`.
+
+Possible fixes:
+
+* Initialize PyJulia (e.g., by `from julia import Main`) as early as
+  possible.  Note that just importing PyJulia (`import julia`) does
+  not work.
+* Load `libstdc++.so.6` first by setting environment variable
+  `LD_PRELOAD` (Linux) to
+  `/PATH/TO/JULIA/DIR/lib/julia/libstdc++.so.6` where
+  `/PATH/TO/JULIA/DIR/lib` is the directory which has `libjulia.so`.
+  macOS and Windows likely to have similar mechanisms (untested).
+* Similarly, set environment variable `LD_LIBRARY_PATH` (Linux) to
+  `/PATH/TO/JULIA/DIR/lib/julia` directory.  Using `DYLD_LIBRARY_PATH`
+  on macOS and `PATH` on Windows may work (untested).
+
+See:
+https://github.com/JuliaPy/pyjulia/issues/180,
+https://github.com/JuliaPy/pyjulia/issues/223
+
 
 How it works
 ------------
