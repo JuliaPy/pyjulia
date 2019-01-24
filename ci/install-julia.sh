@@ -4,7 +4,7 @@
 
 # LICENSE
 #
-# Copyright &copy; 2013 by Steven G. Johnson, Fernando Perez, Jeff
+# Copyright © 2013 by Steven G. Johnson, Fernando Perez, Jeff
 # Bezanson, Stefan Karpinski, Keno Fischer, Jake Bolewski, Takafumi
 # Arakaki, and other contributors.
 #
