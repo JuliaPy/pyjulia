@@ -15,6 +15,8 @@ Bridge Python and Julia by initializing the Julia interpreter inside Python.
 
 # Stdlib
 from __future__ import print_function, absolute_import
+
+from logging import getLogger
 import atexit
 import ctypes
 import ctypes.util
@@ -44,6 +46,20 @@ from .find_libpython import find_libpython, linked_libpython, normalize_path
 # Classes and funtions
 #-----------------------------------------------------------------------------
 python_version = sys.version_info
+
+
+logger = getLogger("julia")
+
+
+def enable_debug():
+    import logging
+    # Importing `logging` module here so that using `logging.debug`
+    # instead of `logger.debug` outside of this function becomes an
+    # error.
+
+    logging.basicConfig(
+        format="%(levelname)s %(message)s",
+        level=logging.DEBUG)
 
 
 # As setting up Julia modifies os.environ, we need to cache it for
@@ -326,7 +342,7 @@ def is_same_path(a, b):
     return a == b
 
 
-def is_compatible_exe(jlinfo, _debug=lambda *_: None):
+def is_compatible_exe(jlinfo):
     """
     Determine if Python used by PyCall.jl is compatible with this Python.
 
@@ -340,11 +356,11 @@ def is_compatible_exe(jlinfo, _debug=lambda *_: None):
     jlinfo : JuliaInfo
         A `JuliaInfo` object returned by `juliainfo` function.
     """
-    _debug("jlinfo.libpython =", jlinfo.libpython)
+    logger.debug("jlinfo.libpython = %s", jlinfo.libpython)
     py_libpython = linked_libpython()
     jl_libpython = normalize_path(jlinfo.libpython)
-    _debug("py_libpython =", py_libpython)
-    _debug("jl_libpython =", jl_libpython)
+    logger.debug("py_libpython = %s", py_libpython)
+    logger.debug("jl_libpython = %s", jl_libpython)
     dynamically_linked = py_libpython is not None
     return dynamically_linked and py_libpython == jl_libpython
     # `py_libpython is not None` here for checking if this Python
@@ -473,7 +489,9 @@ class Julia(object):
         to avoid re-initializing it. The purpose of the flag is only to manage
         situations when Julia was initialized from outside this code.
         """
-        self.is_debugging = debug
+
+        if debug:
+            enable_debug()
 
         # Ugly hack to register the julia interpreter globally so we can reload
         # this extension without trying to re-open the shared lib, which kills
@@ -502,14 +520,14 @@ class Julia(object):
                 raise TypeError(
                     "Both `runtime` and `jl_runtime_path` are specified.")
 
-        self._debug()  # so that debug message is shown nicely w/ pytest
+        logger.debug("")  # so that debug message is shown nicely w/ pytest
 
         if init_julia:
             jlinfo = juliainfo(runtime)
             JULIA_HOME, libjulia_path, image_file, depsjlexe = jlinfo[:4]
-            self._debug("pyprogramname =", depsjlexe)
-            self._debug("sys.executable =", sys.executable)
-            self._debug("JULIA_HOME = %s,  libjulia_path = %s" % (JULIA_HOME, libjulia_path))
+            logger.debug("pyprogramname = %s", depsjlexe)
+            logger.debug("sys.executable = %s", sys.executable)
+            logger.debug("JULIA_HOME = %s,  libjulia_path = %s", JULIA_HOME, libjulia_path)
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
 
@@ -526,8 +544,8 @@ class Julia(object):
                 else:
                     jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
 
-            use_separate_cache = not is_compatible_exe(jlinfo, _debug=self._debug)
-            self._debug("use_separate_cache =", use_separate_cache)
+            use_separate_cache = not is_compatible_exe(jlinfo)
+            logger.debug("use_separate_cache = %s", use_separate_cache)
             if use_separate_cache:
                 PYCALL_JULIA_HOME = os.path.join(
                     os.path.dirname(os.path.realpath(__file__)),"fake-julia").replace("\\","\\\\")
@@ -541,9 +559,9 @@ class Julia(object):
                 else:
                     raise ImportError("No libjulia entrypoint found! (tried jl_init_with_image and jl_init_with_image__threading)")
             self.api.jl_init_with_image.argtypes = [char_p, char_p]
-            self._debug("calling jl_init_with_image(%s, %s)" % (jl_init_path, image_file))
+            logger.debug("calling jl_init_with_image(%s, %s)", jl_init_path, image_file)
             self.api.jl_init_with_image(jl_init_path, image_file.encode("utf-8"))
-            self._debug("seems to work...")
+            logger.debug("seems to work...")
 
         else:
             # we're assuming here we're fully inside a running Julia process,
@@ -673,14 +691,6 @@ class Julia(object):
             self.eval("@eval Main import Base.MainInclude: eval, include")
             # https://github.com/JuliaLang/julia/issues/28825
 
-    def _debug(self, *msg):
-        """
-        Print some debugging stuff, if enabled
-        """
-        if self.is_debugging:
-            print(*msg, file=sys.stderr)
-            sys.stderr.flush()
-
     def _call(self, src):
         """
         Low-level call to execute a snippet of Julia source.
@@ -690,7 +700,7 @@ class Julia(object):
         management. It should never be used for returning the result of Julia
         expressions, only to execute statements.
         """
-        # self._debug("_call(%s)" % src)
+        # logger.debug("_call(%s)", src)
         ans = self.api.jl_eval_string(src.encode('utf-8'))
         self.check_exception(src)
 
@@ -721,9 +731,9 @@ class Julia(object):
 
     def check_exception(self, src="<unknown code>"):
         exoc = self.api.jl_exception_occurred()
-        self._debug("exception occured? " + str(exoc))
+        logger.debug("exception occured? %s", str(exoc))
         if not exoc:
-            # self._debug("No Exception")
+            # logger.debug("No Exception")
             self.api.jl_exception_clear()
             return
 

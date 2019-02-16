@@ -166,12 +166,14 @@ def test_statically_linked(python):
         """
         from __future__ import print_function
         from julia.find_libpython import find_libpython
-        from julia.core import is_compatible_exe
+        from julia.core import is_compatible_exe, enable_debug
+
+        enable_debug()
 
         class jlinfo:
             libpython = find_libpython()
 
-        assert not is_compatible_exe(jlinfo, _debug=print)
+        assert not is_compatible_exe(jlinfo)
         """,
         check=True,
     )
