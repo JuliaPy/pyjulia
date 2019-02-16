@@ -20,9 +20,7 @@ import ctypes
 import ctypes.util
 import os
 import sys
-import keyword
 import subprocess
-import time
 import warnings
 
 from collections import namedtuple
@@ -38,7 +36,7 @@ except ImportError:
     from distutils.spawn import find_executable as which
 
 # this is python 3.3 specific
-from types import ModuleType, FunctionType
+from types import ModuleType
 
 from .find_libpython import find_libpython, linked_libpython, normalize_path
 
@@ -46,11 +44,6 @@ from .find_libpython import find_libpython, linked_libpython, normalize_path
 # Classes and funtions
 #-----------------------------------------------------------------------------
 python_version = sys.version_info
-
-if python_version.major == 3:
-    def iteritems(d): return iter(d.items())
-else:
-    iteritems = dict.iteritems
 
 
 # As setting up Julia modifies os.environ, we need to cache it for
