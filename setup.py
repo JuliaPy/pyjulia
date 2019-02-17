@@ -70,6 +70,9 @@ setup(name='julia',
           "console_scripts": [
               "python-jl = julia.python_jl:main",
           ],
+          "pytest11": [
+              "pyjulia = julia.pytestplugin",
+          ],
       },
       # We bundle Julia scripts etc. inside `julia` directory.  Thus,
       # this directory must exist in the file system (not in a zip

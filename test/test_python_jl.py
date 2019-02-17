@@ -11,7 +11,7 @@ from julia.python_jl import parse_pyjl_args
 is_windows = os.name == "nt"
 
 PYJULIA_TEST_REBUILD = os.environ.get("PYJULIA_TEST_REBUILD", "no") == "yes"
-JULIA = os.environ.get("JULIA_EXE")
+JULIA = os.environ.get("PYJULIA_TEST_RUNTIME")
 
 
 @pytest.mark.parametrize("args", [

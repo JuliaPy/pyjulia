@@ -50,7 +50,7 @@ def test_atexit():
         '''
         import os
         from julia import Julia
-        jl = Julia(runtime=os.getenv("JULIA_EXE"), debug=True)
+        jl = Julia(runtime=os.getenv("PYJULIA_TEST_RUNTIME"), debug=True)
 
         jl_atexit = jl.eval("""
         function(f)

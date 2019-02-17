@@ -104,10 +104,10 @@ def main(args=None):
         variable in your Julia startup file.
         """)
     parser.add_argument(
-        '--julia', default=os.getenv('JULIA_EXE', 'julia'),
+        '--julia', default=os.getenv('PYJULIA_TEST_RUNTIME', 'julia'),
         help="""
         Julia executable to be used.
-        Default to the value of environment variable JULIA_EXE if set.
+        Default to the value of environment variable PYJULIA_TEST_RUNTIME if set.
         """)
     parser.add_argument(
         'command', nargs='+',

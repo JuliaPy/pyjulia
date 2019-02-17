@@ -131,7 +131,7 @@ def test_incompatible_python(python):
         """
         import os
         from julia import Julia
-        Julia(runtime=os.getenv("JULIA_EXE"), debug=True)
+        Julia(runtime=os.getenv("PYJULIA_TEST_RUNTIME"), debug=True)
         """,
     )
 

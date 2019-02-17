@@ -394,7 +394,7 @@ $ tox
 The full syntax for invoking `tox` is
 
 ```shell
-[PYJULIA_TEST_REBUILD=yes] [JULIA_EXE=<julia>] tox [options] [-- pytest options]
+[PYJULIA_TEST_REBUILD=yes] [PYJULIA_TEST_RUNTIME=<julia>] tox [options] [-- pytest options]
 ```
 
 * `PYJULIA_TEST_REBUILD`: *Be careful using this environment
@@ -405,14 +405,14 @@ The full syntax for invoking `tox` is
   also that it does not work if you unconditionally set `PYTHON`
   environment variable in your Julia startup file.
 
-* `JULIA_EXE`: `julia` executable to be used for testing.
+* `PYJULIA_TEST_RUNTIME`: `julia` executable to be used for testing.
 
 * Positional arguments after `--` are passed to `pytest`.
 
 For example,
 
 ```console
-$ PYJULIA_TEST_REBUILD=yes JULIA_EXE=~/julia/julia tox -e py37 -- -s
+$ PYJULIA_TEST_REBUILD=yes PYJULIA_TEST_RUNTIME=~/julia/julia tox -e py37 -- -s
 ```
 
 means to execute tests with

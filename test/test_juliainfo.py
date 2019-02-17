@@ -11,7 +11,7 @@ def check_core_juliainfo(jlinfo):
 
 
 def test_juliainfo_normal():
-    jlinfo = JuliaInfo.load(os.getenv("JULIA_EXE", "julia"))
+    jlinfo = JuliaInfo.load(os.getenv("PYJULIA_TEST_RUNTIME", "julia"))
     check_core_juliainfo(jlinfo)
     assert os.path.exists(jlinfo.python)
     # Note: jlinfo.libpython is probably not a full path so we are not
@@ -23,7 +23,7 @@ def test_juliainfo_without_pycall(tmpdir):
     `juliainfo` should not fail even when PyCall.jl is not installed.
     """
 
-    runtime = os.getenv("JULIA_EXE", "julia")
+    runtime = os.getenv("PYJULIA_TEST_RUNTIME", "julia")
 
     env_var = subprocess.check_output(
         [runtime, "--startup-file=no", "-e", """
