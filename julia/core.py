@@ -17,6 +17,9 @@ Bridge Python and Julia by initializing the Julia interpreter inside Python.
 from __future__ import print_function, absolute_import
 
 from logging import getLogger
+# Not importing `logging` module here so that using `logging.debug`
+# instead of `logger.debug` becomes an error.
+
 import atexit
 import ctypes
 import ctypes.util
@@ -49,17 +52,35 @@ python_version = sys.version_info
 
 
 logger = getLogger("julia")
+_loghandler = None
+
+
+def get_loghandler():
+    """
+    Get `logging.StreamHandler` private to PyJulia.
+    """
+    global _loghandler
+    if _loghandler is None:
+        import logging
+
+        formatter = logging.Formatter("%(levelname)s %(message)s")
+
+        _loghandler = logging.StreamHandler()
+        _loghandler.setFormatter(formatter)
+
+        logger.addHandler(_loghandler)
+    return _loghandler
+
+
+def set_loglevel(level):
+    import logging
+
+    get_loghandler()
+    logger.setLevel(getattr(logging, level, level))
 
 
 def enable_debug():
-    import logging
-    # Importing `logging` module here so that using `logging.debug`
-    # instead of `logger.debug` outside of this function becomes an
-    # error.
-
-    logging.basicConfig(
-        format="%(levelname)s %(message)s",
-        level=logging.DEBUG)
+    set_loglevel("DEBUG")
 
 
 # As setting up Julia modifies os.environ, we need to cache it for
