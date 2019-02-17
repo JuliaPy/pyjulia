@@ -790,8 +790,8 @@ class Julia(object):
         # instance of PyObject and the convert function. Since these will be
         # needed on every call, we hold them in the Julia object itself so
         # they can survive across reinitializations.
-        self.api.PyObject = self._call("PyCall.PyObject")
-        self.api.convert = self._call("convert")
+        self._PyObject = self._call("PyCall.PyObject")
+        self._convert = self._call("convert")
 
         self.sprint = self.eval('sprint')
         self.showerror = self.eval('showerror')
@@ -855,7 +855,7 @@ class Julia(object):
         except AttributeError:
             res = None
         else:
-            res = self.api.jl_call2(self.api.convert, self.api.PyObject, exoc)
+            res = self.api.jl_call2(self._convert, self._PyObject, exoc)
         if res is None:
             exception = self.api.jl_typeof_str(exoc).decode('utf-8')
         else:
@@ -881,7 +881,7 @@ class Julia(object):
         ans = self._call(src)
         if not ans:
             return None
-        res = self.api.jl_call2(self.api.convert, self.api.PyObject, ans)
+        res = self.api.jl_call2(self._convert, self._PyObject, ans)
 
         if res is None:
             self.check_exception("convert(PyCall.PyObject, {})".format(src))
