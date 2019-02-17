@@ -30,7 +30,7 @@ import warnings
 
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
-from ctypes import py_object
+from ctypes import py_object, c_int, c_char_p, POINTER, pointer
 
 try:
     from shutil import which
@@ -489,6 +489,9 @@ def setup_libjulia(libjulia):
     libjulia.jl_stderr_stream.restype = void_p
     libjulia.jl_printf.restype = ctypes.c_int
 
+    libjulia.jl_parse_opts.argtypes = [POINTER(c_int),
+                                       POINTER(POINTER(c_char_p))]
+    libjulia.jl_set_ARGS.argtypes = [c_int, POINTER(c_char_p)]
     libjulia.jl_atexit_hook.argtypes = [ctypes.c_int]
 
 
@@ -601,7 +604,7 @@ class LibJulia(BaseLibJulia):
         except AttributeError:
             return self.libjulia.jl_init_with_image__threading
 
-    def init_julia(self):
+    def init_julia(self, jl_args=None):
         """
         Initialize `libjulia`.  Calling this method twice is a no-op.
 
@@ -614,6 +617,24 @@ class LibJulia(BaseLibJulia):
         jl_init_path = self.bindir
         image_file = self.image_file
 
+        if jl_args:
+            assert not isinstance(jl_args, str)
+            argv_list = [sys.executable]  # TODO: use julia runtime
+            argv_list.extend(jl_args)
+            if sys.version_info[0] >= 3:
+                argv_list = [s.encode('utf-8') for s in argv_list]
+
+            argc = c_int(len(argv_list))
+            argv = POINTER(char_p)((char_p * len(argv_list))(*argv_list))
+
+            logger.debug("argv_list = %r", argv_list)
+            logger.debug("argc = %r", argc)
+            self.libjulia.jl_parse_opts(pointer(argc), pointer(argv))
+            logger.debug("jl_parse_opts called")
+            logger.debug("argc = %r", argc)
+            for i in range(argc.value):
+                logger.debug("argv[%d] = %r", i, argv[i])
+
         logger.debug("calling jl_init_with_image(%s, %s)", jl_init_path, image_file)
         self.jl_init_with_image(jl_init_path.encode("utf-8"), image_file.encode("utf-8"))
         logger.debug("seems to work...")
@@ -621,6 +642,10 @@ class LibJulia(BaseLibJulia):
         set_libjulia(self)
 
         self.libjulia.jl_exception_clear()
+
+        if jl_args:
+            # This doesn't seem to be working.
+            self.libjulia.jl_set_ARGS(argc, argv)
 
 
 class InProcessLibJulia(BaseLibJulia):
