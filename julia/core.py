@@ -451,6 +451,108 @@ def is_compatible_exe(libpython):
     # `jl_libpython` to be a `str` always.
 
 
+class Choices(object):
+
+    def __init__(self, name, choicemap, default=None):
+        self.name = name
+        self.choicemap = choicemap
+        self.default = default
+
+    @property
+    def dataname(self):
+        return "_" + self.name
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return getattr(instance, self.dataname, self.default)
+
+    def __set__(self, instance, value):
+        if instance is None:
+            raise AttributeError(self.name)
+        if value == self.default:
+            pass
+        elif value in self.choicemap:
+            setattr(instance, self.dataname, self.choicemap[value])
+        else:
+            raise ValueError("Attribute {!r} does not accept {!r}"
+                             .format(self.name, value))
+
+
+def yes_no_etc(*etc):
+    choicemap = {
+        True: "yes",
+        False: "no",
+        "yes": "yes",
+        "no": "no",
+    }
+    for v in etc:
+        choicemap[v] = v
+    return choicemap
+
+
+class JuliaOptions(object):
+
+    compiled_module = Choices("compiled_module", yes_no_etc())
+    compile = Choices("compile", yes_no_etc("all", "min"))
+    depwarn = Choices("depwarn", yes_no_etc("error"))
+    warn_overwrite = Choices("warn_overwrite", yes_no_etc())
+    optimize = Choices("optimize", dict(zip(range(4), range(4))))
+    inline = Choices("inline", yes_no_etc())
+    check_bounds = Choices("check_bounds", yes_no_etc())
+
+    def __init__(self, **kwargs):
+        unsupported = []
+        for (name, value) in kwargs.items():
+            if self.is_supported(name):
+                setattr(self, name, value)
+            else:
+                unsupported.append(name)
+        if unsupported:
+            raise TypeError("Unsupported Julia option(s): {}"
+                            .format(", ".join(unsupported)))
+
+    @classmethod
+    def is_supported(cls, name):
+        return isinstance(getattr(cls, name), Choices)
+
+    def is_specified(self, name):
+        desc = getattr(self.__class__, name)
+        if isinstance(desc, Choices):
+            return getattr(self, name) != desc.default
+        return False
+
+    def specified(self):
+        for name in dir(self.__class__):
+            if self.is_specified(name):
+                yield name, getattr(self, name)
+
+    def as_args(self):
+        args = []
+        for (name, value) in self.specified():
+            args.append("--" + name.replace("_", "-"))
+            args.append(value)
+        return args
+
+    @classmethod
+    def supported_names(cls):
+        for name in dir(cls):
+            if cls.is_supported(name):
+                yield name
+
+    @classmethod
+    def show_supported(cls):
+        print("** Supported options and possible values **")
+        print("See `julia --help` for their effects.")
+        print()
+        for name in cls.supported_names():
+            desc = getattr(cls, name)
+            print(desc.name, ":", end="")
+            for var in desc.choicemap:
+                print("", repr(var), end="")
+            print()
+
+
 def setup_libjulia(libjulia):
     # Store the running interpreter reference so we can start using it via self.call
     libjulia.jl_.argtypes = [void_p]
@@ -749,7 +851,7 @@ class Julia(object):
     """
 
     def __init__(self, init_julia=True, jl_init_path=None, runtime=None,
-                 jl_runtime_path=None, debug=False):
+                 jl_runtime_path=None, debug=False, **julia_options):
         """Create a Python object that represents a live Julia interpreter.
 
         Parameters
@@ -769,6 +871,11 @@ class Julia(object):
 
         debug : bool
             If True, print some debugging information to STDERR
+
+        Other keyword arguments (e.g., `compiled_module=False`) are treated
+        as command line options.  Only a subset of command line options is
+        supported.  See `julia.core.JuliaOptions.show_supported()` for the
+        list of supported options.
 
         Note that it is safe to call this class constructor twice in the same
         process with `init_julia` set to True, as a global reference is kept
@@ -820,7 +927,8 @@ class Julia(object):
                 os.environ["JULIA_BINDIR"] = PYCALL_JULIA_HOME
                 self.api.bindir = PYCALL_JULIA_HOME
 
-            self.api.init_julia()
+            jl_args = JuliaOptions(**julia_options).as_args()
+            self.api.init_julia(jl_args)
 
             if use_separate_cache:
                 if jlinfo.version_info < (0, 6):
