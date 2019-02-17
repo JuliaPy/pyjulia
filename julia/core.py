@@ -918,7 +918,11 @@ class Julia(object):
             if jl_init_path:
                 self.api.bindir = jl_init_path
 
-            use_separate_cache = not jlinfo.is_compatible_python()
+            options = JuliaOptions(**julia_options)
+
+            use_separate_cache = not (
+                options.compiled_module == "no" or jlinfo.is_compatible_python()
+            )
             logger.debug("use_separate_cache = %s", use_separate_cache)
             if use_separate_cache:
                 PYCALL_JULIA_HOME = os.path.join(
@@ -927,7 +931,7 @@ class Julia(object):
                 os.environ["JULIA_BINDIR"] = PYCALL_JULIA_HOME
                 self.api.bindir = PYCALL_JULIA_HOME
 
-            jl_args = JuliaOptions(**julia_options).as_args()
+            jl_args = options.as_args()
             self.api.init_julia(jl_args)
 
             if use_separate_cache:
