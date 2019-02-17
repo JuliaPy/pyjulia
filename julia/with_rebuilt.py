@@ -13,14 +13,14 @@ import subprocess
 import sys
 from contextlib import contextmanager
 
-from .core import juliainfo
+from .core import JuliaInfo
 
 
 @contextmanager
 def maybe_rebuild(rebuild, julia):
     if rebuild:
         env = os.environ.copy()
-        info = juliainfo(julia)
+        info = JuliaInfo.load(julia)
 
         build = [julia, '-e', """
         if VERSION >= v"0.7.0-DEV.3630"
@@ -48,10 +48,10 @@ def maybe_rebuild(rebuild, julia):
             print()  # clear out messages from py.test
             print('Restoring previous PyCall.jl build...')
             print(*build)
-            if info.pyprogramname:
+            if info.python:
                 # Use str to avoid "TypeError: environment can only
                 # contain strings" in Python 2.7 + Windows:
-                env = dict(env, PYTHON=str(info.pyprogramname))
+                env = dict(env, PYTHON=str(info.python))
             if 'PYTHON' in env:
                 print('PYTHON =', env['PYTHON'])
             subprocess.check_call(build, env=env)

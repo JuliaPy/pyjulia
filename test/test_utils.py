@@ -19,8 +19,8 @@ except ImportError:
 def dummy_juliainfo():
     somepath = os.devnull  # some random path
     return SimpleNamespace(
-        pyprogramname=somepath,
-        libpython=somepath,
+        python=somepath,
+        libpython_path=somepath,
     )
 
 

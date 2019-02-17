@@ -28,7 +28,6 @@ import sys
 import subprocess
 import warnings
 
-from collections import namedtuple
 from ctypes import c_void_p as void_p
 from ctypes import c_char_p as char_p
 from ctypes import py_object
@@ -294,67 +293,98 @@ def determine_if_statically_linked():
     return linked_libpython() is None
 
 
-JuliaInfo = namedtuple(
-    'JuliaInfo',
-    ['JULIA_HOME', 'libjulia_path', 'image_file',
-     # Variables in PyCall/deps/deps.jl:
-     'pyprogramname', 'libpython'])
+juliainfo_script = """
+println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
+if VERSION >= v"0.7.0-DEV.3630"
+    using Libdl
+    using Pkg
+end
+println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
+println(unsafe_string(Base.JLOptions().image_file))
+if VERSION < v"0.7.0"
+    PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
+else
+    modpath = Base.locate_package(Base.identify_package("PyCall"))
+    if modpath == nothing
+        PyCall_depsfile = nothing
+    else
+        PyCall_depsfile = joinpath(dirname(modpath),"..","deps","deps.jl")
+    end
+end
+if PyCall_depsfile !== nothing && isfile(PyCall_depsfile)
+    include(PyCall_depsfile)
+    println(pyprogramname)
+    println(libpython)
+end
+"""
 
 
-def juliainfo(runtime='julia', **popen_kwargs):
-    # Use the original environment variables to avoid a cryptic
-    # error "fake-julia/../lib/julia/sys.so: cannot open shared
-    # object file: No such file or directory":
-    popen_kwargs.setdefault("env", _enviorn)
+class JuliaInfo(object):
 
-    proc = subprocess.Popen(
-        [runtime, "--startup-file=no", "-e",
-         """
-         println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
-         if VERSION >= v"0.7.0-DEV.3630"
-             using Libdl
-             using Pkg
-         end
-         println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
-         println(unsafe_string(Base.JLOptions().image_file))
-         if VERSION < v"0.7.0"
-             PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
-         else
-             modpath = Base.locate_package(Base.identify_package("PyCall"))
-             if modpath == nothing
-                 PyCall_depsfile = nothing
-             else
-                 PyCall_depsfile = joinpath(dirname(modpath),"..","deps","deps.jl")
-             end
-         end
-         if PyCall_depsfile !== nothing && isfile(PyCall_depsfile)
-             include(PyCall_depsfile)
-             println(pyprogramname)
-             println(libpython)
-         end
-         """],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        **popen_kwargs)
+    @classmethod
+    def load(cls, julia="julia", **popen_kwargs):
+        """
+        Get basic information from `julia`.
+        """
+        # Use the original environment variables to avoid a cryptic
+        # error "fake-julia/../lib/julia/sys.so: cannot open shared
+        # object file: No such file or directory":
+        popen_kwargs.setdefault("env", _enviorn)
 
-    stdout, stderr = proc.communicate()
-    retcode = proc.wait()
-    if retcode != 0:
-        raise subprocess.CalledProcessError(
-            retcode,
-            [runtime, "-e", "..."],
-            stdout,
-            stderr,
-        )
+        proc = subprocess.Popen(
+            [julia, "--startup-file=no", "-e", juliainfo_script],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            **popen_kwargs)
 
-    stderr = stderr.strip()
-    if stderr:
-        warnings.warn("{} warned:\n{}".format(runtime, stderr))
+        stdout, stderr = proc.communicate()
+        retcode = proc.wait()
+        if retcode != 0:
+            raise subprocess.CalledProcessError(
+                retcode,
+                [julia, "-e", "..."],
+                stdout,
+                stderr,
+            )
 
-    args = stdout.rstrip().split("\n")
-    args.extend([None] * (len(JuliaInfo._fields) - len(args)))
-    return JuliaInfo(*args)
+        stderr = stderr.strip()
+        if stderr:
+            warnings.warn("{} warned:\n{}".format(julia, stderr))
+
+        args = stdout.rstrip().split("\n")
+
+        return cls(julia, *args)
+
+    def __init__(self, julia, bindir, libjulia_path, image_file,
+                 python=None, libpython_path=None):
+        self.julia = julia
+        """ Julia executable from which information was retrieved. """
+
+        self.bindir = bindir
+        """ Sys.BINDIR of `.julia`. """
+
+        self.libjulia_path = libjulia_path
+        """ Path to libjulia. """
+
+        self.image_file = image_file
+
+        self.python = python
+        """ Python executable with which PyCall.jl is configured. """
+
+        self.libpython_path = libpython_path
+        """ libpython path used by PyCall.jl. """
+
+        logger.debug("pyprogramname = %s", python)
+        logger.debug("sys.executable = %s", sys.executable)
+        logger.debug("bindir = %s", bindir)
+        logger.debug("libjulia_path = %s", libjulia_path)
+
+    def is_compatible_python(self):
+        """
+        Check if python used by PyCall.jl is compatible with `sys.executable`.
+        """
+        return is_compatible_exe(self.libpython_path)
 
 
 def is_same_path(a, b):
@@ -363,23 +393,18 @@ def is_same_path(a, b):
     return a == b
 
 
-def is_compatible_exe(jlinfo):
+def is_compatible_exe(libpython):
     """
-    Determine if Python used by PyCall.jl is compatible with this Python.
+    Determine if `libpython` is compatible with this Python.
 
     Current Python executable is considered compatible if it is dynamically
     linked to libpython and both of them are using identical libpython.  If
     this function returns `True`, PyJulia use the same precompilation cache
     of PyCall.jl used by Julia itself.
-
-    Parameters
-    ----------
-    jlinfo : JuliaInfo
-        A `JuliaInfo` object returned by `juliainfo` function.
     """
-    logger.debug("jlinfo.libpython = %s", jlinfo.libpython)
+    logger.debug("libpython = %s", libpython)
     py_libpython = linked_libpython()
-    jl_libpython = normalize_path(jlinfo.libpython)
+    jl_libpython = normalize_path(libpython)
     logger.debug("py_libpython = %s", py_libpython)
     logger.debug("jl_libpython = %s", jl_libpython)
     dynamically_linked = py_libpython is not None
@@ -397,7 +422,7 @@ It seems your Julia and PyJulia setup are not supported.
 Julia interpreter:
     {runtime}
 Python interpreter and libpython used by PyCall.jl:
-    {jlinfo.pyprogramname}
+    {jlinfo.python}
     {jl_libpython}
 Python interpreter used to import PyJulia and its libpython.
     {sys.executable}
@@ -453,7 +478,7 @@ def raise_separate_cache_error(
         runtime=runtime,
         jlinfo=jlinfo,
         py_libpython=find_libpython(),
-        jl_libpython=normalize_path(jlinfo.libpython),
+        jl_libpython=normalize_path(jlinfo.libpython_path),
         sys=sys)
     raise RuntimeError(message)
 
@@ -544,11 +569,10 @@ class Julia(object):
         logger.debug("")  # so that debug message is shown nicely w/ pytest
 
         if init_julia:
-            jlinfo = juliainfo(runtime)
-            JULIA_HOME, libjulia_path, image_file, depsjlexe = jlinfo[:4]
-            logger.debug("pyprogramname = %s", depsjlexe)
-            logger.debug("sys.executable = %s", sys.executable)
-            logger.debug("JULIA_HOME = %s,  libjulia_path = %s", JULIA_HOME, libjulia_path)
+            jlinfo = JuliaInfo.load(runtime)
+            JULIA_HOME = jlinfo.bindir
+            libjulia_path = jlinfo.libjulia_path
+            image_file = jlinfo.image_file
             if not os.path.exists(libjulia_path):
                 raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
 
@@ -565,7 +589,7 @@ class Julia(object):
                 else:
                     jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
 
-            use_separate_cache = not is_compatible_exe(jlinfo)
+            use_separate_cache = not jlinfo.is_compatible_python()
             logger.debug("use_separate_cache = %s", use_separate_cache)
             if use_separate_cache:
                 PYCALL_JULIA_HOME = os.path.join(

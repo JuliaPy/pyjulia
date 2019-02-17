@@ -1,19 +1,19 @@
 import os
 import subprocess
 
-from julia.core import juliainfo, _enviorn
+from julia.core import JuliaInfo, _enviorn
 
 
 def check_core_juliainfo(jlinfo):
-    assert os.path.exists(jlinfo.JULIA_HOME)
+    assert os.path.exists(jlinfo.bindir)
     assert os.path.exists(jlinfo.libjulia_path)
     assert os.path.exists(jlinfo.image_file)
 
 
 def test_juliainfo_normal():
-    jlinfo = juliainfo(os.getenv("JULIA_EXE", "julia"))
+    jlinfo = JuliaInfo.load(os.getenv("JULIA_EXE", "julia"))
     check_core_juliainfo(jlinfo)
-    assert os.path.exists(jlinfo.pyprogramname)
+    assert os.path.exists(jlinfo.python)
     # Note: jlinfo.libpython is probably not a full path so we are not
     # testing it here.
 
@@ -40,10 +40,10 @@ def test_juliainfo_without_pycall(tmpdir):
         universal_newlines=True)
     name, val = env_var.split("\n", 1)
 
-    jlinfo = juliainfo(
+    jlinfo = JuliaInfo.load(
         runtime,
         env=dict(_enviorn, **{name: val}))
 
     check_core_juliainfo(jlinfo)
-    assert jlinfo.pyprogramname is None
-    assert jlinfo.libpython is None
+    assert jlinfo.python is None
+    assert jlinfo.libpython_path is None

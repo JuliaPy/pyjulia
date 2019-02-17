@@ -169,11 +169,7 @@ def test_statically_linked(python):
         from julia.core import is_compatible_exe, enable_debug
 
         enable_debug()
-
-        class jlinfo:
-            libpython = find_libpython()
-
-        assert not is_compatible_exe(jlinfo)
+        assert not is_compatible_exe(find_libpython())
         """,
         check=True,
     )
