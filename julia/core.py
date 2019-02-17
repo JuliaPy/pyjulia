@@ -326,6 +326,7 @@ class JuliaInfo(object):
         """
         Get basic information from `julia`.
         """
+
         # Use the original environment variables to avoid a cryptic
         # error "fake-julia/../lib/julia/sys.so: cannot open shared
         # object file: No such file or directory":
@@ -416,6 +417,146 @@ def is_compatible_exe(libpython):
     # `jl_libpython` to be a `str` always.
 
 
+def setup_libjulia(libjulia):
+    # Store the running interpreter reference so we can start using it via self.call
+    libjulia.jl_.argtypes = [void_p]
+    libjulia.jl_.restype = None
+
+    # Set the return types of some of the bridge functions in ctypes terminology
+    libjulia.jl_eval_string.argtypes = [char_p]
+    libjulia.jl_eval_string.restype = void_p
+
+    libjulia.jl_exception_occurred.restype = void_p
+    libjulia.jl_typeof_str.argtypes = [void_p]
+    libjulia.jl_typeof_str.restype = char_p
+    libjulia.jl_call2.argtypes = [void_p, void_p, void_p]
+    libjulia.jl_call2.restype = void_p
+    libjulia.jl_get_field.argtypes = [void_p, char_p]
+    libjulia.jl_get_field.restype = void_p
+    libjulia.jl_typename_str.restype = char_p
+    libjulia.jl_unbox_voidpointer.argtypes = [void_p]
+    libjulia.jl_unbox_voidpointer.restype = py_object
+
+    for c_type in UNBOXABLE_TYPES:
+        jl_unbox = getattr(libjulia, "jl_unbox_{}".format(c_type))
+        jl_unbox.argtypes = [void_p]
+        jl_unbox.restype = getattr(ctypes, "c_{}".format({
+            "float32": "float",
+            "float64": "double",
+        }.get(c_type, c_type)))
+
+    libjulia.jl_typeof.argtypes = [void_p]
+    libjulia.jl_typeof.restype = void_p
+
+    libjulia.jl_exception_clear.restype = None
+    libjulia.jl_stderr_obj.argtypes = []
+    libjulia.jl_stderr_obj.restype = void_p
+    libjulia.jl_stderr_stream.argtypes = []
+    libjulia.jl_stderr_stream.restype = void_p
+    libjulia.jl_printf.restype = ctypes.c_int
+
+    libjulia.jl_atexit_hook.argtypes = [ctypes.c_int]
+
+
+try:
+    # A hack to make `_LIBJULIA` survive reload:
+    _LIBJULIA
+except NameError:
+    _LIBJULIA = None
+# Ugly hack to register the julia interpreter globally so we can reload
+# this extension without trying to re-open the shared lib, which kills
+# the python interpreter. Nasty but useful while debugging
+
+
+def set_libjulia(libjulia):
+    # Flag process-wide that Julia is initialized and store the actual
+    # runtime interpreter, so we can reuse it across calls and module
+    # reloads.
+    global _LIBJULIA
+    _LIBJULIA = libjulia
+
+
+def get_libjulia():
+    return _LIBJULIA
+
+
+class BaseLibJulia(object):
+
+    def __getattr__(self, name):
+        return getattr(self.libjulia, name)
+
+
+class LibJulia(BaseLibJulia):
+
+    """
+    Low-level interface to `libjulia` C-API.
+    """
+
+    @classmethod
+    def from_juliainfo(cls, juliainfo):
+        return cls(
+            libjulia_path=juliainfo.libjulia_path,
+            bindir=juliainfo.bindir,
+            image_file=juliainfo.image_file,
+        )
+
+    def __init__(self, libjulia_path, bindir, image_file):
+        self.libjulia_path = libjulia_path
+        self.bindir = bindir
+        self.image_file = image_file
+
+        if not os.path.exists(libjulia_path):
+            raise RuntimeError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
+
+        # fixes a specific issue with python 2.7.13
+        # ctypes.windll.LoadLibrary refuses unicode argument
+        # http://bugs.python.org/issue29294
+        if sys.version_info >= (2, 7, 13) and sys.version_info < (2, 7, 14):
+            libjulia_path = libjulia_path.encode("ascii")
+
+        self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
+        setup_libjulia(self.libjulia)
+
+    @property
+    def jl_init_with_image(self):
+        try:
+            return self.libjulia.jl_init_with_image
+        except AttributeError:
+            return self.libjulia.jl_init_with_image__threading
+
+    def init_julia(self):
+        """
+        Initialize `libjulia`.  Calling this method twice is a no-op.
+
+        It calls `jl_init_with_image` (or `jl_init_with_image__threading`)
+        but makes sure that it is called only once for each process.
+        """
+        if get_libjulia():
+            return
+
+        jl_init_path = self.bindir
+        image_file = self.image_file
+
+        logger.debug("calling jl_init_with_image(%s, %s)", jl_init_path, image_file)
+        self.jl_init_with_image(jl_init_path.encode("utf-8"), image_file.encode("utf-8"))
+        logger.debug("seems to work...")
+
+        set_libjulia(self)
+
+        self.libjulia.jl_exception_clear()
+
+
+class InProcessLibJulia(BaseLibJulia):
+
+    def __init__(self):
+        # we're assuming here we're fully inside a running Julia process,
+        # so we're fishing for symbols in our own process table
+        self.libjulia = ctypes.PyDLL(None)
+
+        setup_libjulia(self.libjulia)
+        set_libjulia(self)
+
+
 _separate_cache_error_common_header = """\
 It seems your Julia and PyJulia setup are not supported.
 
@@ -483,9 +624,6 @@ def raise_separate_cache_error(
     raise RuntimeError(message)
 
 
-_julia_runtime = [False]
-
-
 UNBOXABLE_TYPES = (
     'bool',
     'int8',
@@ -539,13 +677,6 @@ class Julia(object):
         if debug:
             enable_debug()
 
-        # Ugly hack to register the julia interpreter globally so we can reload
-        # this extension without trying to re-open the shared lib, which kills
-        # the python interpreter. Nasty but useful while debugging
-        if _julia_runtime[0]:
-            self.api = _julia_runtime[0]
-            return
-
         if jl_runtime_path is not None:
             warnings.warn(
                 "`jl_runtime_path` is deprecated. Please use `runtime`.",
@@ -568,90 +699,27 @@ class Julia(object):
 
         logger.debug("")  # so that debug message is shown nicely w/ pytest
 
-        if init_julia:
+        if get_libjulia():
+            # Use pre-existing `LibJulia`.
+            self.api = get_libjulia()
+        elif init_julia:
             jlinfo = JuliaInfo.load(runtime)
-            JULIA_HOME = jlinfo.bindir
-            libjulia_path = jlinfo.libjulia_path
-            image_file = jlinfo.image_file
-            if not os.path.exists(libjulia_path):
-                raise JuliaError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
+            self.api = LibJulia.from_juliainfo(jlinfo)
 
-            # fixes a specific issue with python 2.7.13
-            # ctypes.windll.LoadLibrary refuses unicode argument
-            # http://bugs.python.org/issue29294
-            if sys.version_info >= (2,7,13) and sys.version_info < (2,7,14):
-                libjulia_path = libjulia_path.encode("ascii")
-
-            self.api = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
-            if not jl_init_path:
-                if jl_runtime_path:
-                    jl_init_path = os.path.dirname(os.path.realpath(jl_runtime_path)).encode("utf-8")
-                else:
-                    jl_init_path = JULIA_HOME.encode("utf-8") # initialize with JULIA_HOME
+            if jl_init_path:
+                self.api.bindir = jl_init_path
 
             use_separate_cache = not jlinfo.is_compatible_python()
             logger.debug("use_separate_cache = %s", use_separate_cache)
             if use_separate_cache:
                 PYCALL_JULIA_HOME = os.path.join(
-                    os.path.dirname(os.path.realpath(__file__)),"fake-julia").replace("\\","\\\\")
+                    os.path.dirname(os.path.realpath(__file__)), "fake-julia").replace("\\", "\\\\")
                 os.environ["JULIA_HOME"] = PYCALL_JULIA_HOME  # TODO: this line can be removed when dropping Julia v0.6
                 os.environ["JULIA_BINDIR"] = PYCALL_JULIA_HOME
-                jl_init_path = PYCALL_JULIA_HOME.encode("utf-8")
+                self.api.bindir = PYCALL_JULIA_HOME
 
-            if not hasattr(self.api, "jl_init_with_image"):
-                if hasattr(self.api, "jl_init_with_image__threading"):
-                    self.api.jl_init_with_image = self.api.jl_init_with_image__threading
-                else:
-                    raise ImportError("No libjulia entrypoint found! (tried jl_init_with_image and jl_init_with_image__threading)")
-            self.api.jl_init_with_image.argtypes = [char_p, char_p]
-            logger.debug("calling jl_init_with_image(%s, %s)", jl_init_path, image_file)
-            self.api.jl_init_with_image(jl_init_path, image_file.encode("utf-8"))
-            logger.debug("seems to work...")
+            self.api.init_julia()
 
-        else:
-            # we're assuming here we're fully inside a running Julia process,
-            # so we're fishing for symbols in our own process table
-            self.api = ctypes.PyDLL(None)
-
-        # Store the running interpreter reference so we can start using it via self.call
-        self.api.jl_.argtypes = [void_p]
-        self.api.jl_.restype = None
-
-        # Set the return types of some of the bridge functions in ctypes terminology
-        self.api.jl_eval_string.argtypes = [char_p]
-        self.api.jl_eval_string.restype = void_p
-
-        self.api.jl_exception_occurred.restype = void_p
-        self.api.jl_typeof_str.argtypes = [void_p]
-        self.api.jl_typeof_str.restype = char_p
-        self.api.jl_call2.argtypes = [void_p, void_p, void_p]
-        self.api.jl_call2.restype = void_p
-        self.api.jl_get_field.argtypes = [void_p, char_p]
-        self.api.jl_get_field.restype = void_p
-        self.api.jl_typename_str.restype = char_p
-        self.api.jl_unbox_voidpointer.argtypes = [void_p]
-        self.api.jl_unbox_voidpointer.restype = py_object
-
-        for c_type in UNBOXABLE_TYPES:
-            jl_unbox = getattr(self.api, "jl_unbox_{}".format(c_type))
-            jl_unbox.argtypes = [void_p]
-            jl_unbox.restype = getattr(ctypes, "c_{}".format({
-                "float32": "float",
-                "float64": "double",
-            }.get(c_type, c_type)))
-
-        self.api.jl_typeof.argtypes = [void_p]
-        self.api.jl_typeof.restype = void_p
-
-        self.api.jl_exception_clear.restype = None
-        self.api.jl_stderr_obj.argtypes = []
-        self.api.jl_stderr_obj.restype = void_p
-        self.api.jl_stderr_stream.argtypes = []
-        self.api.jl_stderr_stream.restype = void_p
-        self.api.jl_printf.restype = ctypes.c_int
-        self.api.jl_exception_clear()
-
-        if init_julia:
             if use_separate_cache:
                 # First check that this is supported
                 version_range = self._unbox_as(self._call("""
@@ -671,8 +739,8 @@ class Julia(object):
                 # Intercept precompilation
                 os.environ["PYCALL_PYTHON_EXE"] = sys.executable
                 os.environ["PYCALL_JULIA_HOME"] = PYCALL_JULIA_HOME
-                os.environ["PYJULIA_IMAGE_FILE"] = image_file
-                os.environ["PYCALL_LIBJULIA_PATH"] = os.path.dirname(libjulia_path)
+                os.environ["PYJULIA_IMAGE_FILE"] = jlinfo.image_file
+                os.environ["PYCALL_LIBJULIA_PATH"] = os.path.dirname(jlinfo.libjulia_path)
                 # Add a private cache directory. PyCall needs a different
                 # configuration and so do any packages that depend on it.
                 self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
@@ -710,8 +778,9 @@ class Julia(object):
                 """)
 
             jl_atexit_hook = self.api.jl_atexit_hook
-            jl_atexit_hook.argtypes = [ctypes.c_int]
             atexit.register(jl_atexit_hook, 0)
+        else:
+            self.api = InProcessLibJulia()
 
         # Currently, PyJulia assumes that `Main.PyCall` exsits.  Thus, we need
         # to import `PyCall` again here in case `init_julia=False` is passed:
@@ -723,11 +792,6 @@ class Julia(object):
         # they can survive across reinitializations.
         self.api.PyObject = self._call("PyCall.PyObject")
         self.api.convert = self._call("convert")
-
-        # Flag process-wide that Julia is initialized and store the actual
-        # runtime interpreter, so we can reuse it across calls and module
-        # reloads.
-        _julia_runtime[0] = self.api
 
         self.sprint = self.eval('sprint')
         self.showerror = self.eval('showerror')
