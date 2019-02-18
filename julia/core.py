@@ -301,6 +301,12 @@ if VERSION >= v"0.7.0-DEV.3630"
 end
 println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
 println(unsafe_string(Base.JLOptions().image_file))
+
+println(VERSION)
+println(VERSION.major)
+println(VERSION.minor)
+println(VERSION.patch)
+
 if VERSION < v"0.7.0"
     PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
 else
@@ -358,6 +364,7 @@ class JuliaInfo(object):
         return cls(julia, *args)
 
     def __init__(self, julia, bindir, libjulia_path, image_file,
+                 version_raw, version_major, version_minor, version_patch,
                  python=None, libpython_path=None):
         self.julia = julia
         """ Julia executable from which information was retrieved. """
@@ -369,6 +376,15 @@ class JuliaInfo(object):
         """ Path to libjulia. """
 
         self.image_file = image_file
+
+        version_major = int(version_major)
+        version_minor = int(version_minor)
+        version_patch = int(version_patch)
+        self.version_raw = version_raw
+        self.version_major = version_major
+        self.version_minor = version_minor
+        self.version_patch = version_patch
+        self.version_info = (version_major, version_minor, version_patch)
 
         self.python = python
         """ Python executable with which PyCall.jl is configured. """
