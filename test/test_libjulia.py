@@ -35,7 +35,7 @@ def test_custom_sysimage(tmpdir):
         info = JuliaInfo.load()
 
         sysimage = {!r}
-        copyfile(info.image_file, sysimage)
+        copyfile(info.sysimage, sysimage)
 
         api = LibJulia.load()
         api.init_julia(["--sysimage", sysimage])

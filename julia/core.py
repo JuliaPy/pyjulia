@@ -337,7 +337,7 @@ class JuliaInfo(object):
     >>> info = JuliaInfo.load(julia="PATH/TO/julia")       # doctest: +SKIP
     >>> info.julia
     'julia'
-    >>> info.image_file                                    # doctest: +SKIP
+    >>> info.sysimage                                      # doctest: +SKIP
     '/home/user/julia/lib/julia/sys.so'
     >>> info.python                                        # doctest: +SKIP
     '/usr/bin/python3'
@@ -381,7 +381,7 @@ class JuliaInfo(object):
 
         return cls(julia, *args)
 
-    def __init__(self, julia, bindir, libjulia_path, image_file,
+    def __init__(self, julia, bindir, libjulia_path, sysimage,
                  version_raw, version_major, version_minor, version_patch,
                  python=None, libpython_path=None):
         self.julia = julia
@@ -393,7 +393,7 @@ class JuliaInfo(object):
         self.libjulia_path = libjulia_path
         """ Path to libjulia. """
 
-        self.image_file = image_file
+        self.sysimage = sysimage
 
         version_major = int(version_major)
         version_minor = int(version_minor)
@@ -521,7 +521,7 @@ def yes_no_etc(*etc):
 
 class JuliaOptions(object):
 
-    image_file = String("image_file")
+    sysimage = String("sysimage")
     bindir = String("bindir")
     compiled_modules = Choices("compiled_modules", yes_no_etc())
     compile = Choices("compile", yes_no_etc("all", "min"))
@@ -560,7 +560,7 @@ class JuliaOptions(object):
     def as_args(self):
         args = []
         for (name, value) in self.specified():
-            name = {"bindir": "home", "image_file": "sysimage"}.get(name, name)
+            name = {"bindir": "home"}.get(name, name)
             args.append("--" + name.replace("_", "-"))
             args.append(value)
         return args
@@ -715,9 +715,9 @@ class LibJulia(BaseLibJulia):
 
     Path to the system image can be configured before initializing Julia:
 
-    >>> api.image_file                                     # doctest: +SKIP
+    >>> api.sysimage                                       # doctest: +SKIP
     '/home/user/julia/lib/julia/sys.so'
-    >>> api.image_file = "PATH/TO/CUSTOM/sys.so"           # doctest: +SKIP
+    >>> api.sysimage = "PATH/TO/CUSTOM/sys.so"             # doctest: +SKIP
 
     Finally, the Julia runtime can be initialized using `LibJulia.init_julia`.
     Note that only the first call to this function in the current Python
@@ -741,13 +741,13 @@ class LibJulia(BaseLibJulia):
         return cls(
             libjulia_path=juliainfo.libjulia_path,
             bindir=juliainfo.bindir,
-            image_file=juliainfo.image_file,
+            sysimage=juliainfo.sysimage,
         )
 
-    def __init__(self, libjulia_path, bindir, image_file):
+    def __init__(self, libjulia_path, bindir, sysimage):
         self.libjulia_path = libjulia_path
         self.bindir = bindir
-        self.image_file = image_file
+        self.sysimage = sysimage
 
         if not os.path.exists(libjulia_path):
             raise RuntimeError("Julia library (\"libjulia\") not found! {}".format(libjulia_path))
@@ -797,10 +797,10 @@ class LibJulia(BaseLibJulia):
             if ns.home:
                 self.bindir = ns.home
             if ns.sysimage:
-                self.image_file = ns.sysimage
+                self.sysimage = ns.sysimage
 
         jl_init_path = self.bindir
-        image_file = self.image_file
+        sysimage = self.sysimage
 
         if options:
             assert not isinstance(options, str)
@@ -820,8 +820,8 @@ class LibJulia(BaseLibJulia):
             for i in range(argc.value):
                 logger.debug("argv[%d] = %r", i, argv[i])
 
-        logger.debug("calling jl_init_with_image(%s, %s)", jl_init_path, image_file)
-        self.jl_init_with_image(jl_init_path.encode("utf-8"), image_file.encode("utf-8"))
+        logger.debug("calling jl_init_with_image(%s, %s)", jl_init_path, sysimage)
+        self.jl_init_with_image(jl_init_path.encode("utf-8"), sysimage.encode("utf-8"))
         logger.debug("seems to work...")
 
         set_libjulia(self)
@@ -1025,7 +1025,7 @@ class Julia(object):
                 # Intercept precompilation
                 os.environ["PYCALL_PYTHON_EXE"] = sys.executable
                 os.environ["PYCALL_JULIA_HOME"] = PYCALL_JULIA_HOME
-                os.environ["PYJULIA_IMAGE_FILE"] = jlinfo.image_file
+                os.environ["PYJULIA_IMAGE_FILE"] = jlinfo.sysimage
                 os.environ["PYCALL_LIBJULIA_PATH"] = os.path.dirname(jlinfo.libjulia_path)
                 # Add a private cache directory. PyCall needs a different
                 # configuration and so do any packages that depend on it.

@@ -7,7 +7,7 @@ from julia.core import JuliaInfo, _enviorn
 def check_core_juliainfo(jlinfo):
     assert os.path.exists(jlinfo.bindir)
     assert os.path.exists(jlinfo.libjulia_path)
-    assert os.path.exists(jlinfo.image_file)
+    assert os.path.exists(jlinfo.sysimage)
 
 
 def test_juliainfo_normal():

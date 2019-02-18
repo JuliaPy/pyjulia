@@ -9,7 +9,7 @@ from julia.core import JuliaOptions
     (dict(compiled_modules=False), ["--compiled-modules", "no"]),
     (dict(compiled_modules="no"), ["--compiled-modules", "no"]),
     (dict(depwarn="error"), ["--depwarn", "error"]),
-    (dict(image_file="PATH"), ["--sysimage", "PATH"]),
+    (dict(sysimage="PATH"), ["--sysimage", "PATH"]),
     (dict(bindir="PATH"), ["--home", "PATH"]),
 ])
 def test_as_args(kwargs, args):
