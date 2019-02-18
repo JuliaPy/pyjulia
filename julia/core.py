@@ -451,12 +451,7 @@ def is_compatible_exe(libpython):
     # `jl_libpython` to be a `str` always.
 
 
-class Choices(object):
-
-    def __init__(self, name, choicemap, default=None):
-        self.name = name
-        self.choicemap = choicemap
-        self.default = default
+class OptionDescriptor(object):
 
     @property
     def dataname(self):
@@ -467,16 +462,49 @@ class Choices(object):
             return self
         return getattr(instance, self.dataname, self.default)
 
+
+class String(OptionDescriptor):
+
+    def __init__(self, name, default=None):
+        self.name = name
+        self.default = default
+
+    def __set__(self, instance, value):
+        if instance is None:
+            raise AttributeError(self.name)
+        if value == self.default or isinstance(value, str):
+            setattr(instance, self.dataname, value)
+        else:
+            raise ValueError("Option {!r} only accepts `str`. Got: {!r}"
+                             .format(self.name, value))
+
+    def show_option(self):
+        print(self.name, "(string)", end="")
+
+
+
+class Choices(OptionDescriptor):
+
+    def __init__(self, name, choicemap, default=None):
+        self.name = name
+        self.choicemap = choicemap
+        self.default = default
+
     def __set__(self, instance, value):
         if instance is None:
             raise AttributeError(self.name)
         if value == self.default:
-            pass
+            setattr(instance, self.dataname, value)
         elif value in self.choicemap:
             setattr(instance, self.dataname, self.choicemap[value])
         else:
-            raise ValueError("Attribute {!r} does not accept {!r}"
+            raise ValueError("Option {!r} does not accept {!r}"
                              .format(self.name, value))
+
+    def show_option(self):
+        print(self.name, ":", end="")
+        for var in self.choicemap:
+            print("", repr(var), end="")
 
 
 def yes_no_etc(*etc):
@@ -493,6 +521,8 @@ def yes_no_etc(*etc):
 
 class JuliaOptions(object):
 
+    image_file = String("image_file")
+    bindir = String("bindir")
     compiled_module = Choices("compiled_module", yes_no_etc())
     compile = Choices("compile", yes_no_etc("all", "min"))
     depwarn = Choices("depwarn", yes_no_etc("error"))
@@ -514,11 +544,11 @@ class JuliaOptions(object):
 
     @classmethod
     def is_supported(cls, name):
-        return isinstance(getattr(cls, name), Choices)
+        return isinstance(getattr(cls, name), OptionDescriptor)
 
     def is_specified(self, name):
         desc = getattr(self.__class__, name)
-        if isinstance(desc, Choices):
+        if isinstance(desc, OptionDescriptor):
             return getattr(self, name) != desc.default
         return False
 
@@ -530,6 +560,7 @@ class JuliaOptions(object):
     def as_args(self):
         args = []
         for (name, value) in self.specified():
+            name = {"bindir": "home", "image_file": "sysimage"}.get(name, name)
             args.append("--" + name.replace("_", "-"))
             args.append(value)
         return args
@@ -546,11 +577,42 @@ class JuliaOptions(object):
         print("See `julia --help` for their effects.")
         print()
         for name in cls.supported_names():
-            desc = getattr(cls, name)
-            print(desc.name, ":", end="")
-            for var in desc.choicemap:
-                print("", repr(var), end="")
+            getattr(cls, name).show_option()
             print()
+
+
+def parse_jl_options(options):
+    """
+    Parse --home and --sysimage options.
+
+    Examples
+    --------
+    >>> ns = parse_jl_options(["--home", "PATH/TO/HOME"])
+    >>> ns
+    Namespace(home='PATH/TO/HOME', sysimage=None)
+    >>> ns.home
+    'PATH/TO/HOME'
+    >>> parse_jl_options([])
+    Namespace(home=None, sysimage=None)
+    >>> parse_jl_options(["-HHOME", "--sysimage=PATH/TO/sys.so"])
+    Namespace(home='HOME', sysimage='PATH/TO/sys.so')
+    """
+    import argparse
+
+    def exit(*_):
+        raise Exception("`exit` must not be called")
+
+    def error(message):
+        raise RuntimeError(message)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--home", "-H")
+    parser.add_argument("--sysimage", "-J")
+
+    parser.exit = exit
+    parser.error = error
+    ns = parser.parse_args(options)
+    return ns
 
 
 def setup_libjulia(libjulia):
@@ -717,8 +779,6 @@ class LibJulia(BaseLibJulia):
         ----------
         options : sequence of `str` or `JuliaOptions`
             This is passed as command line options to the Julia runtime.
-            Note that `.image_file` and `.bindir` attributes must be
-            used instead of `--sysimage` and `--home` options.
         """
         if get_libjulia():
             return
@@ -731,6 +791,13 @@ class LibJulia(BaseLibJulia):
         # Record `options`.  It's not used anywhere at the moment but
         # may be useful for debugging.
         self.options = options
+
+        if options:
+            ns = parse_jl_options(options)
+            if ns.home:
+                self.bindir = ns.home
+            if ns.sysimage:
+                self.image_file = ns.sysimage
 
         jl_init_path = self.bindir
         image_file = self.image_file
