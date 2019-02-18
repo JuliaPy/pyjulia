@@ -544,7 +544,7 @@ class JuliaOptions(object):
 
     @classmethod
     def is_supported(cls, name):
-        return isinstance(getattr(cls, name), OptionDescriptor)
+        return isinstance(getattr(cls, name, None), OptionDescriptor)
 
     def is_specified(self, name):
         desc = getattr(self.__class__, name)
