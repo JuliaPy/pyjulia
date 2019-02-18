@@ -737,20 +737,10 @@ class Julia(object):
             self.api.init_julia()
 
             if use_separate_cache:
-                # First check that this is supported
-                version_range = self._unbox_as(self._call("""
-                Int64(if VERSION < v"0.6-"
-                    2
-                elseif VERSION >= v"0.7-"
-                    1
-                else
-                    0
-                end)
-                """), "int64")
-                if version_range == 2:
+                if jlinfo.version_info < (0, 6):
                     raise RuntimeError(
                         "PyJulia does not support Julia < 0.6 anymore")
-                elif version_range == 1:
+                elif jlinfo.version_info >= (0, 7):
                     raise_separate_cache_error(runtime, jlinfo)
                 # Intercept precompilation
                 os.environ["PYCALL_PYTHON_EXE"] = sys.executable
