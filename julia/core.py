@@ -326,6 +326,23 @@ end
 
 
 class JuliaInfo(object):
+    """
+    Information required for initializing Julia runtime.
+
+    Examples
+    --------
+    >>> info = JuliaInfo.load()
+    >>> info = JuliaInfo.load(julia="julia")  # equivalent
+    >>> info = JuliaInfo.load(julia="PATH/TO/julia")       # doctest: +SKIP
+    >>> info.julia
+    'julia'
+    >>> info.image_file                                    # doctest: +SKIP
+    '/home/user/julia/lib/julia/sys.so'
+    >>> info.python                                        # doctest: +SKIP
+    '/usr/bin/python3'
+    >>> info.is_compatible_python()                        # doctest: +SKIP
+    True
+    """
 
     @classmethod
     def load(cls, julia="julia", **popen_kwargs):
@@ -503,13 +520,46 @@ class BaseLibJulia(object):
 
 
 class LibJulia(BaseLibJulia):
-
     """
     Low-level interface to `libjulia` C-API.
+
+    Examples
+    --------
+    An easy way to create a `LibJulia` object is `LibJulia.load`:
+
+    >>> api = LibJulia.load()
+
+    Or, equivalently,
+
+    >>> api = LibJulia.load(julia="julia")
+    >>> api = LibJulia.from_juliainfo(JuliaInfo.load())
+
+    You can pass a path to the Julia executable using `julia` keyword
+    argument:
+
+    >>> api = LibJulia.load(julia="PATH/TO/CUSTOM/julia")  # doctest: +SKIP
+
+    Path to the system image can be configured before initializing Julia:
+
+    >>> api.image_file                                     # doctest: +SKIP
+    '/home/user/julia/lib/julia/sys.so'
+    >>> api.image_file = "PATH/TO/CUSTOM/sys.so"           # doctest: +SKIP
+
+    Finally, the Julia runtime can be initialized using `LibJulia.init_julia`.
+    Note that only the first call to this function in the current Python
+    process takes effect.
+
+    >>> api.init_julia()
     """
 
     @classmethod
     def load(cls, **kwargs):
+        """
+        Create `LibJulia` based on information retrieved with `JuliaInfo.load`.
+
+        This classmethod runs `JuliaInfo.load` to retrieve information about
+        `julia` runtime.  This information is used to intialize `LibJulia`.
+        """
         return cls.from_juliainfo(JuliaInfo.load(**kwargs))
 
     @classmethod
