@@ -509,6 +509,10 @@ class LibJulia(BaseLibJulia):
     """
 
     @classmethod
+    def load(cls, **kwargs):
+        return cls.from_juliainfo(JuliaInfo.load(**kwargs))
+
+    @classmethod
     def from_juliainfo(cls, juliainfo):
         return cls(
             libjulia_path=juliainfo.libjulia_path,
