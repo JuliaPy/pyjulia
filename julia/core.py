@@ -331,6 +331,7 @@ class JuliaInfo(object):
 
     Examples
     --------
+    >>> from julia.api import JuliaInfo
     >>> info = JuliaInfo.load()
     >>> info = JuliaInfo.load(julia="julia")  # equivalent
     >>> info = JuliaInfo.load(julia="PATH/TO/julia")       # doctest: +SKIP
@@ -525,6 +526,8 @@ class LibJulia(BaseLibJulia):
 
     Examples
     --------
+    >>> from julia.api import LibJulia, JuliaInfo
+
     An easy way to create a `LibJulia` object is `LibJulia.load`:
 
     >>> api = LibJulia.load()
