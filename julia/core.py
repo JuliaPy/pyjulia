@@ -523,7 +523,7 @@ class JuliaOptions(object):
 
     image_file = String("image_file")
     bindir = String("bindir")
-    compiled_module = Choices("compiled_module", yes_no_etc())
+    compiled_modules = Choices("compiled_modules", yes_no_etc())
     compile = Choices("compile", yes_no_etc("all", "min"))
     depwarn = Choices("depwarn", yes_no_etc("error"))
     warn_overwrite = Choices("warn_overwrite", yes_no_etc())
@@ -611,7 +611,7 @@ def parse_jl_options(options):
 
     parser.exit = exit
     parser.error = error
-    ns = parser.parse_args(options)
+    ns, _ = parser.parse_known_args(options)
     return ns
 
 
@@ -955,7 +955,7 @@ class Julia(object):
         debug : bool
             If True, print some debugging information to STDERR
 
-        Other keyword arguments (e.g., `compiled_module=False`) are treated
+        Other keyword arguments (e.g., `compiled_modules=False`) are treated
         as command line options.  Only a subset of command line options is
         supported.  See `julia.core.JuliaOptions.show_supported()` for the
         list of supported options.
@@ -1004,7 +1004,7 @@ class Julia(object):
             options = JuliaOptions(**julia_options)
 
             use_separate_cache = not (
-                options.compiled_module == "no" or jlinfo.is_compatible_python()
+                options.compiled_modules == "no" or jlinfo.is_compatible_python()
             )
             logger.debug("use_separate_cache = %s", use_separate_cache)
             if use_separate_cache:

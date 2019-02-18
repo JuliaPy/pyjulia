@@ -5,9 +5,9 @@ from julia.core import JuliaOptions
 
 @pytest.mark.parametrize("kwargs, args", [
     ({}, []),
-    (dict(compiled_module=None), []),
-    (dict(compiled_module=False), ["--compiled-module", "no"]),
-    (dict(compiled_module="no"), ["--compiled-module", "no"]),
+    (dict(compiled_modules=None), []),
+    (dict(compiled_modules=False), ["--compiled-modules", "no"]),
+    (dict(compiled_modules="no"), ["--compiled-modules", "no"]),
     (dict(depwarn="error"), ["--depwarn", "error"]),
     (dict(image_file="PATH"), ["--sysimage", "PATH"]),
     (dict(bindir="PATH"), ["--home", "PATH"]),
@@ -17,7 +17,7 @@ def test_as_args(kwargs, args):
 
 
 @pytest.mark.parametrize("kwargs", [
-    dict(compiled_module="invalid value"),
+    dict(compiled_modules="invalid value"),
     dict(bindir=123456789),
 ])
 def test_valueerror(kwargs):
