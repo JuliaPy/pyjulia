@@ -706,23 +706,39 @@ class LibJulia(BaseLibJulia):
         except AttributeError:
             return self.libjulia.jl_init_with_image__threading
 
-    def init_julia(self, jl_args=None):
+    def init_julia(self, options=None):
         """
         Initialize `libjulia`.  Calling this method twice is a no-op.
 
         It calls `jl_init_with_image` (or `jl_init_with_image__threading`)
         but makes sure that it is called only once for each process.
+
+        Parameters
+        ----------
+        options : sequence of `str` or `JuliaOptions`
+            This is passed as command line options to the Julia runtime.
+            Note that `.image_file` and `.bindir` attributes must be
+            used instead of `--sysimage` and `--home` options.
         """
         if get_libjulia():
             return
 
+        if hasattr(options, "as_args"):  # JuliaOptions
+            options = options.as_args()
+        if options:
+            # Let's materialize it here in case it's an iterator.
+            options = list(options)
+        # Record `options`.  It's not used anywhere at the moment but
+        # may be useful for debugging.
+        self.options = options
+
         jl_init_path = self.bindir
         image_file = self.image_file
 
-        if jl_args:
-            assert not isinstance(jl_args, str)
+        if options:
+            assert not isinstance(options, str)
             argv_list = [sys.executable]  # TODO: use julia runtime
-            argv_list.extend(jl_args)
+            argv_list.extend(options)
             if sys.version_info[0] >= 3:
                 argv_list = [s.encode('utf-8') for s in argv_list]
 
@@ -745,7 +761,7 @@ class LibJulia(BaseLibJulia):
 
         self.libjulia.jl_exception_clear()
 
-        if jl_args:
+        if options:
             # This doesn't seem to be working.
             self.libjulia.jl_set_ARGS(argc, argv)
 
@@ -931,8 +947,7 @@ class Julia(object):
                 os.environ["JULIA_BINDIR"] = PYCALL_JULIA_HOME
                 self.api.bindir = PYCALL_JULIA_HOME
 
-            jl_args = options.as_args()
-            self.api.init_julia(jl_args)
+            self.api.init_julia(options)
 
             if use_separate_cache:
                 if jlinfo.version_info < (0, 6):
