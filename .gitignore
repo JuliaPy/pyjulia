@@ -40,9 +40,6 @@ nosetests.xml
 # PyCharm
 .idea/*
 
-# Test files
-*test.py
-
 # created by distutils during build process
 MANIFEST
 
