@@ -3,9 +3,13 @@ import sys
 import pytest
 
 from .test_compatible_exe import runcode
+from julia.core import JuliaInfo
+
+juliainfo = JuliaInfo.load()
 
 
 @pytest.mark.xfail(reason="https://github.com/JuliaPy/PyCall.jl/pull/648")
+@pytest.mark.skipif("juliainfo.version_info < (0, 7)")
 def test_compiled_modules_no():
     runcode(
         sys.executable,
@@ -23,6 +27,7 @@ def test_compiled_modules_no():
         check=True)
 
 
+@pytest.mark.skipif("not juliainfo.is_compatible_python()")
 def test_custom_sysimage(tmpdir):
     sysimage = str(tmpdir.join("sys.so"))
     runcode(
