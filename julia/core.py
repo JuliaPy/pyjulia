@@ -127,7 +127,12 @@ class JuliaModule(ModuleType):
             names = set()
         else:
             names = set(super(JuliaModule, self).__dir__())
-        names.update(self.__all__)
+
+        juliapath = remove_prefix(self.__name__, "julia.")
+        julianames = set(self._julia.eval("names({}; all=true)".format(juliapath)))
+        julianames.discard(juliapath.rsplit('.', 1)[-1])
+        names.update(py_name(n) for n in julianames if is_accessible_name(n))
+
         return list(names)
     # Override __dir__ method so that completing member names work
     # well in Python REPLs like IPython.
