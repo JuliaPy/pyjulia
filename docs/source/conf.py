@@ -39,6 +39,7 @@ release = '0.2.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
 ]
@@ -49,8 +50,9 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = {
+    '.rst': 'restructuredtext',
+}
 
 # The master toctree document.
 master_doc = 'index'
@@ -66,6 +68,10 @@ language = None
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
+
+# The reST default role (used for this markup: `text`) to use for all
+# documents.
+default_role = 'any'
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None

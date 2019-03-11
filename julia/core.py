@@ -89,7 +89,9 @@ _enviorn = os.environ.copy()
 
 
 class JuliaError(Exception):
-    pass
+    """
+    Wrapper for Julia exceptions.
+    """
 
 
 def remove_prefix(string, prefix):
@@ -389,7 +391,7 @@ class JuliaInfo(object):
         """ Julia executable from which information was retrieved. """
 
         self.bindir = bindir
-        """ Sys.BINDIR of `.julia`. """
+        """ Sys.BINDIR of `julia`. """
 
         self.libjulia_path = libjulia_path
         """ Path to libjulia. """
@@ -826,6 +828,9 @@ class Julia(object):
 
         debug : bool
             If True, print some debugging information to STDERR
+
+        Notes
+        =====
 
         Other keyword arguments (e.g., `compiled_modules=False`) are treated
         as command line options.  Only a subset of command line options is
