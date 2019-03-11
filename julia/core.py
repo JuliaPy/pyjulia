@@ -346,6 +346,21 @@ class JuliaInfo(object):
     '/usr/bin/python3'
     >>> info.is_compatible_python()                        # doctest: +SKIP
     True
+
+    Attributes
+    ----------
+    julia : str
+        Path to a Julia executable from which information was retrieved.
+    bindir : str
+        ``Sys.BINDIR`` of `julia`.
+    libjulia_path : str
+        Path to libjulia.
+    sysimage : str
+        Path to system image.
+    python : str
+        Python executable with which PyCall.jl is configured.
+    libpython_path : str
+        libpython path used by PyCall.jl.
     """
 
     @classmethod
@@ -388,14 +403,8 @@ class JuliaInfo(object):
                  version_raw, version_major, version_minor, version_patch,
                  python=None, libpython_path=None):
         self.julia = julia
-        """ Julia executable from which information was retrieved. """
-
         self.bindir = bindir
-        """ Sys.BINDIR of `julia`. """
-
         self.libjulia_path = libjulia_path
-        """ Path to libjulia. """
-
         self.sysimage = sysimage
 
         version_major = int(version_major)
@@ -408,10 +417,7 @@ class JuliaInfo(object):
         self.version_info = (version_major, version_minor, version_patch)
 
         self.python = python
-        """ Python executable with which PyCall.jl is configured. """
-
         self.libpython_path = libpython_path
-        """ libpython path used by PyCall.jl. """
 
         logger.debug("pyprogramname = %s", python)
         logger.debug("sys.executable = %s", sys.executable)
