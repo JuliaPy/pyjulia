@@ -530,17 +530,21 @@ class LibJulia(BaseLibJulia):
 
     An easy way to create a `LibJulia` object is `LibJulia.load`:
 
-    >>> api = LibJulia.load()
+    >>> api = LibJulia.load()                              # doctest: +SKIP
 
     Or, equivalently,
 
-    >>> api = LibJulia.load(julia="julia")
-    >>> api = LibJulia.from_juliainfo(JuliaInfo.load())
+    >>> api = LibJulia.load(julia="julia")                 # doctest: +SKIP
+    >>> api = LibJulia.from_juliainfo(JuliaInfo.load())    # doctest: +SKIP
 
     You can pass a path to the Julia executable using `julia` keyword
     argument:
 
     >>> api = LibJulia.load(julia="PATH/TO/CUSTOM/julia")  # doctest: +SKIP
+
+    .. Do not run doctest with non-default libjulia.so.
+       >>> _ = getfixture("julia")
+       >>> api = get_libjulia()
 
     Path to the system image can be configured before initializing Julia:
 
