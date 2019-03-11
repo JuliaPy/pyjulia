@@ -8,7 +8,6 @@ from julia.core import JuliaInfo
 juliainfo = JuliaInfo.load()
 
 
-@pytest.mark.xfail(reason="https://github.com/JuliaPy/PyCall.jl/pull/648")
 @pytest.mark.skipif("juliainfo.version_info < (0, 7)")
 def test_compiled_modules_no():
     runcode(
