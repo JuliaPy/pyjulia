@@ -787,6 +787,12 @@ class Julia(object):
             being called from inside an already running Julia, the flag should
             be passed as False so the interpreter isn't re-initialized.
 
+            Note that it is safe to call this class constructor twice in the
+            same process with `init_julia` set to True, as a global reference
+            is kept to avoid re-initializing it. The purpose of the flag is
+            only to manage situations when Julia was initialized from outside
+            this code.
+
         runtime : str (optional)
             Custom Julia binary, e.g. "/usr/local/bin/julia" or "julia-1.0.0".
 
@@ -801,11 +807,6 @@ class Julia(object):
         as command line options.  Only a subset of command line options is
         supported.  See `julia.core.JuliaOptions.show_supported()` for the
         list of supported options.
-
-        Note that it is safe to call this class constructor twice in the same
-        process with `init_julia` set to True, as a global reference is kept
-        to avoid re-initializing it. The purpose of the flag is only to manage
-        situations when Julia was initialized from outside this code.
         """
 
         if debug:
