@@ -1,7 +1,9 @@
 import os
 import subprocess
 
-from julia.core import JuliaInfo, _enviorn
+import pytest
+
+from julia.core import JuliaInfo, _enviorn, which
 
 
 def check_core_juliainfo(jlinfo):
@@ -47,3 +49,14 @@ def test_juliainfo_without_pycall(tmpdir):
     check_core_juliainfo(jlinfo)
     assert jlinfo.python is None
     assert jlinfo.libpython_path is None
+
+
+@pytest.mark.skipif(
+    not which("false"),
+    reason="false command not found")
+def test_juliainfo_failure():
+    with pytest.raises(subprocess.CalledProcessError) as excinfo:
+        JuliaInfo.load(julia="false")
+    assert excinfo.value.cmd[0] == "false"
+    assert excinfo.value.returncode == 1
+    assert isinstance(excinfo.value.output, str)

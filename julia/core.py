@@ -384,12 +384,15 @@ class JuliaInfo(object):
         stdout, stderr = proc.communicate()
         retcode = proc.wait()
         if retcode != 0:
-            raise subprocess.CalledProcessError(
-                retcode,
-                [julia, "-e", "..."],
-                stdout,
-                stderr,
-            )
+            if sys.version_info[0] < 3:
+                output = "\n".join(["STDOUT:", stdout, "STDERR:", stderr])
+                raise subprocess.CalledProcessError(
+                    retcode, [julia, "-e", "..."], output
+                )
+            else:
+                raise subprocess.CalledProcessError(
+                    retcode, [julia, "-e", "..."], stdout, stderr
+                )
 
         stderr = stderr.strip()
         if stderr:
