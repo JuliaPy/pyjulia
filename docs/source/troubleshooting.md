@@ -30,6 +30,8 @@ use `otool -L` instead of `ldd`.  If it does not print the path to
 libpython like `/usr/lib/libpython3.7m.so.1.0` in above example, you
 need to use one of the workaround below.
 
+#### `python-jl`: an easy workaround
+
 The easiest workaround is to use the `python-jl` command bundled in
 PyJulia.  This can be used instead of normal `python` command for
 basic use-cases such as:
@@ -41,6 +43,8 @@ $ python-jl -m IPython
 ```
 
 See `python-jl --help` for more information.
+
+##### How `python-jl` works
 
 Note that `python-jl` works by launching Python interpreter inside
 Julia.  Importantly, it means that PyJulia has to be installed in the
@@ -68,6 +72,8 @@ julia> py"""
        function()
        """
 ```
+
+#### Ultimate fix: build your own Python
 
 Alternatively, you can use [pyenv](https://github.com/pyenv/pyenv) to
 build Python with
