@@ -73,6 +73,20 @@ julia> py"""
        """
 ```
 
+#### Turn off compilation cache
+
+PyCall can work with statically linked libpython when compilation
+cache is not used.  This can be done by passing keyword option
+`compiled_modules=False` to `Julia` which is equivalent to command
+line option `--compiled-modules=no`:
+
+```pycon
+>>> from julia.api import Julia
+>>> jl = Julia(compiled_modules=False)
+```
+
+See also [low-level API](api.md)
+
 #### Ultimate fix: build your own Python
 
 Alternatively, you can use [pyenv](https://github.com/pyenv/pyenv) to
