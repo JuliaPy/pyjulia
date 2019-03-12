@@ -6,16 +6,12 @@ import subprocess
 from types import ModuleType
 
 from julia import JuliaError
-from julia.core import jl_name, py_name
+from julia.core import jl_name, py_name, _enviorn as orig_env
 import sys
-import os
 
 import pytest
 
 python_version = sys.version_info
-
-
-orig_env = os.environ.copy()
 
 
 def test_call(julia):
