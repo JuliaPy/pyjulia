@@ -1,2 +1,2 @@
 Sphinx
-recommonmark
+recommonmark>=0.5
