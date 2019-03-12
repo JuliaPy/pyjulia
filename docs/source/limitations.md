@@ -21,10 +21,10 @@ example, the Julia method `sum!` can be called in PyJulia using
 There was a major overhaul in the module loading system between Julia
 0.6 and 1.0.  As a result, the "hack" supporting the PyJulia to load
 PyCall stopped working.  For the implementation detail of the hack,
-see: https://github.com/JuliaPy/pyjulia/tree/master/julia/fake-julia
+see: <https://github.com/JuliaPy/pyjulia/tree/master/julia/fake-julia>
 
 For the update on this problem, see:
-https://github.com/JuliaLang/julia/issues/28518
+<https://github.com/JuliaLang/julia/issues/28518>
 
 ### <kbd>Ctrl-C</kbd> does not work / terminates the whole Python process
 
@@ -41,7 +41,7 @@ computations or I/O at the moment.  Sending SIGINT with
 <kbd>Ctrl-C</kbd> will terminate the whole Python process.
 
 For the update on this problem, see:
-https://github.com/JuliaPy/pyjulia/issues/211
+<https://github.com/JuliaPy/pyjulia/issues/211>
 
 ### No threading support
 

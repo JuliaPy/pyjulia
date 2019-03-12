@@ -87,7 +87,7 @@ $ ldd ~/.pyenv/versions/3.6.6/bin/python3.6 | grep libpython
 ```
 
 For more discussion, see:
-https://github.com/JuliaPy/pyjulia/issues/185
+<https://github.com/JuliaPy/pyjulia/issues/185>
 
 ### Segmentation fault in IPython
 
@@ -121,5 +121,5 @@ Possible fixes:
   on macOS and `PATH` on Windows may work (untested).
 
 See:
-https://github.com/JuliaPy/pyjulia/issues/180,
-https://github.com/JuliaPy/pyjulia/issues/223
+<https://github.com/JuliaPy/pyjulia/issues/180>,
+<https://github.com/JuliaPy/pyjulia/issues/223>
