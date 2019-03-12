@@ -51,7 +51,7 @@ Julia.  Importantly, it means that PyJulia has to be installed in the
 Python environment with which PyCall is configured.  That is to say,
 following commands must work for `python-jl` to be usable:
 
-```julia
+```jlcon
 julia> using PyCall
 
 julia> pyimport("julia")
@@ -61,7 +61,7 @@ PyObject <module 'julia' from '/.../julia/__init__.py'>
 In fact, you can simply use PyJulia inside the Julia REPL, if you are
 comfortable with working in it:
 
-```julia
+```jlcon
 julia> using PyCall
 
 julia> py"""
