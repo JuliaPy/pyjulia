@@ -776,6 +776,9 @@ class Julia(object):
                  jl_runtime_path=None, debug=False, **julia_options):
         """Create a Python object that represents a live Julia interpreter.
 
+        Note: Use `LibJulia` to fully control the initialization of
+        the Julia runtime.
+
         Parameters
         ==========
 
