@@ -22,13 +22,27 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_sessionstart(session):
+    if not session.config.getoption("julia"):
+        return
+
+    from .core import Julia
+
+    global JULIA
+    JULIA = Julia(runtime=session.config.getoption("julia_runtime"), debug=True)
+
+# Initialize Julia runtime as soon as possible (or more precisely
+# before importing any additional Python modules) to avoid, e.g.,
+# incompatibility of `libstdc++`.
+#
+# See:
+# https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_sessionstart
+
+
 @pytest.fixture(scope="session")
 def julia(request):
     """ pytest fixture for providing a `Julia` instance. """
     if not request.config.getoption("julia"):
         pytest.skip("--no-julia is given.")
 
-    from julia.core import Julia
-
-    jl = Julia(runtime=request.config.getoption("julia_runtime"), debug=True)
-    return jl
+    return JULIA
