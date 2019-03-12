@@ -641,7 +641,9 @@ class LibJulia(BaseLibJulia):
 
         if options:
             assert not isinstance(options, str)
-            argv_list = [sys.executable]  # TODO: use julia runtime
+            # It seems that `argv_list[0]` is ignored and
+            # `sys.executable` is used anyway:
+            argv_list = [sys.executable]
             argv_list.extend(options)
             if sys.version_info[0] >= 3:
                 argv_list = [s.encode('utf-8') for s in argv_list]
