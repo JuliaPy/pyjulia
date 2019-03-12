@@ -561,6 +561,25 @@ class LibJulia(BaseLibJulia):
     process takes effect.
 
     >>> api.init_julia()
+
+    Any command-line options supported by Julia can be passed to
+    `init_julia`:
+
+    >>> api.init_julia(["--compiled-modules=no", "--optimize=3"])
+
+    Once `init_julia` is called, any subsequent use of `Julia` API
+    (thus also ``from julia import <JuliaModule>`` etc.) uses this
+    initialized Julia runtime.
+
+    `LibJulia` can be used to access Julia's C-API:
+
+    >>> ret = api.jl_eval_string(b"Int64(1 + 2)")
+    >>> int(api.jl_unbox_int64(ret))
+    3
+
+    However, a proper use of the C-API is more involved and presumably
+    very challenging without C macros.  See also:
+    https://docs.julialang.org/en/latest/manual/embedding/
     """
 
     @classmethod
@@ -616,6 +635,11 @@ class LibJulia(BaseLibJulia):
         ----------
         options : sequence of `str` or `JuliaOptions`
             This is passed as command line options to the Julia runtime.
+
+            .. warning::
+
+                Any invalid command line option terminates the entire
+                Python process.
         """
         if get_libjulia():
             return
