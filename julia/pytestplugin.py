@@ -26,10 +26,18 @@ def pytest_sessionstart(session):
     if not session.config.getoption("julia"):
         return
 
-    from .core import Julia
+    from .core import enable_debug, Julia, LibJulia, JuliaInfo
+
+    enable_debug()
+    info = JuliaInfo.load(julia=session.config.getoption("julia_runtime"))
+    api = LibJulia.from_juliainfo(info)
+    if info.is_compatible_python() or info.version_info < (0, 7):
+        api.init_julia()
+    else:
+        api.init_julia(["--compiled-modules=no"])
 
     global JULIA
-    JULIA = Julia(runtime=session.config.getoption("julia_runtime"), debug=True)
+    JULIA = Julia()
 
 # Initialize Julia runtime as soon as possible (or more precisely
 # before importing any additional Python modules) to avoid, e.g.,
