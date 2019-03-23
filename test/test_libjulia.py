@@ -5,13 +5,10 @@ import pytest
 from .test_compatible_exe import runcode
 from julia.core import JuliaInfo
 
-xfail_if_windows = pytest.mark.xfail if sys.platform == "win32" else lambda x: x
-
 juliainfo = JuliaInfo.load()
 
 
 @pytest.mark.skipif("juliainfo.version_info < (0, 7)")
-@xfail_if_windows  # https://github.com/JuliaPy/PyCall.jl/pull/661
 def test_compiled_modules_no():
     runcode(
         sys.executable,
