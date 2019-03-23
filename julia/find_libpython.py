@@ -88,6 +88,8 @@ def _linked_libpython_unix():
     if retcode == 0:  # means error
         return None
     path = os.path.realpath(dlinfo.dli_fname.decode())
+    if not os.path.exists(path):
+        return None
     if path == os.path.realpath(sys.executable):
         return None
     return path
