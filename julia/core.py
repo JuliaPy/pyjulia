@@ -39,6 +39,16 @@ except ImportError:
     # shutil.which when used with single argument.
     from distutils.spawn import find_executable as which
 
+try:
+    from os.path import samefile
+except ImportError:
+    # For Python < 3.2 in Windows:
+    def samefile(f1, f2):
+        a = os.path.realpath(os.path.normcase(f1))
+        b = os.path.realpath(os.path.normcase(f2))
+        return a == b
+
+
 # this is python 3.3 specific
 from types import ModuleType
 
@@ -447,7 +457,7 @@ def is_compatible_exe(jl_libpython):
     logger.debug("py_libpython = %s", py_libpython)
     logger.debug("jl_libpython = %s", jl_libpython)
     dynamically_linked = py_libpython is not None
-    return dynamically_linked and os.path.samefile(py_libpython, jl_libpython)
+    return dynamically_linked and samefile(py_libpython, jl_libpython)
     # `py_libpython is not None` here for checking if this Python
     # executable is dynamically linked or not (`py_libpython is None`
     # if it's statically linked).  `jl_libpython` may be `None` if
