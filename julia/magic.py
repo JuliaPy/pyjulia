@@ -18,9 +18,12 @@ Usage
 #-----------------------------------------------------------------------------
 
 from __future__ import print_function, absolute_import
+
 import sys
+import warnings
 
 from IPython.core.magic import Magics, magics_class, line_cell_magic
+from traitlets import Bool
 from julia import Julia, JuliaError
 
 #-----------------------------------------------------------------------------
@@ -29,10 +32,29 @@ from julia import Julia, JuliaError
 
 import IPython.utils.py3compat as compat
 
+
 @magics_class
 class JuliaMagics(Magics):
     """A set of magics useful for interactive work with Julia.
     """
+
+    highlight = Bool(
+        True,
+        config=True,
+        help="""
+        Enable highlighting in `%%julia` magic by monkey-patching
+        IPython internal (`TerminalInteractiveShell`).
+        """,
+    )
+    completion = Bool(
+        True,
+        config=True,
+        help="""
+        Enable code completion in `%julia` and `%%julia` magics by
+        monkey-patching IPython internal (`IPCompleter`).
+        """,
+    )
+
     def __init__(self, shell):
         """
         Parameters
@@ -77,6 +99,28 @@ __doc__ = __doc__.format(
 # IPython registration entry point.
 #-----------------------------------------------------------------------------
 
+
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
-    ip.register_magics(JuliaMagics)
+
+    # This is equivalent to `ip.register_magics(JuliaMagics)` (but it
+    # let us access the instance of `JuliaMagics`):
+    magics = JuliaMagics(shell=ip)
+    ip.register_magics(magics)
+
+    template = "Incompatible upstream libraries. Got ImportError: {}"
+    if magics.highlight:
+        try:
+            from .ipy.monkeypatch_interactiveshell import patch_interactiveshell
+        except ImportError as err:
+            warnings.warn(template.format(err))
+        else:
+            patch_interactiveshell(ip)
+
+    if magics.completion:
+        try:
+            from .ipy.monkeypatch_completer import patch_ipcompleter
+        except ImportError as err:
+            warnings.warn(template.format(err))
+        else:
+            patch_ipcompleter()

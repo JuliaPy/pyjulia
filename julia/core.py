@@ -200,9 +200,9 @@ class JuliaImporter(object):
     # find_module was deprecated in v3.4
     def find_module(self, fullname, path=None):
         if fullname.startswith("julia."):
-            pypath = os.path.join(os.path.dirname(__file__),
-                                  "{}.py".format(fullname[len("julia."):]))
-            if os.path.isfile(pypath):
+            filename = fullname.split(".", 2)[1]
+            filepath = os.path.join(os.path.dirname(__file__), filename)
+            if os.path.isfile(filepath + ".py") or os.path.isdir(filepath):
                 return
             return JuliaModuleLoader()
 

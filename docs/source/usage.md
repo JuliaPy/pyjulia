@@ -86,6 +86,27 @@ In [2]: %%julia
 |__/                   |
 ```
 
+#### IPython configuration
+
+PyJulia-IPython integration can be configured via IPython's
+configuration system.  For the non-default behaviors, add the
+following lines in, e.g.,
+``~/.ipython/profile_default/ipython_config.py`` (see
+[Introduction to IPython configuration](https://ipython.readthedocs.io/en/stable/config/intro.html)).
+
+To disable code completion in ``%julia`` and ``%%julia`` magics, use
+
+```python
+c.JuliaMagics.completion = False  # default: True
+```
+
+To disable code highlighting in ``%%julia`` magic for terminal
+(non-Jupyter) IPython, use
+
+```python
+c.JuliaMagics.highlight = False  # default: True
+```
+
 ### Virtual environments
 
 PyJulia can be used in Python virtual environments created by
