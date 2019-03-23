@@ -42,7 +42,7 @@ except ImportError:
 # this is python 3.3 specific
 from types import ModuleType
 
-from .find_libpython import find_libpython, linked_libpython, normalize_path
+from .find_libpython import find_libpython, linked_libpython
 from .options import JuliaOptions, parse_jl_options
 
 #-----------------------------------------------------------------------------
@@ -434,7 +434,7 @@ class JuliaInfo(object):
         return is_compatible_exe(self.libpython_path)
 
 
-def is_compatible_exe(libpython):
+def is_compatible_exe(jl_libpython):
     """
     Determine if `libpython` is compatible with this Python.
 
@@ -443,13 +443,11 @@ def is_compatible_exe(libpython):
     this function returns `True`, PyJulia use the same precompilation cache
     of PyCall.jl used by Julia itself.
     """
-    logger.debug("libpython = %s", libpython)
     py_libpython = linked_libpython()
-    jl_libpython = normalize_path(libpython)
     logger.debug("py_libpython = %s", py_libpython)
     logger.debug("jl_libpython = %s", jl_libpython)
     dynamically_linked = py_libpython is not None
-    return dynamically_linked and py_libpython == jl_libpython
+    return dynamically_linked and os.path.samefile(py_libpython, jl_libpython)
     # `py_libpython is not None` here for checking if this Python
     # executable is dynamically linked or not (`py_libpython is None`
     # if it's statically linked).  `jl_libpython` may be `None` if
@@ -774,7 +772,7 @@ def raise_separate_cache_error(
         runtime=runtime,
         jlinfo=jlinfo,
         py_libpython=find_libpython(),
-        jl_libpython=normalize_path(jlinfo.libpython_path),
+        jl_libpython=jlinfo.libpython_path,
         sys=sys)
     raise RuntimeError(message)
 
