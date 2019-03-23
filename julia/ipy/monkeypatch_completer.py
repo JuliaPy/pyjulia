@@ -24,24 +24,9 @@ class JuliaCompleter(object):
 
     @property
     def jlcomplete(self):
-        try:
-            return self.__jlcomplete
-        except AttributeError:
-            pass
-        self.__jlcomplete = self.julia.eval(
-            """
-            import REPL
-            (str, pos) -> begin
-                ret, ran, should_complete = REPL.completions(str, pos)
-                return (
-                    map(REPL.completion_text, ret),
-                    (first(ran), last(ran)),
-                    should_complete,
-                )
-            end
-            """
-        )
-        return self.__jlcomplete
+        from julia.Main._PyJuliaHelper import completions
+
+        return completions
 
     def julia_completions(self, full_text, offset):
         self.last_text = full_text

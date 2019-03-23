@@ -1,5 +1,18 @@
 module _PyJuliaHelper
 
+if VERSION >= v"0.7-"
+    import REPL
+
+    function completions(str, pos)
+        ret, ran, should_complete = REPL.completions(str, pos)
+        return (
+            map(REPL.completion_text, ret),
+            (first(ran), last(ran)),
+            should_complete,
+        )
+    end
+end
+
 module IOPiper
 
 const orig_stdin  = Ref{IO}()
