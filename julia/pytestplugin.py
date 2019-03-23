@@ -6,6 +6,9 @@ import pytest
 def pytest_addoption(parser):
     import os
 
+    # Note: the help strings have to be synchronized manually with
+    # ../docs/source/pytest.rst
+
     parser.addoption(
         "--no-julia",
         action="store_false",

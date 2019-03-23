@@ -24,6 +24,7 @@ PyJulia is tested against Python versions 2.7, 3.5, 3.6, and 3.7.
    usage
    troubleshooting
    api
+   pytest
    how_it_works
    limitations
    testing

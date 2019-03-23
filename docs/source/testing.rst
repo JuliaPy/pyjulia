@@ -31,6 +31,7 @@ The full syntax for invoking |tox|_ is
 .. envvar:: PYJULIA_TEST_RUNTIME
 
    ``julia`` executable to be used for testing.
+   See also `pytest --julia-runtime`.
 
 ``[-- pytest options]``
    Positional arguments after ``--`` are passed to |pytest|_.
