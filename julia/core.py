@@ -434,12 +434,6 @@ class JuliaInfo(object):
         return is_compatible_exe(self.libpython_path)
 
 
-def is_same_path(a, b):
-    a = os.path.realpath(os.path.normcase(a))
-    b = os.path.realpath(os.path.normcase(b))
-    return a == b
-
-
 def is_compatible_exe(libpython):
     """
     Determine if `libpython` is compatible with this Python.
