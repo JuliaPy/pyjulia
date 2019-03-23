@@ -144,6 +144,11 @@ class JuliaModule(ModuleType):
     # Override __dir__ method so that completing member names work
     # well in Python REPLs like IPython.
 
+    __path__ = ()
+    # Declare that `JuliaModule` is a Python module since any Julia
+    # module can have sub-modules.
+    # See: https://docs.python.org/3/reference/import.html#package-path-rules
+
     def __getattr__(self, name):
         try:
             return self.__try_getattr(name)
@@ -224,7 +229,7 @@ class JuliaModuleLoader(object):
             return self.julia.eval(juliapath)
 
         try:
-            self.julia.eval("import {}".format(juliapath))
+            self.julia.eval("import {}".format(juliapath.split(".", 1)[0]))
         except JuliaError:
             pass
         else:
@@ -968,6 +973,13 @@ class Julia(object):
         if self.eval('VERSION >= v"0.7-"'):
             self.eval("@eval Main import Base.MainInclude: eval, include")
             # https://github.com/JuliaLang/julia/issues/28825
+
+        if not isdefined(self, "Main", "_PyJuliaHelper"):
+            self.eval("include")(
+                os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)), "pyjulia_helper.jl"
+                )
+            )
 
     def _call(self, src):
         """

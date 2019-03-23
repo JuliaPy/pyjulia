@@ -23,14 +23,15 @@ import sys
 import warnings
 
 from IPython.core.magic import Magics, magics_class, line_cell_magic
-from traitlets import Bool
-from julia import Julia, JuliaError
+from IPython.utils import py3compat as compat
+from traitlets import Bool, Enum
+
+from .core import Julia, JuliaError
+from .tools import redirect_output_streams
 
 #-----------------------------------------------------------------------------
 # Main classes
 #-----------------------------------------------------------------------------
-
-import IPython.utils.py3compat as compat
 
 
 @magics_class
@@ -52,6 +53,15 @@ class JuliaMagics(Magics):
         help="""
         Enable code completion in `%julia` and `%%julia` magics by
         monkey-patching IPython internal (`IPCompleter`).
+        """,
+    )
+    redirect_output_streams = Enum(
+        ["auto", True, False],
+        "auto",
+        config=True,
+        help="""
+        Connect Julia's stdout and stderr to Python's standard stream.
+        "auto" (default) means to do so only in Jupyter.
         """,
     )
 
@@ -95,6 +105,14 @@ __doc__ = __doc__.format(
 )
 
 
+def should_redirect_output_streams():
+    try:
+        OutStream = sys.modules["ipykernel"].iostream.OutStream
+    except (KeyError, AttributeError):
+        return False
+    return isinstance(sys.stdout, OutStream)
+
+
 #-----------------------------------------------------------------------------
 # IPython registration entry point.
 #-----------------------------------------------------------------------------
@@ -124,3 +142,8 @@ def load_ipython_extension(ip):
             warnings.warn(template.format(err))
         else:
             patch_ipcompleter()
+
+    if magics.redirect_output_streams is True or (
+        magics.redirect_output_streams == "auto" and should_redirect_output_streams()
+    ):
+        redirect_output_streams()

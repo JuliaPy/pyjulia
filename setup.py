@@ -65,7 +65,7 @@ setup(name='julia',
       ],
       url='http://julialang.org',
       packages=['julia'],
-      package_data={'julia': ['fake-julia/*']},
+      package_data={'julia': ['fake-julia/*', "*.jl"]},
       entry_points={
           "console_scripts": [
               "python-jl = julia.python_jl:main",
