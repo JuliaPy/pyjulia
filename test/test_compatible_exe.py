@@ -56,7 +56,9 @@ def runcode(python, code, check=False):
         env=dict(
             _enviorn,
             # Make PyJulia importable:
-            PYTHONPATH=os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+            PYTHONPATH=os.path.join(
+                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "src"
+            ),
         ),
     )
     print_completed_proc(proc)

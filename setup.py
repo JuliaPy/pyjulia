@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from io import open  # for Python 2 (identical to builtin in Python 3)
-from setuptools import setup
+from setuptools import setup, find_packages
 import os
 
 
@@ -29,7 +29,7 @@ with open(os.path.join(repo_root, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 # https://packaging.python.org/guides/making-a-pypi-friendly-readme/
 
-ns = pyload(os.path.join(repo_root, "julia", "release.py"))
+ns = pyload(os.path.join(repo_root, "src", "julia", "release.py"))
 version = ns["__version__"]
 
 setup(name='julia',
@@ -64,7 +64,8 @@ setup(name='julia',
         'Programming Language :: Python :: 3.7',
       ],
       url='http://julialang.org',
-      packages=['julia'],
+      packages=find_packages("src"),
+      package_dir={"": "src"},
       package_data={'julia': ['fake-julia/*', "*.jl"]},
       entry_points={
           "console_scripts": [

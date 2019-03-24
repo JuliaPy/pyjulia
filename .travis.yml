@@ -87,4 +87,5 @@ script:
   - cat .tox/py/log/pytest.log
 
 after_success:
+  - .tox/py/bin/coverage combine .coverage
   - coveralls
