@@ -20,9 +20,15 @@ const orig_stdout = Ref{IO}()
 const orig_stderr = Ref{IO}()
 
 function __init__()
+@static if VERSION < v"0.7-"
+    orig_stdin[]  = STDIN
+    orig_stdout[] = STDOUT
+    orig_stderr[] = STDERR
+else
     orig_stdin[]  = stdin
     orig_stdout[] = stdout
     orig_stderr[] = stderr
+end
 end
 
 """
