@@ -116,6 +116,12 @@ def test_import_julia_submodule(julia):
     from julia.Base import Enums
 
     assert isinstance(Enums, ModuleType)
+    assert Enums.__name__ == "julia.Base.Enums"
+    assert julia.fullname(Enums) == "Base.Enums"
+
+
+def test_getattr_submodule(Main):
+    assert Main._PyJuliaHelper.IOPiper.__name__ == "julia.Main._PyJuliaHelper.IOPiper"
 
 
 def test_star_import_julia_module(julia):
