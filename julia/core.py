@@ -55,6 +55,11 @@ from types import ModuleType
 from .find_libpython import find_libpython, linked_libpython
 from .options import JuliaOptions, parse_jl_options
 
+try:
+    string_types = (basestring,)
+except NameError:
+    string_types = (str,)
+
 #-----------------------------------------------------------------------------
 # Classes and funtions
 #-----------------------------------------------------------------------------
@@ -164,14 +169,12 @@ class JuliaModule(ModuleType):
         jl_module = remove_prefix(self.__name__, "julia.")
         jl_fullname = ".".join((jl_module, name))
 
-        # If `name` is a top-level module, don't import it as a
-        # submodule.  Note that it handles the case that `name` is
-        # `Base` and `Core`.
-        is_toplevel = isdefined(self._julia, 'Main', name)
-        if not is_toplevel and isamodule(self._julia, jl_fullname):
-            # FIXME: submodules from other modules still hit this code
-            # path and they are imported as submodules.
-            return self.__loader__.load_module(".".join((self.__name__, name)))
+        if isamodule(self._julia, jl_fullname):
+            realname = self._julia.fullname(self._julia.eval(jl_fullname))
+            if self._julia.isdefined(realname):
+                return self.__loader__.load_module("julia." + realname)
+            # Otherwise, it may be, e.g., "Main.anonymous", created by
+            # Module().
 
         if isdefined(self._julia, jl_module, name):
             return self._julia.eval(jl_fullname)
@@ -1081,6 +1084,30 @@ class Julia(object):
     def using(self, module):
         """Load module in Julia by calling the `using module` command"""
         self.eval("using %s" % module)
+
+    def fullname(self, module):
+        if isinstance(module, JuliaModule):
+            assert module.__name__.startswith("julia.")
+            return module.__name__[len("julia.") :]
+
+        from .Main._PyJuliaHelper import fullnamestr
+
+        return fullnamestr(module)
+
+    def isdefined(self, parent, member=None):
+        from .Main._PyJuliaHelper import isdefinedstr
+
+        if member is None:
+            if not isinstance(parent, string_types):
+                raise ValueError("`julia.isdefined(name)` requires string `name`")
+            if "." not in parent:
+                raise ValueError(
+                    "`julia.isdefined(name)` requires at least one dot in `name`."
+                )
+            parent, member = parent.rsplit(".", 1)
+        if isinstance(parent, string_types):
+            parent = self.eval(parent)
+        return isdefinedstr(parent, member)
 
 
 class LegacyJulia(object):

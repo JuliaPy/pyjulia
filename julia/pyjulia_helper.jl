@@ -1,5 +1,36 @@
 module _PyJuliaHelper
 
+if VERSION < v"0.7-"
+nameof(m::Module) = ccall(:jl_module_name, Ref{Symbol}, (Any,), m)
+
+parentmodule(m::Module) = ccall(:jl_module_parent, Ref{Module}, (Any,), m)
+
+function fullname(m::Module)
+    mn = nameof(m)
+    if m === Main || m === Base || m === Core
+        return (mn,)
+    end
+    mp = parentmodule(m)
+    if mp === m
+        return (mn,)
+    end
+    return (fullname(mp)..., mn)
+end
+end  # if
+
+"""
+    fullnamestr(m)
+
+# Examples
+```jldoctest
+julia> fullnamestr(Base.Enums)
+"Base.Enums"
+```
+"""
+fullnamestr(m) = join(fullname(m), ".")
+
+isdefinedstr(parent, member) = isdefined(parent, Symbol(member))
+
 if VERSION >= v"0.7-"
     import REPL
 
