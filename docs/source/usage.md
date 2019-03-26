@@ -107,6 +107,13 @@ To disable code highlighting in ``%%julia`` magic for terminal
 c.JuliaMagics.highlight = False  # default: True
 ```
 
+To enable [Revise.jl](https://github.com/timholy/Revise.jl)
+automatically, use
+
+```python
+c.JuliaMagics.revise = True  # default: False
+```
+
 ### Virtual environments
 
 PyJulia can be used in Python virtual environments created by

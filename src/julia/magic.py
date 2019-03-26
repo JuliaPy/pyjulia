@@ -64,6 +64,14 @@ class JuliaMagics(Magics):
         "auto" (default) means to do so only in Jupyter.
         """,
     )
+    revise = Bool(
+        False,
+        config=True,
+        help="""
+        Enable Revise.jl integration.  Revise.jl must be installed
+        before using this option (run `using Pkg; Pkg.add("Revise")`).
+        """,
+    )
 
     def __init__(self, shell):
         """
@@ -147,3 +155,8 @@ def load_ipython_extension(ip):
         magics.redirect_output_streams == "auto" and should_redirect_output_streams()
     ):
         redirect_output_streams()
+
+    if magics.revise:
+        from .ipy.revise import register_revise_hook
+
+        register_revise_hook(ip)
