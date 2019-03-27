@@ -45,7 +45,7 @@ except ImportError:
     run = _run_fallback
 
 
-def runcode(python, code, check=False):
+def runcode(python, code, check=False, **kwargs):
     """Run `code` in `python`."""
     proc = run(
         [python],
@@ -60,6 +60,7 @@ def runcode(python, code, check=False):
                 os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "src"
             ),
         ),
+        **kwargs
     )
     print_completed_proc(proc)
     if check:

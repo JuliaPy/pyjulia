@@ -23,7 +23,8 @@ def test_compiled_modules_no():
         print("use_compiled_modules =", use_compiled_modules)
         assert use_compiled_modules == 0
         """,
-        check=True)
+        check=True,
+    )
 
 
 @pytest.mark.skipif("not juliainfo.is_compatible_python()")
@@ -50,5 +51,31 @@ def test_custom_sysimage(tmpdir):
         print("actual =", actual)
         print("sysimage =", sysimage)
         assert actual == sysimage
-        """.format(sysimage),
-        check=True)
+        """.format(
+            sysimage
+        ),
+        check=True,
+    )
+
+
+def test_non_existing_sysimage(tmpdir):
+    proc = runcode(
+        sys.executable,
+        """
+        import sys
+        from julia.core import enable_debug, LibJulia
+
+        enable_debug()
+
+        api = LibJulia.load()
+        try:
+            api.init_julia(["--sysimage", "sys.so"])
+        except RuntimeError as err:
+            print(err)
+            assert "System image" in str(err)
+            assert "does not exist" in str(err)
+            sys.exit(55)
+        """,
+        cwd=str(tmpdir),
+    )
+    assert proc.returncode == 55

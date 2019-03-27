@@ -601,6 +601,25 @@ class LibJulia(BaseLibJulia):
     However, a proper use of the C-API is more involved and presumably
     very challenging without C macros.  See also:
     https://docs.julialang.org/en/latest/manual/embedding/
+
+    Attributes
+    ----------
+    libjulia_path : str
+        Path to libjulia.
+    bindir : str
+        ``Sys.BINDIR`` of `julia`.  This is passed to
+        `jl_init_with_image` unless overridden by argument ``option``
+        to `init_julia`.
+    sysimage : str
+        Path to system image.  This is passed to `jl_init_with_image`
+        unless overridden by argument ``option`` to `init_julia`.
+
+        .. warning::
+
+            Unlike `jl_init_with_image` C API, relative path is not
+            interpreted as relative to `bindir`.  Instead, relative
+            path is resolved using `os.path.realpath` before passed to
+            Julia.
     """
 
     @classmethod
@@ -681,8 +700,20 @@ class LibJulia(BaseLibJulia):
             if ns.sysimage:
                 self.sysimage = ns.sysimage
 
+        # Julia tries to interpret `sysimage` as a relative path and
+        # aborts if not found.  Turning it to absolute path here.
+        # Mutating `self.sysimage` so that the actual path used can be
+        # retrieved later.
+        if not os.path.isabs(self.sysimage):
+            self.sysimage = os.path.realpath(self.sysimage)
+
         jl_init_path = self.bindir
         sysimage = self.sysimage
+
+        if not os.path.isdir(jl_init_path):
+            raise RuntimeError("jl_init_path (bindir) {} is not a directory".format(jl_init_path))
+        if not os.path.exists(sysimage):
+            raise RuntimeError("System image {} does not exist".format(sysimage))
 
         if options:
             assert not isinstance(options, str)
