@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function
 
+import glob
 import os
+import re
 import subprocess
 import sys
-import re
 
 from .core import JuliaNotFound, _enviorn, which
 from .find_libpython import linked_libpython
@@ -134,3 +135,33 @@ def redirect_output_streams():
 
     # TODO: Invoking `redirect_output_streams()` in terminal IPython
     # terminates the whole Python process.  Find out why.
+
+
+def julia_py_executable(executable=sys.executable):
+    """
+    Path to ``julia-py`` executable installed for this Python executable.
+    """
+    stempath = os.path.join(os.path.dirname(executable), "julia-py")
+    candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
+    if not candidates:
+        raise RuntimeError(
+            "``julia-py`` executable is not found for Python installed at {}".format(
+                executable
+            )
+        )
+
+    for basename in ["julia-py", "julia-py.exe", "julia-py.cmd"]:
+        try:
+            return candidates[basename]
+        except KeyError:
+            continue
+
+    raise RuntimeError(
+        """\
+``julia-py`` with following unrecognized extension(s) are found.
+Please report it at https://github.com/JuliaPy/pyjulia/issues
+with the full traceback.
+Files found:
+    """
+        + "    \n".join(sorted(candidates))
+    )
