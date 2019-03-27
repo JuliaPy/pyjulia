@@ -614,12 +614,9 @@ class LibJulia(BaseLibJulia):
         Path to system image.  This is passed to `jl_init_with_image`
         unless overridden by argument ``option`` to `init_julia`.
 
-        .. warning::
-
-            Unlike `jl_init_with_image` C API, relative path is not
-            interpreted as relative to `bindir`.  Instead, relative
-            path is resolved using `os.path.realpath` before passed to
-            Julia.
+        If `sysimage` is a relative path, it is interpreted relative
+        to the current directory (rather than relative to the Julia
+        `bindir` as in the `jl_init_with_image` C API).
     """
 
     @classmethod
