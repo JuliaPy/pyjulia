@@ -82,7 +82,7 @@ class JuliaMagics(Magics):
         """
 
         super(JuliaMagics, self).__init__(shell)
-        print("Initializing Julia interpreter. This may take some time...",
+        print("Initializing Julia runtime. This may take some time...",
               end='')
         # Flush, otherwise the Julia startup will keep stdout buffered
         sys.stdout.flush()

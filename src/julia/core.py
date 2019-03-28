@@ -1,5 +1,5 @@
 """
-Bridge Python and Julia by initializing the Julia interpreter inside Python.
+Bridge Python and Julia by initializing the Julia runtime inside Python.
 """
 
 #-----------------------------------------------------------------------------
@@ -759,7 +759,7 @@ class InProcessLibJulia(BaseLibJulia):
 _separate_cache_error_common_header = """\
 It seems your Julia and PyJulia setup are not supported.
 
-Julia interpreter:
+Julia executable:
     {runtime}
 Python interpreter and libpython used by PyCall.jl:
     {jlinfo.python}
@@ -796,7 +796,7 @@ _separate_cache_error_incompatible_libpython = """
 In Julia >= 0.7, above two paths to `libpython` have to match exactly
 in order for PyJulia to work.  To configure PyCall.jl to use Python
 interpreter "{sys.executable}",
-run the following commands in the Julia interpreter:
+run the following commands in the Julia REPL:
 
     ENV["PYTHON"] = "{sys.executable}"
     using Pkg
@@ -840,14 +840,14 @@ UNBOXABLE_TYPES = (
 
 class Julia(object):
     """
-    Implements a bridge to the Julia interpreter or library.
+    Implements a bridge to the Julia runtime.
     This uses the Julia PyCall module to perform type conversions and allow
-    full access to the entire Julia interpreter.
+    full access to the entire Julia runtime.
     """
 
     def __init__(self, init_julia=True, jl_init_path=None, runtime=None,
                  jl_runtime_path=None, debug=False, **julia_options):
-        """Create a Python object that represents a live Julia interpreter.
+        """Create a Python object that represents a live Julia runtime.
 
         Note: Use `LibJulia` to fully control the initialization of
         the Julia runtime.
@@ -856,7 +856,7 @@ class Julia(object):
         ==========
 
         init_julia : bool
-            If True, try to initialize the Julia interpreter. If this code is
+            If True, try to initialize the Julia runtime. If this code is
             being called from inside an already running Julia, the flag should
             be passed as False so the interpreter isn't re-initialized.
 

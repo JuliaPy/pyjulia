@@ -29,7 +29,7 @@ import sys
 from .pseudo_python_cli import make_parser, parse_args_with, ARGUMENT_HELP
 
 PYJL_ARGUMENT_HELP = ARGUMENT_HELP + """
-  --julia JULIA  Julia interpreter to be used. (default: julia)
+  --julia JULIA  Julia runtime to be used. (default: julia)
 """
 
 script_jl = """
@@ -98,7 +98,7 @@ def parse_pyjl_args(args):
     """
     # Mix the options we need in this Python process with the Python
     # arguments to be parsed in the "subprocess".  This way, we get a
-    # parse error right now without initiating Julia interpreter and
+    # parse error right now without initializing Julia runtime and
     # importing PyCall.jl etc. to get an extra speedup for the
     # abnormal case (including -h/--help and -V/--version).
     parser = make_parser(description=__doc__ + PYJL_ARGUMENT_HELP)

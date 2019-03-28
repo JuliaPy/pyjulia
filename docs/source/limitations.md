@@ -53,7 +53,7 @@ run:
 
 ```julia
 In [1]: %load_ext julia.magic
-Initializing Julia interpreter. This may take some time...
+Initializing Julia runtime. This may take some time...
 
 In [2]: %%julia
    ...: a = zeros(10)
