@@ -866,10 +866,10 @@ class Julia(object):
             only to manage situations when Julia was initialized from outside
             this code.
 
-        runtime : str (optional)
+        runtime : str
             Custom Julia binary, e.g. "/usr/local/bin/julia" or "julia-1.0.0".
 
-        jl_init_path : str (optional)
+        jl_init_path : str
             Path to give to jl_init relative to which we find sys.so,
             (defaults to jl_runtime_path or NULL)
 
