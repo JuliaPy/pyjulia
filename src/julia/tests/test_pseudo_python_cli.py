@@ -10,6 +10,7 @@ def make_dict(**kwargs):
     return dict(vars(ns), **kwargs)
 
 
+# fmt: off
 @pytest.mark.parametrize("args, desired", [
     ("-m json.tool -h", make_dict(module="json.tool", args=["-h"])),
     ("-mjson.tool -h", make_dict(module="json.tool", args=["-h"])),
@@ -30,12 +31,14 @@ def make_dict(**kwargs):
     ("script -c 1", make_dict(script="script", args=["-c", "1"])),
     ("script -h 1", make_dict(script="script", args=["-h", "1"])),
 ])
+# fmt: on
 def test_valid_args(args, desired):
     ns = parse_args(shlex.split(args))
     actual = vars(ns)
     assert actual == desired
 
 
+# fmt: off
 @pytest.mark.parametrize("args", [
     "-m",
     "-c",
@@ -43,6 +46,7 @@ def test_valid_args(args, desired):
     "-h -m",
     "-V -m",
 ])
+# fmt: on
 def test_invalid_args(args, capsys):
     with pytest.raises(SystemExit) as exc_info:
         parse_args(shlex.split(args))
@@ -53,6 +57,7 @@ def test_invalid_args(args, capsys):
     assert not captured.out
 
 
+# fmt: off
 @pytest.mark.parametrize("args", [
     "-h",
     "-i --help",
@@ -64,6 +69,7 @@ def test_invalid_args(args, capsys):
     "-h -m json.tool",
     "-h -mjson.tool",
 ])
+# fmt: on
 def test_help_option(args, capsys):
     with pytest.raises(SystemExit) as exc_info:
         parse_args(shlex.split(args))
@@ -74,6 +80,7 @@ def test_help_option(args, capsys):
     assert not captured.err
 
 
+# fmt: off
 @pytest.mark.parametrize("args", [
     "-V",
     "--version",
@@ -83,6 +90,7 @@ def test_help_option(args, capsys):
     "-V script",
     "-V script -h",
 ])
+# fmt: on
 def test_version_option(args, capsys):
     with pytest.raises(SystemExit) as exc_info:
         parse_args(shlex.split(args))

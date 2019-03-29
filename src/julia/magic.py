@@ -13,9 +13,9 @@ Usage
 {JULIA_DOC}
 """
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import print_function, absolute_import
 
@@ -32,12 +32,14 @@ from .tools import redirect_output_streams
 try:
     from IPython.core.magic import no_var_expand
 except ImportError:
+
     def no_var_expand(f):
         return f
 
-#-----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
 # Main classes
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 @magics_class
@@ -88,8 +90,7 @@ class JuliaMagics(Magics):
         """
 
         super(JuliaMagics, self).__init__(shell)
-        print("Initializing Julia runtime. This may take some time...",
-              end='')
+        print("Initializing Julia interpreter. This may take some time...", end="")
         # Flush, otherwise the Julia startup will keep stdout buffered
         sys.stdout.flush()
         self._julia = Julia(init_julia=True)
@@ -104,6 +105,8 @@ class JuliaMagics(Magics):
         """
         src = compat.unicode_type(line if cell is None else cell)
 
+        # fmt: off
+
         # We assume the caller's frame is the first parent frame not in the
         # IPython module. This seems to work with IPython back to ~v5, and
         # is at least somewhat immune to future IPython internals changes,
@@ -116,10 +119,13 @@ class JuliaMagics(Magics):
         _PyJuliaHelper.@prepare_for_pyjulia_call begin %s end
         """%src)(self.shell.user_ns, caller_frame.f_locals)
 
+        # fmt: on
+
+
 # Add to the global docstring the class information.
 __doc__ = __doc__.format(
-    JULIAMAGICS_DOC=' ' * 8 + JuliaMagics.__doc__,
-    JULIA_DOC=' ' * 8 + JuliaMagics.julia.__doc__,
+    JULIAMAGICS_DOC=" " * 8 + JuliaMagics.__doc__,
+    JULIA_DOC=" " * 8 + JuliaMagics.julia.__doc__,
 )
 
 
@@ -131,9 +137,9 @@ def should_redirect_output_streams():
     return isinstance(sys.stdout, OutStream)
 
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # IPython registration entry point.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 
 def load_ipython_extension(ip):

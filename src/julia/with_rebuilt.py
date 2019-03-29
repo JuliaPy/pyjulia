@@ -16,6 +16,8 @@ from contextlib import contextmanager
 from .core import JuliaInfo
 from .tools import install
 
+# fmt: off
+
 
 @contextmanager
 def maybe_rebuild(rebuild, julia):

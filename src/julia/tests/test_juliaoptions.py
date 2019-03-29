@@ -3,6 +3,7 @@ import pytest
 from julia.core import JuliaOptions
 
 
+# fmt: off
 @pytest.mark.parametrize("kwargs, args", [
     ({}, []),
     (dict(compiled_modules=None), []),
@@ -12,6 +13,7 @@ from julia.core import JuliaOptions
     (dict(sysimage="PATH"), ["--sysimage", "PATH"]),
     (dict(bindir="PATH"), ["--home", "PATH"]),
 ])
+# fmt: on
 def test_as_args(kwargs, args):
     assert JuliaOptions(**kwargs).as_args() == args
 
@@ -27,10 +29,12 @@ def test_valueerror(kwargs):
     assert "accept" in str(excinfo.value)
 
 
+# fmt: off
 @pytest.mark.parametrize("kwargs", [
     dict(invalid_option=None),
     dict(invalid_option_1=None, invalid_option_2=None),
 ])
+# fmt: on
 def test_unsupported(kwargs):
     with pytest.raises(TypeError) as excinfo:
         JuliaOptions(**kwargs)

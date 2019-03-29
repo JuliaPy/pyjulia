@@ -17,10 +17,7 @@ except ImportError:
 
 def dummy_juliainfo():
     somepath = os.devnull  # some random path
-    return SimpleNamespace(
-        python=somepath,
-        libpython_path=somepath,
-    )
+    return SimpleNamespace(python=somepath, libpython_path=somepath)
 
 
 def test_raise_separate_cache_error_statically_linked():
@@ -28,8 +25,8 @@ def test_raise_separate_cache_error_statically_linked():
     jlinfo = dummy_juliainfo()
     with pytest.raises(RuntimeError) as excinfo:
         raise_separate_cache_error(
-            runtime, jlinfo,
-            _determine_if_statically_linked=lambda: True)
+            runtime, jlinfo, _determine_if_statically_linked=lambda: True
+        )
     assert "is statically linked" in str(excinfo.value)
 
 
@@ -38,8 +35,8 @@ def test_raise_separate_cache_error_dynamically_linked():
     jlinfo = dummy_juliainfo()
     with pytest.raises(RuntimeError) as excinfo:
         raise_separate_cache_error(
-            runtime, jlinfo,
-            _determine_if_statically_linked=lambda: False)
+            runtime, jlinfo, _determine_if_statically_linked=lambda: False
+        )
     assert "have to match exactly" in str(excinfo.value)
 
 
@@ -61,6 +58,6 @@ def test_atexit():
         @jl_atexit
         def _():
             print("atexit called")
-        ''',
+        '''
     )
     assert "atexit called" in proc.stdout

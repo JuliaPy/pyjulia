@@ -76,6 +76,9 @@ class Dl_info(ctypes.Structure):
     ]
 
 
+# fmt: off
+
+
 def _linked_libpython_unix():
     libdl = ctypes.CDLL(ctypes.util.find_library("dl"))
     libdl.dladdr.argtypes = [ctypes.c_void_p, ctypes.POINTER(Dl_info)]

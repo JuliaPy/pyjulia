@@ -48,7 +48,11 @@ def test_juliainfo_without_pycall(tmpdir):
     runtime = os.getenv("PYJULIA_TEST_RUNTIME", "julia")
 
     env_var = subprocess.check_output(
-        [runtime, "--startup-file=no", "-e", """
+        [
+            runtime,
+            "--startup-file=no",
+            "-e",
+            """
         if VERSION < v"0.7-"
             println("JULIA_PKGDIR")
             print(ARGS[1])
@@ -57,14 +61,15 @@ def test_juliainfo_without_pycall(tmpdir):
             println("JULIA_DEPOT_PATH")
             print(join(paths, Sys.iswindows() ? ';' : ':'))
         end
-        """, str(tmpdir)],
+        """,
+            str(tmpdir),
+        ],
         env=_enviorn,
-        universal_newlines=True)
+        universal_newlines=True,
+    )
     name, val = env_var.split("\n", 1)
 
-    jlinfo = JuliaInfo.load(
-        runtime,
-        env=dict(_enviorn, **{name: val}))
+    jlinfo = JuliaInfo.load(runtime, env=dict(_enviorn, **{name: val}))
 
     check_core_juliainfo(jlinfo)
     assert jlinfo.python is None
@@ -73,9 +78,7 @@ def test_juliainfo_without_pycall(tmpdir):
     assert not jlinfo.is_compatible_python()
 
 
-@pytest.mark.skipif(
-    not which("false"),
-    reason="false command not found")
+@pytest.mark.skipif(not which("false"), reason="false command not found")
 def test_juliainfo_failure():
     with pytest.raises(subprocess.CalledProcessError) as excinfo:
         JuliaInfo.load(julia="false")

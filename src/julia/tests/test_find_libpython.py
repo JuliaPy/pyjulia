@@ -12,13 +12,15 @@ except NameError:
 def test_finding_libpython_yield_type():
     paths = list(finding_libpython())
     assert set(map(type, paths)) <= {str, unicode}
+
+
 # In a statically linked Python executable, no paths may be found.  So
 # let's just check returned type of finding_libpython.
 
 
 def determine_if_statically_linked():
     """Determines if this python executable is statically linked"""
-    if not sys.platform.startswith('linux'):
+    if not sys.platform.startswith("linux"):
         # Assuming that Windows and OS X are generally always
         # dynamically linked.  Note that this is not the case in
         # Python installed via conda:

@@ -15,6 +15,17 @@ env:
 matrix:
   # Python environment is not functional on OS X
   include:
+      - language: python
+        env:
+          - TOXENV=style
+        os: linux
+        python: "3.6"
+        before_script:
+          - python -m pip --version
+          - python -m pip install --quiet tox
+        script:
+          - python -m tox
+        after_success: []
       - language: generic
         env:
           - PYTHON=python2

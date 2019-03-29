@@ -51,17 +51,12 @@ def python(module, command, script, args, interactive):
             scope = {}
             exec(command, scope)
         elif module:
-            scope = runpy.run_module(
-                module,
-                run_name="__main__",
-                alter_sys=True)
+            scope = runpy.run_module(module, run_name="__main__", alter_sys=True)
         elif script == "-":
             source = sys.stdin.read()
             exec(compile(source, "<stdin>", "exec"), scope)
         elif script:
-            scope = runpy.run_path(
-                script,
-                run_name="__main__")
+            scope = runpy.run_path(script, run_name="__main__")
         else:
             interactive = True
             scope = None
@@ -73,6 +68,7 @@ def python(module, command, script, args, interactive):
 
     if interactive:
         code.interact(banner=banner, local=scope)
+
 
 ArgDest = namedtuple("ArgDest", "dest names default")
 Optional = namedtuple("Optional", "name is_long argdest nargs action terminal")
@@ -94,8 +90,7 @@ class PyArgumentParser(object):
       to stop parsing after consuming the given option.
     """
 
-    def __init__(self, prog=None, usage="%(prog)s [options] [args]",
-                 description=""):
+    def __init__(self, prog=None, usage="%(prog)s [options] [args]", description=""):
         self.prog = sys.argv[0] if prog is None else prog
         self.usage = usage
         self.description = description
@@ -117,6 +112,8 @@ class PyArgumentParser(object):
 
     def add_argument(self, name, *alt, **kwargs):
         return self._add_argument_impl(name, alt, **kwargs)
+
+    # fmt: off
 
     def _add_argument_impl(self, name, alt, dest=None, nargs=None, action=None,
                            default=None, terminal=False):
@@ -243,6 +240,7 @@ class PyArgumentParser(object):
                         return results
                         # arg="-ih" -> rest="-h"
         return []
+    # fmt: on
 
     def print_usage(self, file=None):
         print(self.format_usage(), file=file or sys.stdout)
@@ -269,7 +267,8 @@ def make_parser(description=__doc__ + ARGUMENT_HELP):
     parser = PyArgumentParser(
         prog=None if sys.argv[0] else "python",
         usage="%(prog)s [option] ... [-c cmd | -m mod | script | -] [args]",
-        description=description)
+        description=description,
+    )
 
     parser.add_argument("-i", dest="interactive", action="store_true")
     parser.add_argument("--version", "-V", action="store_true")

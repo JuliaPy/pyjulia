@@ -1,4 +1,5 @@
 # Minimal repl.c to support precompilation with python symbols already loaded
+# fmt: off
 import ctypes
 import sys
 import os

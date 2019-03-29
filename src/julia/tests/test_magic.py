@@ -11,6 +11,9 @@ def julia_magics(julia):
     return magic.JuliaMagics(shell=globalipapp.get_ipython())
 
 
+# fmt: off
+
+
 @pytest.fixture
 def run_cell(julia_magics):
     # a more convenient way to run strings (possibly with magic) as if they were

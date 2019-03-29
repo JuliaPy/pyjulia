@@ -11,12 +11,14 @@ def pyload(name):
         exec(compile(f.read(), name, "exec"), ns)
     return ns
 
+
 # In case it's Python 2:
 try:
     execfile
 except NameError:
     pass
 else:
+
     def pyload(path):
         ns = {}
         execfile(path, ns)
@@ -32,6 +34,7 @@ with open(os.path.join(repo_root, "README.md"), encoding="utf-8") as f:
 ns = pyload(os.path.join(repo_root, "src", "julia", "release.py"))
 version = ns["__version__"]
 
+# fmt: off
 setup(name='julia',
       version=version,
       description="Julia/Python bridge with IPython support.",

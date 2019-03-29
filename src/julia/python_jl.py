@@ -26,9 +26,12 @@ import sys
 from .pseudo_python_cli import make_parser, parse_args_with, ARGUMENT_HELP
 from .utils import execprog
 
-PYJL_ARGUMENT_HELP = ARGUMENT_HELP + """
+PYJL_ARGUMENT_HELP = (
+    ARGUMENT_HELP
+    + """
   --julia JULIA  Julia runtime to be used. (default: julia)
 """
+)
 
 script_jl = """
 import PyCall

@@ -16,6 +16,8 @@ python_jl_required = pytest.mark.skipif(
     reason="python-jl command not found",
 )
 
+# fmt: off
+
 
 @pytest.mark.parametrize("args", [
     "-h",

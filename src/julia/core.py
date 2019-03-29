@@ -2,21 +2,22 @@
 Bridge Python and Julia by initializing the Julia runtime inside Python.
 """
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (C) 2013 The IPython and Julia Development Teams.
 #
 # Distributed under the terms of the BSD License. The full license is in
 # the file COPYING, distributed as part of this software.
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 # Stdlib
 from __future__ import print_function, absolute_import
 
 from logging import getLogger
+
 # Not importing `logging` module here so that using `logging.debug`
 # instead of `logger.debug` becomes an error.
 
@@ -63,9 +64,9 @@ try:
 except NameError:
     string_types = (str,)
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Classes and funtions
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 python_version = sys.version_info
 
 
@@ -113,6 +114,9 @@ class JuliaError(Exception):
     """
     Wrapper for Julia exceptions.
     """
+
+
+# fmt: off
 
 
 class JuliaNotFound(RuntimeError):

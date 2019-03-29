@@ -18,6 +18,7 @@
 
 
 # -- Project information -----------------------------------------------------
+# fmt: off
 
 project = 'PyJulia'
 copyright = '2019, The Julia and IPython development teams'
