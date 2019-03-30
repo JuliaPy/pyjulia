@@ -17,10 +17,10 @@ tricky aspects of PyJulia initialization:
 
 * The tests requiring Julia can be skipped with :option:`--no-julia`.
 
-Use |pytest -p no:pyjulia|_ to disable PyJulia plugin.
+Use |pytest -p no:julia|_ to disable PyJulia plugin.
 
-.. |pytest -p no:pyjulia| replace:: ``pytest -p no:pyjulia``
-.. _pytest -p no:pyjulia:
+.. |pytest -p no:julia| replace:: ``pytest -p no:julia``
+.. _pytest -p no:julia:
    https://docs.pytest.org/en/latest/plugins.html#deactivating-unregistering-a-plugin-by-name
 
 

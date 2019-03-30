@@ -72,7 +72,7 @@ setup(name='julia',
               "python-jl = julia.python_jl:main",
           ],
           "pytest11": [
-              "pyjulia = julia.pytestplugin",
+              "julia = julia.pytestplugin",
           ],
       },
       # We bundle Julia scripts etc. inside `julia` directory.  Thus,
