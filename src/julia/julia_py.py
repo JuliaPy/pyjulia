@@ -9,7 +9,7 @@ import os
 import sys
 
 from .api import LibJulia
-from .core import enable_debug
+from .core import which, enable_debug
 from .tools import julia_py_executable
 
 
@@ -17,6 +17,8 @@ def julia_py(julia, pyjulia_debug, jl_args):
     if pyjulia_debug:
         enable_debug()
 
+    julia = which(julia)
+    os.environ["_PYJULIA_JULIA"] = julia
     os.environ["_PYJULIA_JULIA_PY"] = julia_py_executable()
     os.environ["_PYJULIA_PATCH_JL"] = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "patch.jl"
@@ -49,7 +51,7 @@ def parse_args(args, **kwargs):
     parser = argparse.ArgumentParser(**options)
     parser.add_argument(
         "--julia",
-        default="julia",
+        default=os.environ.get("_PYJULIA_JULIA", "julia"),
         help="""
         Julia `executable` used by PyJulia.
         """,
