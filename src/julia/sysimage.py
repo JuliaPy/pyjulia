@@ -73,7 +73,7 @@ def build_sysimage(
         # output -- path to sys.o file
         os.path.realpath(output),
     ]
-    with temporarydirectory(prefix="tmp.pyjulia.sysimage") as path:
+    with temporarydirectory(prefix="tmp.pyjulia.sysimage.") as path:
         check_call(build_sysimage_cmd(julia_py, julia, compile_args), cwd=path)
 
 
