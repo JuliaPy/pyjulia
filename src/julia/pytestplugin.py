@@ -29,10 +29,12 @@ def pytest_sessionstart(session):
     if not session.config.getoption("julia"):
         return
 
-    from .core import Julia
+    from .core import LibJulia, enable_debug
 
-    global JULIA
-    JULIA = Julia(runtime=session.config.getoption("julia_runtime"), debug=True)
+    enable_debug()
+    api = LibJulia.load(julia=session.config.getoption("julia_runtime"))
+    api.init_julia()
+
 
 # Initialize Julia runtime as soon as possible (or more precisely
 # before importing any additional Python modules) to avoid, e.g.,
@@ -48,4 +50,6 @@ def julia(request):
     if not request.config.getoption("julia"):
         pytest.skip("--no-julia is given.")
 
-    return JULIA
+    from .core import Julia
+
+    return Julia()
