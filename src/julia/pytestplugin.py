@@ -2,6 +2,8 @@ from __future__ import print_function, absolute_import
 
 import pytest
 
+from .options import JuliaOptions
+
 
 def pytest_addoption(parser):
     import os
@@ -24,6 +26,12 @@ def pytest_addoption(parser):
         default=os.getenv("PYJULIA_TEST_RUNTIME", "julia"),
     )
 
+    for desc in JuliaOptions.supported_options():
+        parser.addoption(
+            "--julia-{}".format(desc.cli_argument_name().lstrip("-")),
+            **desc.cli_argument_spec()
+        )
+
 
 def pytest_sessionstart(session):
     if not session.config.getoption("julia"):
@@ -31,9 +39,14 @@ def pytest_sessionstart(session):
 
     from .core import LibJulia, enable_debug
 
+    options = JuliaOptions()
+    for desc in JuliaOptions.supported_options():
+        cli_option = "--julia-{}".format(desc.cli_argument_name().lstrip("-"))
+        desc.__set__(options, session.config.getoption(cli_option))
+
     enable_debug()
     api = LibJulia.load(julia=session.config.getoption("julia_runtime"))
-    api.init_julia()
+    api.init_julia(options)
 
 
 # Initialize Julia runtime as soon as possible (or more precisely

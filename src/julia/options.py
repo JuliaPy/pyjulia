@@ -13,6 +13,14 @@ class OptionDescriptor(object):
             return self
         return getattr(instance, self.dataname, self.default)
 
+    def cli_argument_name(self):
+        name = {"bindir": "home"}.get(self.name, self.name)
+        return "--" + name.replace("_", "-")
+
+    def cli_argument_spec(self):
+        return dict(help="Julia's ``{}`` option.".format(self.cli_argument_name()))
+        # TODO: parse help from `options_docs`.
+
 
 class String(OptionDescriptor):
     def __init__(self, name, default=None):
@@ -53,6 +61,12 @@ class Choices(OptionDescriptor):
 
     def _domain(self):  # used in test
         return set(self.choicemap)
+
+    def cli_argument_spec(self):
+        return dict(
+            super(Choices, self).cli_argument_spec(),
+            choices=list(self.choicemap.values()),
+        )
 
 
 def yes_no_etc(*etc):
@@ -149,15 +163,20 @@ class JuliaOptions(object):
     def specified(self):
         for name in dir(self.__class__):
             if self.is_specified(name):
-                yield name, getattr(self, name)
+                yield getattr(self.__class__, name), getattr(self, name)
 
     def as_args(self):
         args = []
-        for (name, value) in self.specified():
-            name = {"bindir": "home"}.get(name, name)
-            args.append("--" + name.replace("_", "-"))
+        for (desc, value) in self.specified():
+            args.append(desc.cli_argument_name())
             args.append(value)
         return args
+
+    @classmethod
+    def supported_options(cls):
+        for name in dir(cls):
+            if cls.is_supported(name):
+                yield getattr(cls, name)
 
 
 def parse_jl_options(options):

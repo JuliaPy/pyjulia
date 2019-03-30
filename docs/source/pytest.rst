@@ -54,6 +54,15 @@ Following options can be passed to :program:`pytest`
    Julia executable to be used.  Defaults to environment variable
    `PYJULIA_TEST_RUNTIME`.
 
+.. option:: --julia-<julia_option>
+
+   Some ``<julia_option>`` that can be passed to ``julia`` executable
+   (e.g., ``--compiled-modules=no``) can be passed to ``pytest``
+   plugin by ``--julia-<julia_option>`` (e.g.,
+   ``--julia-compiled-modules=no``).  See ``pytest -p
+   julia.pytestplugin --help`` for the actual list of options.
+
+
 Fixture
 =======
 

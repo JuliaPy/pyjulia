@@ -13,20 +13,13 @@ def parse_options_docs(docs):
     return optdefs
 
 
-def supported_names(cls):
-    for name in dir(cls):
-        if cls.is_supported(name):
-            yield name
-
-
 def test_options_docs():
     """
     Ensure that `JuliaOptions` and `JuliaOptions.__doc__` agree.
     """
 
     optdefs = parse_options_docs(options_docs)
-    for name in supported_names(JuliaOptions):
-        odef = optdefs.pop(name)
-        desc = getattr(JuliaOptions, name)
+    for desc in JuliaOptions.supported_options():
+        odef = optdefs.pop(desc.name)
         assert odef["domain"] == desc._domain()
     assert not optdefs
