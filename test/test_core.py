@@ -147,15 +147,7 @@ def test_module_dir(julia):
     assert "resize_b" in dir(Base)
 
 
-@pytest.mark.skipif(
-    "PYJULIA_TEST_RUNTIME" in orig_env,
-    reason=(
-        "cannot be tested with custom Julia executable;"
-        " PYJULIA_TEST_RUNTIME is set to {}".format(
-            orig_env.get("PYJULIA_TEST_RUNTIME")
-        )
-    ),
-)
+@pytest.mark.pyjulia__using_default_setup
 def test_import_without_setup():
     command = [sys.executable, "-c", "from julia import Base"]
     print("Executing:", *command)

@@ -44,6 +44,7 @@ def test_raise_separate_cache_error_dynamically_linked():
     assert "have to match exactly" in str(excinfo.value)
 
 
+@pytest.mark.pyjulia__using_default_setup
 def test_atexit():
     proc = runcode(
         sys.executable,
