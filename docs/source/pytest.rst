@@ -17,11 +17,27 @@ tricky aspects of PyJulia initialization:
 
 * The tests requiring Julia can be skipped with :option:`--no-julia`.
 
-Use |pytest -p no:julia|_ to disable PyJulia plugin.
+* It enables debug-level logging.  This is highly recommended
+  especially in CI setting as miss-configuration of PyJulia may result
+  in segmentation fault in which Python cannot provide useful
+  traceback.
 
-.. |pytest -p no:julia| replace:: ``pytest -p no:julia``
-.. _pytest -p no:julia:
-   https://docs.pytest.org/en/latest/plugins.html#deactivating-unregistering-a-plugin-by-name
+To activate PyJulia's pytest plugin [#]_ add ``-p julia.pytestplugin``
+to the command line option.  There are several ways to do this by
+default in your project.  One option is to include this using
+``addopts`` setup of ``pytest.ini`` or ``tox.ini`` file.  See `How to
+change command line options defaults
+<https://docs.pytest.org/en/latest/customize.html#adding-default-options>`_:
+
+.. code-block:: ini
+
+   [pytest]
+   addopts =
+       -p julia.pytestplugin
+
+.. [#] This plugin is not activated by default (as in normal
+   ``pytest-*`` plugin packages) to avoid accidentally breaking user's
+   ``pytest`` setup when PyJulia is included as a non-test dependency.
 
 
 Options
