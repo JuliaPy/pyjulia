@@ -1,9 +1,11 @@
 from __future__ import print_function, absolute_import
 
 from argparse import Namespace
+import os
 import sys
 
 from .api import LibJulia
+from .tools import julia_py_executable
 
 
 def parse_args(args):
@@ -25,9 +27,17 @@ def main(args=None):
         args = sys.argv[1:]
     ns, jl_args = parse_args(args)
 
+    os.environ["_PYJULIA_JULIA_PY"] = julia_py_executable()
+    os.environ["_PYJULIA_PATCH_JL"] = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "patch.jl"
+    )
+
     api = LibJulia.load(julia=ns.julia)
     api.init_julia(jl_args)
-    code = int(not api.jl_eval_string(b"Base._start()"))
+    code = 1
+    if api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
+        if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
+            code = 0
     api.jl_atexit_hook(code)
     sys.exit(code)
 
