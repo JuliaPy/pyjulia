@@ -1,5 +1,7 @@
 from __future__ import print_function, absolute_import
 
+import textwrap
+
 
 class OptionDescriptor(object):
     @property
@@ -27,8 +29,8 @@ class String(OptionDescriptor):
                 "Option {!r} only accepts `str`. Got: {!r}".format(self.name, value)
             )
 
-    def show_option(self):
-        print(self.name, "(string)", end="")
+    def _domain(self):  # used in test
+        return str
 
 
 class Choices(OptionDescriptor):
@@ -49,10 +51,8 @@ class Choices(OptionDescriptor):
                 "Option {!r} does not accept {!r}".format(self.name, value)
             )
 
-    def show_option(self):
-        print(self.name, ":", end="")
-        for var in self.choicemap:
-            print("", repr(var), end="")
+    def _domain(self):  # used in test
+        return set(self.choicemap)
 
 
 def yes_no_etc(*etc):
@@ -62,7 +62,57 @@ def yes_no_etc(*etc):
     return choicemap
 
 
+options_docs = """
+bindir: str
+    Set location of `julia` executable relative to which we find
+    system image (``sys.so``).  It is inferred from `runtime` if not
+    given.  Equivalent to ``--home`` of the Julia CLI.
+
+check_bounds: {True, False, 'yes', 'no'}
+    Emit bounds checks always or never (ignoring declarations).
+    `True` and `False` are synonym of ``'yes'`` and ``'no'``, respectively.
+    This applies to all other options.
+
+compile: {True, False, 'yes', 'no', 'all', 'min'}
+    Enable or disable JIT compiler, or request exhaustive compilation.
+
+compiled_modules: {True, False, 'yes', 'no'}
+    Enable or disable incremental precompilation of modules.
+
+depwarn: {True, False, 'yes', 'no', 'error'}
+    Enable or disable syntax and method deprecation warnings ("error"
+    turns warnings into errors).
+
+inline: {True, False, 'yes', 'no'}
+    Control whether inlining is permitted, including overriding
+    @inline declarations.
+
+optimize: {0, 1, 2, 3}
+    Set the optimization level (default level is 2 if unspecified or 3
+    if used without a level).
+
+sysimage: str
+    Start up with the given system image file.
+
+warn_overwrite: {True, False, 'yes', 'no'}
+    Enable or disable method overwrite warnings.
+"""
+
+
 class JuliaOptions(object):
+    """
+    Julia options validator.
+
+    Attributes
+    ----------
+    """
+
+    __doc__ = textwrap.dedent(__doc__) + options_docs
+
+    # `options_docs` defined above must be updated when changing the
+    # list of options supported by `JuliaOptions`. `test_options_docs`
+    # tests that `options_docs` matches with the definition of
+    # `JuliaOptions`
 
     sysimage = String("sysimage")
     bindir = String("bindir")
@@ -108,21 +158,6 @@ class JuliaOptions(object):
             args.append("--" + name.replace("_", "-"))
             args.append(value)
         return args
-
-    @classmethod
-    def supported_names(cls):
-        for name in dir(cls):
-            if cls.is_supported(name):
-                yield name
-
-    @classmethod
-    def show_supported(cls):
-        print("** Supported options and possible values **")
-        print("See `julia --help` for their effects.")
-        print()
-        for name in cls.supported_names():
-            getattr(cls, name).show_option()
-            print()
 
 
 def parse_jl_options(options):

@@ -26,6 +26,7 @@ import ctypes.util
 import os
 import sys
 import subprocess
+import textwrap
 import warnings
 
 from ctypes import c_void_p as void_p
@@ -53,7 +54,7 @@ except ImportError:
 from types import ModuleType
 
 from .find_libpython import find_libpython, linked_libpython
-from .options import JuliaOptions, parse_jl_options
+from .options import JuliaOptions, options_docs, parse_jl_options
 
 try:
     string_types = (basestring,)
@@ -847,7 +848,8 @@ class Julia(object):
 
     def __init__(self, init_julia=True, jl_init_path=None, runtime=None,
                  jl_runtime_path=None, debug=False, **julia_options):
-        """Create a Python object that represents a live Julia runtime.
+        """
+        Create a Python object that represents a live Julia runtime.
 
         Note: Use `LibJulia` to fully control the initialization of
         the Julia runtime.
@@ -869,21 +871,10 @@ class Julia(object):
         runtime : str
             Custom Julia binary, e.g. "/usr/local/bin/julia" or "julia-1.0.0".
 
-        jl_init_path : str
-            Path to give to jl_init relative to which we find sys.so,
-            (defaults to jl_runtime_path or NULL)
-
         debug : bool
             If True, print some debugging information to STDERR
-
-        Notes
-        =====
-
-        Other keyword arguments (e.g., `compiled_modules=False`) are treated
-        as command line options.  Only a subset of command line options is
-        supported.  See `julia.core.JuliaOptions.show_supported()` for the
-        list of supported options.
         """
+        # Note: `options_docs` is appended below (top level)
 
         if debug:
             enable_debug()
@@ -907,6 +898,13 @@ class Julia(object):
             else:
                 raise TypeError(
                     "Both `runtime` and `jl_runtime_path` are specified.")
+
+        if jl_init_path:
+            warnings.warn(
+                "`jl_init_path` is deprecated. Please use `bindir`.",
+                DeprecationWarning)
+            if "bindir" in julia_options:
+                raise TypeError("Both `jl_init_path` and `bindir` are specified.")
 
         logger.debug("")  # so that debug message is shown nicely w/ pytest
 
@@ -1136,6 +1134,10 @@ class Julia(object):
         if isinstance(parent, string_types):
             parent = self.eval(parent)
         return isdefinedstr(parent, member)
+
+
+if sys.version_info[0] > 2:
+    Julia.__init__.__doc__ = textwrap.dedent(Julia.__init__.__doc__) + options_docs
 
 
 class LegacyJulia(object):
