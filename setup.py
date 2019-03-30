@@ -79,6 +79,7 @@ setup(name='julia',
       },
       entry_points={
           "console_scripts": [
+              "julia-py = julia.julia_py:main",
               "python-jl = julia.python_jl:main",
           ],
       },
