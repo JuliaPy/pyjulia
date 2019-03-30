@@ -60,6 +60,7 @@ def test_cli_quick_pass_no_julia(args):
 @pytest.mark.skipif(
     not PYJULIA_TEST_REBUILD,
     reason="PYJULIA_TEST_REBUILD=yes is not set")
+@pytest.mark.julia
 def test_cli_import():
     args = ["-c", dedent("""
     from julia import Base

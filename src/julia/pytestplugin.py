@@ -76,6 +76,10 @@ def julia(request):
 
 
 def pytest_runtest_setup(item):
+    if not item.config.getoption("julia"):
+        for mark in item.iter_markers("julia"):
+            pytest.skip("--no-julia is given.")
+
     if not (item.config.getoption("julia") and _USING_DEFAULT_SETUP):
         for mark in item.iter_markers("pyjulia__using_default_setup"):
             pytest.skip(

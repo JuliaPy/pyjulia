@@ -9,6 +9,7 @@ juliainfo = JuliaInfo.load()
 
 
 @pytest.mark.skipif("juliainfo.version_info < (0, 7)")
+@pytest.mark.julia
 def test_compiled_modules_no():
     runcode(
         sys.executable,
@@ -28,6 +29,7 @@ def test_compiled_modules_no():
 
 
 @pytest.mark.skipif("not juliainfo.is_compatible_python()")
+@pytest.mark.julia
 def test_custom_sysimage(tmpdir):
     sysimage = str(tmpdir.join("sys.so"))
     runcode(
@@ -58,6 +60,7 @@ def test_custom_sysimage(tmpdir):
     )
 
 
+@pytest.mark.julia
 def test_non_existing_sysimage(tmpdir):
     proc = runcode(
         sys.executable,

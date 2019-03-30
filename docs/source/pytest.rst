@@ -13,7 +13,7 @@ tricky aspects of PyJulia initialization:
   bundled with ``julia`` are newer than the ones otherwise loaded).
 
 * It provides a way to succinctly mark certain tests require Julia
-  runtime (see `Fixture`_).
+  runtime (see `Fixture`_ and `Marker`_).
 
 * The tests requiring Julia can be skipped with :option:`--no-julia`.
 
@@ -77,3 +77,21 @@ initialized.  Example usage::
 This fixture also "marks" that this test requires a Julia runtime.
 Thus, the tests using ``julia`` fixture are not run when
 :option:`--no-julia` is passed.
+
+
+Marker
+======
+
+PyJulia's pytest plugin also includes a `pytest marker
+<https://docs.pytest.org/en/latest/example/markers.html>`_ ``julia``
+which can be used to mark that the test requires PyJulia setup.  It is
+similar to ``julia`` fixture but it does not instantiate the actual
+:class:`.Julia` object.
+
+Example usage::
+
+   import pytest
+
+   @pytest.mark.julia
+   def test_import():
+       from julia import MyModule
