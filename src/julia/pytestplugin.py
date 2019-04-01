@@ -39,7 +39,7 @@ def pytest_sessionstart(session):
     if not session.config.getoption("julia"):
         return
 
-    from .core import LibJulia, enable_debug
+    from .core import LibJulia, JuliaInfo, Julia, enable_debug
 
     options = JuliaOptions()
     for desc in JuliaOptions.supported_options():
@@ -52,8 +52,14 @@ def pytest_sessionstart(session):
     _USING_DEFAULT_SETUP = not (julia_runtime or options.as_args())
 
     enable_debug()
-    api = LibJulia.load(julia=julia_runtime)
-    api.init_julia(options)
+    info = JuliaInfo.load(julia=julia_runtime)
+    if (info.version_major, info.version_minor) < (0, 7):
+        # In Julia 0.6, we have to load PyCall.jl here to do the
+        # fake-julia setup.
+        Julia(runtime=julia_runtime)
+    else:
+        api = LibJulia.from_juliainfo(info)
+        api.init_julia(options)
 
 
 # Initialize Julia runtime as soon as possible (or more precisely
