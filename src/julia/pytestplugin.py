@@ -49,7 +49,7 @@ def pytest_sessionstart(session):
     julia_runtime = session.config.getoption("julia_runtime")
 
     global _USING_DEFAULT_SETUP
-    _USING_DEFAULT_SETUP = not (julia_runtime or options.as_args())
+    _USING_DEFAULT_SETUP = not (julia_runtime != "julia" or options.as_args())
 
     enable_debug()
     info = JuliaInfo.load(julia=julia_runtime)
