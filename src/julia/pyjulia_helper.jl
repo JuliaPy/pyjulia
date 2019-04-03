@@ -1,5 +1,10 @@
 module _PyJuliaHelper
 
+using PyCall
+using PyCall: pyeval_
+using MacroTools
+using MacroTools: isexpr
+
 if VERSION < v"0.7-"
 nameof(m::Module) = ccall(:jl_module_name, Ref{Symbol}, (Any,), m)
 
@@ -43,6 +48,33 @@ if VERSION >= v"0.7-"
         )
     end
 end
+
+
+macro prepare_for_pyjulia_call(ex)
+    
+    # f(x) returns transformed expression x and whether to recurse 
+    # into the new expression
+    function walk(f, x)
+        (fx, recurse) = f(x)
+        MacroTools.walk(fx, (recurse ? (x -> walk(f,x)) : identity), identity)
+    end
+    
+    ex = walk(ex) do x
+        if isexpr(x, :$)
+            if isexpr(x.args[1], :$)
+                x.args[1], false
+            else
+                :($convert($PyAny, $pyeval_($("$(x.args[1])"),__globals,__locals))), true
+            end
+        else
+            x, true
+        end 
+    end
+    esc(quote
+        $pyfunction((__globals,__locals) -> $ex, $PyObject, $PyObject)
+    end)
+end
+
 
 module IOPiper
 

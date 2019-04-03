@@ -70,7 +70,7 @@ You can then use, e.g.,
 In IPython (and therefore in Jupyter), you can directly execute Julia
 code using `%%julia` magic:
 
-```
+```none
 In [1]: %load_ext julia.magic
 Initializing Julia interpreter. This may take some time...
 
@@ -84,6 +84,35 @@ In [2]: %%julia
   | | |_| | | | (_| |  |  Version 1.0.1 (2018-09-29)
  _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
 |__/                   |
+```
+
+Any `$var` or `$(var)` expressions that appear in the Julia code (except in
+comments or string literals) are evaluated in Python and passed to Julia. Use
+`$$var` to insert a literal `$var` in Julia code.
+
+```none
+In [3]: foo = [[1,2],[3,4]]
+
+In [4]: %julia $foo .+ 1
+
+Out[4]: 
+array([[2, 3],
+       [4, 5]], dtype=int64)
+       
+In [22]: %%julia
+   ...: bar=3
+   ...: :($$bar)
+   
+Out[22]: 3
+
+```
+
+Variables are automatically converted between equivalent Python/Julia types (should they exist) using PyCall. Note below that `1`, `x`, and the tuple itself are converted to Julia `Int64`, `String`, and `Tuple`, respectively, although the function `abs` and the result of `typeof` are not.
+
+```none
+In [6]: %julia typeof($(1,"x",abs))
+
+Out[6]: <PyCall.jlwrap Tuple{Int64,String,PyObject}>
 ```
 
 #### IPython configuration
