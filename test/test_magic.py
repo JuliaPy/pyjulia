@@ -23,13 +23,13 @@ def test_success_cell(julia_magics):
 
 
 def test_failure_line(julia_magics):
-    ans = julia_magics.julia('pop!([])')
-    assert ans is None
+    with pytest.raises(Exception):
+        julia_magics.julia("pop!([])")
 
 
 def test_failure_cell(julia_magics):
-    ans = julia_magics.julia(None, '1 += 1')
-    assert ans is None
+    with pytest.raises(Exception):
+        julia_magics.julia(None, "1 += 1")
 
 
 def test_revise_error():

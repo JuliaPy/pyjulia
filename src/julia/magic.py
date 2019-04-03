@@ -26,7 +26,7 @@ from IPython.core.magic import Magics, magics_class, line_cell_magic
 from IPython.utils import py3compat as compat
 from traitlets import Bool, Enum
 
-from .core import Julia, JuliaError
+from .core import Julia
 from .tools import redirect_output_streams
 
 #-----------------------------------------------------------------------------
@@ -96,14 +96,7 @@ class JuliaMagics(Magics):
         Python namespace.
         """
         src = compat.unicode_type(line if cell is None else cell)
-
-        try:
-            ans = self._julia.eval(src)
-        except JuliaError as e:
-            print(e, file=sys.stderr)
-            ans = None
-
-        return ans
+        return self._julia.eval(src)
 
 
 # Add to the global docstring the class information.
