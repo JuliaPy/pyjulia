@@ -67,52 +67,61 @@ You can then use, e.g.,
 
 ### IPython magic
 
-In IPython (and therefore in Jupyter), you can directly execute Julia
-code using `%%julia` magic:
+In IPython (and therefore in Jupyter), you can directly execute Julia code using `%%julia` magic:
 
-```none
+```python
 In [1]: %load_ext julia.magic
 Initializing Julia interpreter. This may take some time...
 
-In [2]: %%julia
-   ...: Base.banner(IOContext(stdout, :color=>true))
-               _
-   _       _ _(_)_     |  Documentation: https://docs.julialang.org
-  (_)     | (_) (_)    |
-   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
-  | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.0.1 (2018-09-29)
- _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
-|__/                   |
-```
-
-Any `$var` or `$(var)` expressions that appear in the Julia code (except in
-comments or string literals) are evaluated in Python and passed to Julia. Use
-`$$var` to insert a literal `$var` in Julia code.
-
-```none
-In [3]: foo = [[1,2],[3,4]]
-
-In [4]: %julia $foo .+ 1
-
-Out[4]: 
+In [2]: %julia [1 2; 3 4] .+ 1 
+Out[2]: 
 array([[2, 3],
        [4, 5]], dtype=int64)
-       
-In [22]: %%julia
-   ...: bar=3
-   ...: :($$bar)
-   
-Out[22]: 3
-
 ```
 
-Variables are automatically converted between equivalent Python/Julia types (should they exist) using PyCall. Note below that `1`, `x`, and the tuple itself are converted to Julia `Int64`, `String`, and `Tuple`, respectively, although the function `abs` and the result of `typeof` are not.
+You can "interpolate" Python results into Julia code via `$var` for single variable names, `$(expression)` for *most* Python code (although notably excluding comprehensions and any Python syntax which is not also valid Julia syntax), or `py"expression"` for *any* arbitrary Python code:
 
-```none
-In [6]: %julia typeof($(1,"x",abs))
+```julia
+In [3]: arr = [1,2,3]
 
-Out[6]: <PyCall.jlwrap Tuple{Int64,String,PyObject}>
+In [4]: %julia $arr .+ 1
+Out[4]: 
+array([2, 3, 4], dtype=int64)
+
+In [5]: %julia $(len(arr))
+Out[5]: 3
+
+In [6]: %julia py"[x**2 for x in arr]"
+Out[6]: array([1, 4, 9], dtype=int64)
+```
+
+Interpolation is never performed inside of strings. If you wish to override interpolation elsewhere, use `$$...` to insert a literal `$...`:
+
+```julia
+In [7]: %julia foo=3; "$foo"
+Out[7]: '3'
+
+In [8]: %julia bar=3; :($$bar)
+Out[8]: 3
+```
+
+Variables are automatically converted between equivalent Python/Julia types (should they exist). You can turn this off by appending `o` to the Python string:
+
+```python
+In [9]: %julia typeof(py"1"), typeof(py"1"o)
+Out[9]: (<PyCall.jlwrap Int64>, <PyCall.jlwrap PyObject>)
+```
+
+Note that interpolated variables always refer to the global Python scope:
+
+```python
+In [10]: x = "global"
+    ...: def f():
+    ...:     x = "local"
+    ...:     ret = %julia py"x"
+    ...:     return ret
+    ...: f()
+Out[10]: 'global'
 ```
 
 #### IPython configuration

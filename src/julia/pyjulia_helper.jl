@@ -1,7 +1,7 @@
 module _PyJuliaHelper
 
 using PyCall
-using PyCall: pyeval_
+using PyCall: pyeval_, Py_eval_input, Py_file_input
 using MacroTools
 using MacroTools: isexpr
 
@@ -59,19 +59,31 @@ macro prepare_for_pyjulia_call(ex)
         MacroTools.walk(fx, (recurse ? (x -> walk(f,x)) : identity), identity)
     end
     
+    locals = gensym("locals")
+    globals = gensym("globals")
+    
+    function make_pyeval(expr, options...)
+        code = string(expr)
+        T = length(options) == 1 && 'o' in options[1] ? PyObject : PyAny
+        input_type = '\n' in code ? Py_file_input : Py_eval_input
+        :($convert($T, $pyeval_($code, $globals, $locals, $input_type)))
+    end
+        
     ex = walk(ex) do x
         if isexpr(x, :$)
             if isexpr(x.args[1], :$)
                 x.args[1], false
             else
-                :($convert($PyAny, $pyeval_($("$(x.args[1])"),__globals,__locals))), true
+                make_pyeval(x.args[1]), false
             end
+        elseif isexpr(x, :macrocall) && x.args[1]==Symbol("@py_str")
+            make_pyeval(x.args[3:end]...), false
         else
             x, true
         end 
     end
     esc(quote
-        $pyfunction((__globals,__locals) -> $ex, $PyObject, $PyObject)
+        $pyfunction(($globals,$locals) -> $ex, $PyObject, $PyObject)
     end)
 end
 
