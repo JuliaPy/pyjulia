@@ -66,7 +66,7 @@ macro prepare_for_pyjulia_call(ex)
         code = string(expr)
         T = length(options) == 1 && 'o' in options[1] ? PyObject : PyAny
         input_type = '\n' in code ? Py_file_input : Py_eval_input
-        :($convert($T, $pyeval_($code, $globals, $locals, $input_type)))
+        :($convert($T, $pyeval_($code, $(Expr(:$,globals)), $(Expr(:$,locals)), $input_type)))
     end
         
     ex = walk(ex) do x
@@ -83,7 +83,7 @@ macro prepare_for_pyjulia_call(ex)
         end 
     end
     esc(quote
-        $pyfunction(($globals,$locals) -> $ex, $PyObject, $PyObject)
+        $pyfunction(($globals,$locals) -> (@eval Main $ex), $PyObject, $PyObject)
     end)
 end
 
