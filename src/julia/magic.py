@@ -22,12 +22,18 @@ from __future__ import print_function, absolute_import
 import sys
 import warnings
 
-from IPython.core.magic import Magics, magics_class, line_cell_magic, no_var_expand
+from IPython.core.magic import Magics, magics_class, line_cell_magic
 from IPython.utils import py3compat as compat
 from traitlets import Bool, Enum
 
 from .core import Julia, JuliaError
 from .tools import redirect_output_streams
+
+try:
+    from IPython.core.magic import no_var_expand
+except ImportError:
+    def no_var_expand(f):
+        return f
 
 #-----------------------------------------------------------------------------
 # Main classes
