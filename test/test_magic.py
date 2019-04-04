@@ -1,7 +1,10 @@
-from IPython.testing.globalipapp import get_ipython
+from IPython.testing.globalipapp import start_ipython as _start_ipython
+from IPython import get_ipython as _get_ipython
 from julia import magic
 import pytest
 
+def get_ipython():
+    return _start_ipython() or _get_ipython()
 
 @pytest.fixture
 def julia_magics(julia):
@@ -23,15 +26,57 @@ def test_success_cell(julia_magics):
 
 
 def test_failure_line(julia_magics):
-    ans = julia_magics.julia('pop!([])')
-    assert ans is None
+    with pytest.raises(Exception):
+        julia_magics.julia('pop!([])')
 
 
 def test_failure_cell(julia_magics):
-    ans = julia_magics.julia(None, '1 += 1')
-    assert ans is None
+    with pytest.raises(Exception):
+        julia_magics.julia(None, '1 += 1')
 
 
+def test_interp_var(julia_magics):
+    assert julia_magics.shell.run_cell("""
+    x=1
+    %julia $x
+    """).result == 1
+    
+def test_interp_expr(julia_magics):
+    assert julia_magics.shell.run_cell("""
+    x=1
+    %julia py"x+1"
+    """).result == 2
+    
+def test_bad_interp(julia_magics):
+    assert julia_magics.shell.run_cell("""
+    %julia $(x+1)
+    """).error_in_exec is not None
+    
+def test_string_interp(julia_magics):
+    assert julia_magics.shell.run_cell("""
+    %julia foo=3; "$foo"    
+    """).result == '3'
+    
+def test_interp_escape(julia_magics):
+    assert julia_magics.shell.run_cell("""
+    %julia bar=3; :($$bar)
+    """).result == 3
+    
+def test_type_conversion(julia_magics):
+    assert julia_magics.shell.run_cell("""
+    %julia py"1" isa Int && py"1"o isa PyObject
+    """).result == True
+    
+def test_scoping(julia_magics):
+    assert julia_magics.shell.run_cell("""
+    x = "global"
+    def f():
+        x = "local"
+        ret = %julia py"x"
+        return ret
+    f()    
+    """).result == "local"
+    
 def test_revise_error():
     from julia.ipy import revise
 
