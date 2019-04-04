@@ -2,8 +2,7 @@ module _PyJuliaHelper
 
 using PyCall
 using PyCall: pyeval_, Py_eval_input, Py_file_input
-using MacroTools
-using MacroTools: isexpr
+using PyCall.MacroTools: isexpr, walk
 
 if VERSION < v"0.7-"
 nameof(m::Module) = ccall(:jl_module_name, Ref{Symbol}, (Any,), m)
@@ -52,11 +51,11 @@ end
 
 macro prepare_for_pyjulia_call(ex)
     
-    # f(x) returns transformed expression x and whether to recurse 
+    # f(x) should return a transformed expression x and whether to recurse 
     # into the new expression
-    function walk(f, x)
+    function stoppable_walk(f, x)
         (fx, recurse) = f(x)
-        MacroTools.walk(fx, (recurse ? (x -> walk(f,x)) : identity), identity)
+        walk(fx, (recurse ? (x -> stoppable_walk(f,x)) : identity), identity)
     end
     
     locals = gensym("locals")
@@ -69,7 +68,7 @@ macro prepare_for_pyjulia_call(ex)
         :($convert($T, $pyeval_($code, $(Expr(:$,globals)), $(Expr(:$,locals)), $input_type)))
     end
         
-    ex = walk(ex) do x
+    ex = stoppable_walk(ex) do x
         if isexpr(x, :$)
             if isexpr(x.args[1], :$)
                 x.args[1], false
