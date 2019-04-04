@@ -67,7 +67,7 @@ You can then use, e.g.,
 
 ### IPython magic
 
-In IPython (and therefore in Jupyter), you can directly execute Julia code using `%%julia` magic:
+In IPython (and therefore in Jupyter), you can directly execute Julia code using `%julia` magic:
 
 ```python
 In [1]: %load_ext julia.magic
@@ -79,8 +79,7 @@ array([[2, 3],
        [4, 5]], dtype=int64)
 ```
 
-You can "interpolate" Python results into Julia code via `$var` for single variable names, `$(expression)` for *most* Python code (although notably excluding comprehensions and any Python syntax which is not also valid Julia syntax), or `py"expression"` for *any* arbitrary Python code:
-
+You can "interpolate" Python objects into Julia code via `$var` for the value of single variables or `py"expression"` for the result of any arbitrary Python code:
 ```julia
 In [3]: arr = [1,2,3]
 
@@ -88,40 +87,37 @@ In [4]: %julia $arr .+ 1
 Out[4]: 
 array([2, 3, 4], dtype=int64)
 
-In [5]: %julia $(len(arr))
-Out[5]: 3
-
-In [6]: %julia py"[x**2 for x in arr]"
-Out[6]: array([1, 4, 9], dtype=int64)
+In [5]: %julia sum(py"[x**2 for x in arr]")
+Out[5]: 14
 ```
 
-Interpolation is never performed inside of strings. If you wish to override interpolation elsewhere, use `$$...` to insert a literal `$...`:
+Python interpolation is not performed inside of strings (instead this is treated as regular Julia string interpolation), and can also be overridden elsewhere by using `$$...` to insert a literal `$...`:
 
 ```julia
-In [7]: %julia foo=3; "$foo"
-Out[7]: '3'
+In [6]: %julia foo=3; "$foo"
+Out[6]: '3'
 
-In [8]: %julia bar=3; :($$bar)
-Out[8]: 3
+In [7]: %julia bar=3; :($$bar)
+Out[7]: 3
 ```
 
 Variables are automatically converted between equivalent Python/Julia types (should they exist). You can turn this off by appending `o` to the Python string:
 
 ```python
-In [9]: %julia typeof(py"1"), typeof(py"1"o)
-Out[9]: (<PyCall.jlwrap Int64>, <PyCall.jlwrap PyObject>)
+In [8]: %julia typeof(py"1"), typeof(py"1"o)
+Out[8]: (<PyCall.jlwrap Int64>, <PyCall.jlwrap PyObject>)
 ```
 
-Note that interpolated variables always refer to the global Python scope:
+Interpolated variables obey Python scope, as expected:
 
 ```python
-In [10]: x = "global"
-    ...: def f():
-    ...:     x = "local"
-    ...:     ret = %julia py"x"
-    ...:     return ret
-    ...: f()
-Out[10]: 'global'
+In [9]: x = "global"
+   ...: def f():
+   ...:     x = "local"
+   ...:     ret = %julia py"x"
+   ...:     return ret
+   ...: f()
+Out[9]: 'local'
 ```
 
 #### IPython configuration

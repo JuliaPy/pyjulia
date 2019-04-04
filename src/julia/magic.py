@@ -100,7 +100,7 @@ class JuliaMagics(Magics):
 
         return self._julia.eval("""
         _PyJuliaHelper.@prepare_for_pyjulia_call begin %s end
-        """%src)(self.shell.user_ns, self.shell.user_ns)
+        """%src)(self.shell.user_ns, sys._getframe(4).f_locals)
 
 # Add to the global docstring the class information.
 __doc__ = __doc__.format(

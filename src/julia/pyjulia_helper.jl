@@ -73,8 +73,13 @@ macro prepare_for_pyjulia_call(ex)
         if isexpr(x, :$)
             if isexpr(x.args[1], :$)
                 x.args[1], false
-            else
+            elseif x.args[1] isa Symbol
                 make_pyeval(x.args[1]), false
+            else
+                error("""syntax error in: \$($(string(x.args[1])))
+                Use py"..." instead of \$(...) for interpolating Python expressions, 
+                or \$\$(...) for a literal Julia \$(...).
+                """)
             end
         elseif isexpr(x, :macrocall) && x.args[1]==Symbol("@py_str")
             make_pyeval(x.args[3:end]...), false
