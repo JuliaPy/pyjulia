@@ -81,11 +81,14 @@ macro prepare_for_pyjulia_call(ex)
                 """)
             end
         elseif isexpr(x, :macrocall) && x.args[1]==Symbol("@py_str")
-            make_pyeval(x.args[3:end]...), false
+            # in Julia 0.7+, x.args[2] is a LineNumberNode, so filter it out
+            # in a way that's compatible with Julia 0.6:
+            make_pyeval(filter(s->(s isa String), x.args[2:end])...), false
         else
             x, true
         end 
     end
+    
     esc(quote
         $pyfunction(($globals,$locals) -> (@eval Main $ex), $PyObject, $PyObject)
     end)
