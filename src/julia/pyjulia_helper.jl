@@ -61,7 +61,7 @@ macro prepare_for_pyjulia_call(ex)
     locals = gensym("locals")
     globals = gensym("globals")
     
-    function make_pyeval(expr, options...)
+    function make_pyeval(expr::Union{String,Symbol}, options...)
         code = string(expr)
         T = length(options) == 1 && 'o' in options[1] ? PyObject : PyAny
         input_type = '\n' in code ? Py_file_input : Py_eval_input
