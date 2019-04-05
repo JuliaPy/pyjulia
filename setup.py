@@ -70,6 +70,7 @@ setup(name='julia',
       entry_points={
           "console_scripts": [
               "python-jl = julia.python_jl:main",
+              "ipython-jl = julia.python_jl:ipython_main",
           ],
           "pytest11": [
               "julia = julia.pytestplugin",

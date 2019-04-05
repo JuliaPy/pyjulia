@@ -39,7 +39,12 @@ basic use-cases such as:
 ```console
 $ python-jl your_script.py
 $ python-jl -c 'from julia.Base import banner; banner()'
-$ python-jl -m IPython
+```
+
+For IPython, use:
+
+```console
+$ ipython-jl
 ```
 
 See `python-jl --help` for more information.

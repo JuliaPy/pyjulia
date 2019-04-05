@@ -116,6 +116,10 @@ def main(args=None):
     julia = ns.julia
     os.execvp(julia, [julia, "-e", script_jl, "--"] + unused_args)
 
+def ipython_main(args=None):
+    if args is None:
+        args = sys.argv[1:]
+    main(["-m","IPython"]+args)
 
 if __name__ == "__main__":
     main()
