@@ -98,7 +98,7 @@ def test_interp_escape(julia_magics):
 
 def test_type_conversion(julia_magics):
     assert julia_magics.run_cell("""
-    %julia py"1" isa Int && py"1"o isa PyObject
+    %julia py"1" isa Integer && py"1"o isa PyObject
     """) == True
 
 def test_scoping(julia_magics):
