@@ -59,7 +59,7 @@ before_script:
   - which $PYTHON
   - $PYTHON -m pip --version
   - $PYTHON -m pip install --quiet tox coveralls
-  - julia --color=yes -e 'VERSION >= v"0.7.0-DEV.5183" && using Pkg; Pkg.add("PyCall")'
+  - $PYTHON ci/install_pycall.py
 script:
 
   # Point PYJULIA_TEST_INCOMPATIBLE_PYTHONS to incompatible Python

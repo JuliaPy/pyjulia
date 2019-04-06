@@ -31,12 +31,9 @@ end  # if
 
 if VERSION < v"0.7.0"
 pycall_is_installed = Pkg.installed("PyCall") !== nothing
-pkgdir = Pkg.dir("PyCall")
 else
 pkg = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")
-modpath = Base.locate_package(pkg)
-pycall_is_installed = modpath !== nothing
-pkgdir = joinpath(dirname(modpath), "..")
+pycall_is_installed = Base.locate_package(pkg) !== nothing
 end  # if
 
 
@@ -122,6 +119,16 @@ else
         Pkg.add("PyCall")
     end
 end
+
+# Calling `Base.locate_package` again in case PyCall is just added by
+# `Pkg.add("PyCall")`
+if VERSION < v"0.7.0"
+pkgdir = Pkg.dir("PyCall")
+else
+pkg = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")
+modpath = Base.locate_package(pkg)
+pkgdir = joinpath(dirname(modpath), "..")
+end  # if
 
 if print_logfile
     logfile = joinpath(pkgdir, "deps", "build.log")

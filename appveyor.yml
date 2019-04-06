@@ -68,21 +68,11 @@ install:
   - C:\projects\julia-binary.exe /S /D=C:\projects\julia
 
 build_script:
-  - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;%PATH%"
+  - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
   - "\"C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\editbin.exe\" %PYTHONDIR%\\python.exe /STACK:8000000"
-  # - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.add(\"PyCall\"); Pkg.init(); Pkg.resolve()"
-  # - C:\projects\julia\bin\julia -e "using PyCall; @assert isdefined(:PyCall); @assert typeof(PyCall) === Module"
   - "SET PYTHON=%PYTHONDIR%\\python.exe"
-  - C:\projects\julia\bin\julia -e "
-      if VERSION >= v\"0.7.0-DEV.3630\";
-          using InteractiveUtils;
-          versioninfo(verbose=true);
-      else
-          versioninfo(true);
-      end;
-      VERSION >= v\"0.7.0-DEV.5183\" && using Pkg;
-      Pkg.add(\"PyCall\")"
   - "%PYTHONDIR%\\python.exe -m pip install --quiet tox"
+  - "%PYTHONDIR%\\python.exe ci\\install_pycall.py"
 
 test_script:
   - "SET PATH=%cd%\\%BATDIR%;%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
