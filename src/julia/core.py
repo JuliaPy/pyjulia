@@ -110,6 +110,24 @@ class JuliaError(Exception):
     """
 
 
+class JuliaNotFound(RuntimeError):
+    def __init__(self, executable, kwargname):
+        self.executable = executable
+        self.kwargname = kwargname
+
+    def __str__(self):
+        return """\
+Julia executable `{}` cannot be found.
+
+If you have installed Julia, make sure Julia executable is in the
+system PATH.  Alternatively, specify file path to the Julia executable
+using `{}` keyword argument.
+
+If you have not installed Julia, download Julia from
+https://julialang.org/downloads/ and install it.
+""".format(self.executable, self.kwargname)
+
+
 def remove_prefix(string, prefix):
     return string[len(prefix):] if string.startswith(prefix) else string
 
@@ -893,8 +911,7 @@ class Julia(object):
             if jl_runtime_path is None:
                 jl_runtime_path = which(runtime)
                 if jl_runtime_path is None:
-                    raise RuntimeError("Julia runtime {} cannot be found"
-                                       .format(runtime))
+                    raise JuliaNotFound(runtime, kwargname="runtime")
             else:
                 raise TypeError(
                     "Both `runtime` and `jl_runtime_path` are specified.")
