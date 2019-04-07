@@ -52,7 +52,8 @@ def pytest_sessionstart(session):
     _USING_DEFAULT_SETUP = not (julia_runtime != "julia" or options.as_args())
 
     enable_debug()
-    info = JuliaInfo.load(julia=julia_runtime)
+    global _JULIA_INFO
+    _JULIA_INFO = info = JuliaInfo.load(julia=julia_runtime)
     if (info.version_major, info.version_minor) < (0, 7):
         # In Julia 0.6, we have to load PyCall.jl here to do the
         # fake-julia setup.
@@ -79,6 +80,12 @@ def julia(request):
     from .core import Julia
 
     return Julia()
+
+
+@pytest.fixture(scope="session")
+def juliainfo(julia):
+    """ pytest fixture for providing `JuliaInfo` instance. """
+    return _JULIA_INFO
 
 
 def pytest_runtest_setup(item):

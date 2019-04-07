@@ -62,7 +62,6 @@ catch err
     @error "`import PyCall` failed" exception=(err, catch_backtrace())
     end  # if
     global PyCall = DummyPyCall
-    global pycall_is_installed = false
 end
 
 
@@ -99,7 +98,7 @@ elseif PyCall.python == python || PyCall.libpython == libpython
     """
     exit(code_no_precompile_needed)
 else
-    if pycall_is_installed
+    if PyCall.python !== nothing
         if isempty(libpython)
             @warn """
             PyCall is already installed.  However, you may have trouble using
@@ -121,6 +120,12 @@ else
             """
             build_pycall()
         end
+    elseif pycall_is_installed
+        @info """
+        PyCall is already installed but importing it failed.
+        Re-building PyCall may fix the issue...
+        """
+        build_pycall()
     else
         @info "Installing PyCall..."
         Pkg.add("PyCall")
