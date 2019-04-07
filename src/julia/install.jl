@@ -32,8 +32,7 @@ end  # if
 if VERSION < v"0.7.0"
 pycall_is_installed = Pkg.installed("PyCall") !== nothing
 else
-pkg = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")
-pycall_is_installed = Base.locate_package(pkg) !== nothing
+pycall_is_installed = haskey(Pkg.installed(), "PyCall")
 end  # if
 
 
