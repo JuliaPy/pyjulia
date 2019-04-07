@@ -35,7 +35,7 @@ def _julia_version(julia):
         return (0, 0, 0)
 
 
-def install(julia="julia", color="auto", env=None):
+def install(julia="julia", color="auto", env=None, python=None):
     """
     Install Julia packages required by PyJulia in `julia`.
 
@@ -69,10 +69,12 @@ def install(julia="julia", color="auto", env=None):
             julia_cmd.append("--color=yes")
         """
 
+    OP = "build" if python else "install"
     install_cmd = julia_cmd + [
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "install.jl"),
         "--",
-        sys.executable,
+        OP,
+        python or sys.executable,
         libpython,
     ]
 

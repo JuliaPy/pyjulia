@@ -1,4 +1,4 @@
-python, libpython = ARGS
+OP, python, libpython = ARGS
 
 # Special exit codes for this script.
 # (see: https://www.tldp.org/LDP/abs/html/exitcodes.html)
@@ -72,7 +72,21 @@ ENV["PYTHON"] = python
 # TODO: use PackageSpec to specify PyCall's UUID
 
 print_logfile = true
-if PyCall.python == python || PyCall.libpython == libpython
+
+function build_pycall()
+    if VERSION >= v"1.1.0-rc1"
+        @info """Run `Pkg.build("PyCall"; verbose=true)`"""
+        Pkg.build("PyCall"; verbose=true)
+        global print_logfile = false
+    else
+        @info """Run `Pkg.build("PyCall")`"""
+        Pkg.build("PyCall")
+    end
+end
+
+if OP == "build"
+    build_pycall()
+elseif PyCall.python == python || PyCall.libpython == libpython
     @info """
     PyCall is already installed and compatible with Python executable.
 
@@ -105,14 +119,7 @@ else
             PyCall is already installed but not compatible with this Python
             executable.  Re-building PyCall...
             """
-            if VERSION >= v"1.1.0-rc1"
-                @info """Run `Pkg.build("PyCall"; verbose=true)`"""
-                Pkg.build("PyCall"; verbose=true)
-                print_logfile = false
-            else
-                @info """Run `Pkg.build("PyCall")`"""
-                Pkg.build("PyCall")
-            end
+            build_pycall()
         end
     else
         @info "Installing PyCall..."

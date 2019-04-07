@@ -14,47 +14,28 @@ import sys
 from contextlib import contextmanager
 
 from .core import JuliaInfo
+from .tools import install
 
 
 @contextmanager
 def maybe_rebuild(rebuild, julia):
     if rebuild:
-        env = os.environ.copy()
         info = JuliaInfo.load(julia)
 
-        build = [julia, '-e', """
-        if VERSION >= v"0.7.0-DEV.3630"
-            using Pkg
-        end
-        Pkg.build("PyCall")
-        if VERSION < v"0.7.0"
-            pkgdir = Pkg.dir("PyCall")
-        else
-            modpath = Base.locate_package(Base.identify_package("PyCall"))
-            pkgdir = joinpath(dirname(modpath), "..")
-        end
-        logfile = joinpath(pkgdir, "deps", "build.log")
-        if isfile(logfile)
-            print(read(logfile, String))
-        end
-        """]
         print('Building PyCall.jl with PYTHON =', sys.executable)
-        print(*build)
         sys.stdout.flush()
-        subprocess.check_call(build, env=dict(env, PYTHON=sys.executable))
+        # Passing `python` to force build (OP="build")
+        install(julia=julia, python=sys.executable)
         try:
             yield
         finally:
-            print()  # clear out messages from py.test
-            print('Restoring previous PyCall.jl build...')
-            print(*build)
             if info.python:
                 # Use str to avoid "TypeError: environment can only
                 # contain strings" in Python 2.7 + Windows:
-                env = dict(env, PYTHON=str(info.python))
-            if 'PYTHON' in env:
-                print('PYTHON =', env['PYTHON'])
-            subprocess.check_call(build, env=env)
+                python = str(info.python)
+                print()  # clear out messages from py.test
+                print('Restoring previous PyCall.jl build with PYTHON =', python)
+                install(julia=julia, python=python)
     else:
         yield
 
