@@ -55,8 +55,9 @@ Step 2: Install PyJulia
 
 **Note:** If you are not familiar with ``pip`` and have some troubles
 with the following installation steps, we recommend going through the
-`Tutorials in Python Packaging User
-Guide <https://packaging.python.org/tutorials/>`_.
+`Tutorial in Python Packaging User Guide
+<https://packaging.python.org/tutorials/installing-packages/>`_ or
+`pip's User Guide <https://pip.pypa.io/en/stable/user_guide/>`_.
 
 To get released versions you can use:
 
