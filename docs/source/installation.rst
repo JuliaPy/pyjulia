@@ -2,29 +2,61 @@
  Installation
 ==============
 
+.. admonition:: tl;dr
+
+   1. :ref:`Install Julia <install-julia>`.
+
+   2. :ref:`Install PyJulia <install-pyjulia>` by
+
+      .. code-block:: console
+
+         $ python3 -m pip install --user julia
+
+      Remove ``--user`` if you are using a virtual environment.
+
+   3. :ref:`Install Julia dependencies of PyJulia <install-julia-packages>`
+      by
+
+      .. code-block:: console
+
+         $ python3
+         >>> import julia
+         >>> julia.install()
+
+See below for more detailed explanations.
+
 **Note:** If you are using Python installed with Ubuntu or ``conda``,
 PyJulia may not work with Julia ≥ 0.7. For workarounds, see
 :doc:`Troubleshooting <troubleshooting>`. Same caution applies to any
 Debian-based and possibly other GNU/Linux distributions.
 
-You will need to install PyCall in your existing Julia installation
 
-.. code:: julia
+.. _install-julia:
 
-   julia> using Pkg  # for julia ≥ 0.7
-   julia> Pkg.add("PyCall")
+Step 1: Install Julia
+=====================
+
+Get the Julia installer from https://julialang.org/downloads/.  See
+also the `Platform Specific Instructions
+<https://julialang.org/downloads/platform.html>`_.
 
 Your python installation must be able to call command line program
 ``julia``. If your installer does not add the Julia binary directory to
 your ``PATH``, you will have to add it. *An alias will not work.*
 
-Then finally you have to install PyJulia.
+Alternatively, you can pass the file path of the Julia executable to
+PyJulia functions.  See `julia.install` and `Julia`.
+
+
+.. _install-pyjulia:
+
+Step 2: Install PyJulia
+=======================
 
 **Note:** If you are not familiar with ``pip`` and have some troubles
 with the following installation steps, we recommend going through the
 `Tutorials in Python Packaging User
 Guide <https://packaging.python.org/tutorials/>`_.
-
 
 To get released versions you can use:
 
@@ -63,3 +95,28 @@ PyJulia source tree will take effect at next python interpreter restart
 without having to reissue an install command.
 
 See :doc:`Testing <testing>` for how to run tests.
+
+
+.. _install-julia-packages:
+
+Step 3: Install Julia packages required by PyJulia
+==================================================
+
+Launch a Python REPL and run the following code
+
+>>> import julia
+>>> julia.install()
+
+This installs Julia packages required by PyJulia.  See also
+`julia.install`.
+
+Alternatively, you can use Julia's builtin package manager.
+
+.. code-block:: jlcon
+
+   julia> using Pkg  # for julia ≥ 0.7
+   julia> Pkg.add("PyCall")
+
+Note that PyCall must be built with Python executable that is used to
+import PyJulia.  See https://github.com/JuliaPy/PyCall.jl for more
+information about configuring PyCall.

@@ -11,18 +11,13 @@ Quick usage
 -----------
 
 ```console
-$ julia                                  # install PyCall.jl
-...
-julia> using Pkg  # for julia ≥ 0.7
-julia> Pkg.add("PyCall")
-...
-julia> exit()
+$ python3 -m pip install julia    # install PyJulia
+...                               # you may need `--user` after `install`
 
-$ python3 -m pip install --user julia    # install PyJulia
-...
-
-$ python3                                # short demo
->>> from julia import Base
+$ python3
+>>> import julia
+>>> julia.install()               # install PyCall.jl etc.
+>>> from julia import Base        # short demo
 >>> Base.sind(90)
 1.0
 ```

@@ -41,15 +41,18 @@ def _julia_version(julia):
 
 def install(julia="julia", color="auto", env=None, python=None, quiet=False):
     """
+    install(*, julia="julia", color="auto")
     Install Julia packages required by PyJulia in `julia`.
 
-    This function installs and/or re-builds PyCall if necessary.
+    This function installs and/or re-builds PyCall if necessary.  It
+    also makes sure to build PyCall in a way compatible with this
+    Python executable (if possible).
 
     Keyword Arguments
     -----------------
     julia : str
         Julia executable (default: "julia")
-    color : {"auto", False, True}
+    color : "auto", False or True
         Use colorful output if `True`.  "auto" (default) to detect it
         automatically.
     """

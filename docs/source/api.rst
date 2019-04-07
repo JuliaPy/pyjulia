@@ -1,3 +1,13 @@
+=====
+ API
+=====
+
+Utility functions
+=================
+
+.. autofunction:: julia.install
+
+
 Low-level API
 =============
 
