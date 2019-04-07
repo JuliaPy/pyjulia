@@ -35,7 +35,7 @@ def maybe_rebuild(rebuild, julia):
                 python = str(info.python)
                 print()  # clear out messages from py.test
                 print('Restoring previous PyCall.jl build with PYTHON =', python)
-                install(julia=julia, python=python)
+                install(julia=julia, python=python, quiet=True)
     else:
         yield
 

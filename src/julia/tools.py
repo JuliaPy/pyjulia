@@ -10,11 +10,15 @@ from .find_libpython import linked_libpython
 
 
 class PyCallInstallError(RuntimeError):
-    def __init__(self, op):
+    def __init__(self, op, output=None):
         self.op = op
+        self.output = output
 
     def __str__(self):
-        return """\
+        if self.output:
+            return "{} PyCall failed with output:\n\n{}".format(self.op, self.output)
+        else:
+            return """\
 {} PyCall failed.
 
 ** Important information from Julia may be printed before Python's Traceback **
@@ -22,8 +26,8 @@ class PyCallInstallError(RuntimeError):
 Some useful information may also be stored in the build log file
 `~/.julia/packages/PyCall/*/deps/build.log`.
 """.format(
-            self.op
-        )
+                self.op
+            )
 
 
 def _julia_version(julia):
@@ -35,7 +39,7 @@ def _julia_version(julia):
         return (0, 0, 0)
 
 
-def install(julia="julia", color="auto", env=None, python=None):
+def install(julia="julia", color="auto", env=None, python=None, quiet=False):
     """
     Install Julia packages required by PyJulia in `julia`.
 
@@ -57,6 +61,8 @@ def install(julia="julia", color="auto", env=None, python=None):
     env = env or _enviorn.copy()
 
     julia_cmd = [julia, "--startup-file=no"]
+    if quiet:
+        color = False
     if color == "auto":
         color = sys.stdout.isatty()
     if color:
@@ -78,15 +84,24 @@ def install(julia="julia", color="auto", env=None, python=None):
         libpython,
     ]
 
-    returncode = subprocess.call(install_cmd, env=env)
+    kwargs = {}
+    if quiet:
+        kwargs.update(
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
+        )
+    proc = subprocess.Popen(install_cmd, **kwargs)
+    output, _ = proc.communicate()
+    returncode = proc.returncode
+
     if returncode == 113:  # code_no_precompile_needed
         return
     elif returncode != 0:
-        raise PyCallInstallError("Installing")
+        raise PyCallInstallError("Installing", output)
 
-    print(file=sys.stderr)
-    print("Precompiling PyCall...", file=sys.stderr)
-    sys.stderr.flush()
+    if not quiet:
+        print(file=sys.stderr)
+        print("Precompiling PyCall...", file=sys.stderr)
+        sys.stderr.flush()
     precompile_cmd = julia_cmd + ["-e", "using PyCall"]
     returncode = subprocess.call(precompile_cmd, env=env)
     if returncode != 0:
