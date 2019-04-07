@@ -87,7 +87,7 @@ def install(julia="julia", color="auto", env=None, python=None, quiet=False):
         libpython,
     ]
 
-    kwargs = {}
+    kwargs = dict(env=env)
     if quiet:
         kwargs.update(
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
