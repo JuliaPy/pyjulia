@@ -15,6 +15,11 @@ Tests that are too destructive to run with casual `tox` call.
 
 
 @only_in_ci
+def test_noop(juliainfo):
+    install(julia=juliainfo.julia)
+
+
+@only_in_ci
 def test_rebuild_broken_pycall(juliainfo):
     if juliainfo.version_info < (0, 7):
         pytest.skip("Julia >= 0.7 required")
