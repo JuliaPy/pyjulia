@@ -29,6 +29,12 @@ from traitlets import Bool, Enum
 from .core import Julia, JuliaError
 from .tools import redirect_output_streams
 
+try:
+    from IPython.core.magic import no_var_expand
+except ImportError:
+    def no_var_expand(f):
+        return f
+
 #-----------------------------------------------------------------------------
 # Main classes
 #-----------------------------------------------------------------------------
@@ -89,6 +95,7 @@ class JuliaMagics(Magics):
         self._julia = Julia(init_julia=True)
         print()
 
+    @no_var_expand
     @line_cell_magic
     def julia(self, line, cell=None):
         """
@@ -97,14 +104,17 @@ class JuliaMagics(Magics):
         """
         src = compat.unicode_type(line if cell is None else cell)
 
-        try:
-            ans = self._julia.eval(src)
-        except JuliaError as e:
-            print(e, file=sys.stderr)
-            ans = None
-
-        return ans
-
+        # We assume the caller's frame is the first parent frame not in the
+        # IPython module. This seems to work with IPython back to ~v5, and
+        # is at least somewhat immune to future IPython internals changes,
+        # although by no means guaranteed to be perfect.
+        caller_frame = sys._getframe(3)
+        while caller_frame.f_globals.get('__name__').startswith("IPython"):
+            caller_frame = caller_frame.f_back
+        
+        return self._julia.eval("""
+        _PyJuliaHelper.@prepare_for_pyjulia_call begin %s end
+        """%src)(self.shell.user_ns, caller_frame.f_locals)
 
 # Add to the global docstring the class information.
 __doc__ = __doc__.format(

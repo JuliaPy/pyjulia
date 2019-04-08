@@ -67,23 +67,64 @@ You can then use, e.g.,
 
 ### IPython magic
 
-In IPython (and therefore in Jupyter), you can directly execute Julia
-code using `%%julia` magic:
+In IPython (and therefore in Jupyter), you can directly execute Julia code using `%julia` magic:
 
-```
+```python
 In [1]: %load_ext julia.magic
 Initializing Julia runtime. This may take some time...
 
-In [2]: %%julia
-   ...: Base.banner(IOContext(stdout, :color=>true))
-               _
-   _       _ _(_)_     |  Documentation: https://docs.julialang.org
-  (_)     | (_) (_)    |
-   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
-  | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.0.1 (2018-09-29)
- _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
-|__/                   |
+In [2]: %julia [1 2; 3 4] .+ 1 
+Out[2]: 
+array([[2, 3],
+       [4, 5]], dtype=int64)
+```
+
+You can call Python code from inside of `%julia` blocks via `$var` for accessing single variables or `py"..."` for more complex expressions:
+
+```julia
+In [3]: arr = [1, 2, 3]
+
+In [4]: %julia $arr .+ 1
+Out[4]: 
+array([2, 3, 4], dtype=int64)
+
+In [5]: %julia sum(py"[x**2 for x in arr]")
+Out[5]: 14
+```
+
+Inside of strings and quote blocks, `$var` and `py"..."` don't call Python and instead retain their usual Julia behavior. To call Python code in these cases, you can "escape" one extra time:
+
+```julia
+In [6]: foo = "Python"
+        %julia foo = "Julia"
+        %julia ("this is $foo", "this is $($foo)")
+Out[6]: ('this is Julia', 'this is Python')
+```
+
+Expressions in macro arguments also always retain the Julia behavior:
+
+```julia
+In [7]: %julia @eval $foo
+Out[7]: 'Julia'
+```
+
+Results are automatically converted between equivalent Python/Julia types (should they exist). You can turn this off by appending `o` to the Python string:
+
+```python
+In [8]: %julia typeof(py"1"), typeof(py"1"o)
+Out[8]: (<PyCall.jlwrap Int64>, <PyCall.jlwrap PyObject>)
+```
+
+Code inside `%julia` blocks obeys the Python scope:
+
+```python
+In [9]: x = "global"
+   ...: def f():
+   ...:     x = "local"
+   ...:     ret = %julia py"x"
+   ...:     return ret
+   ...: f()
+Out[9]: 'local'
 ```
 
 #### IPython configuration
