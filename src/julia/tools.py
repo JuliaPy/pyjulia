@@ -109,6 +109,10 @@ def install(julia="julia", color="auto", env=None, python=None, quiet=False):
     returncode = subprocess.call(precompile_cmd, env=env)
     if returncode != 0:
         raise PyCallInstallError("Precompiling")
+    if not quiet:
+        print("Precompiling PyCall... DONE", file=sys.stderr)
+        print("PyCall is installed and built successfully.", file=sys.stderr)
+        sys.stderr.flush()
 
 
 def make_receiver(io):
