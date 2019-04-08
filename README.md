@@ -1,6 +1,7 @@
 PyJulia
 =======
 
+[![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://pyjulia.readthedocs.io/en/stable/)
 [![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://pyjulia.readthedocs.io/en/latest/)
 [![Build Status](https://travis-ci.org/JuliaPy/pyjulia.svg?branch=master)](https://travis-ci.org/JuliaPy/pyjulia)
 [![Build status](https://ci.appveyor.com/api/projects/status/github/JuliaPy/pyjulia?svg=true)](https://ci.appveyor.com/project/Keno/pyjulia)
