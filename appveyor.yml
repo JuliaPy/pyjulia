@@ -4,6 +4,11 @@ environment:
   TOX_TESTENV_PASSENV: DISTUTILS_USE_SDK MSSdk INCLUDE LIB
   # https://packaging.python.org/guides/supporting-windows-using-appveyor/#testing-with-tox
 
+  # Point PYJULIA_TEST_INCOMPATIBLE_PYTHONS to incompatible Python
+  # executable (see: test/test_compatible_exe.py).  MUST specify
+  # Python versions NOT listed in the matrix below:
+  PYJULIA_TEST_INCOMPATIBLE_PYTHONS: python3.6.bat
+
   # for more python versions have a look at
   # https://github.com/ogrisel/python-appveyor-demo/blob/master/appveyor.yml
   matrix:
