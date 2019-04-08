@@ -30,9 +30,26 @@ use `otool -L` instead of `ldd`.  If it does not print the path to
 libpython like `/usr/lib/libpython3.7m.so.1.0` in above example, you
 need to use one of the workaround below.
 
+#### Turn off compilation cache
+
+The easiest workaround is to pass `compiled_modules=False` to the
+`Julia` constructor.
+
+```pycon
+>>> from julia.api import Julia
+>>> jl = Julia(compiled_modules=False)
+```
+
+This is equivalent to `julia`'s command line option
+`--compiled-modules=no` and disables the precompilation cache
+mechanism in Julia.  Note that this option slows down loading and
+using Julia packages especially for complex and large ones.
+
+See also [low-level API](api.md)
+
 #### `python-jl`: an easy workaround
 
-The easiest workaround is to use the `python-jl` command bundled in
+Another easy workaround is to use the `python-jl` command bundled in
 PyJulia.  This can be used instead of normal `python` command for
 basic use-cases such as:
 
@@ -72,20 +89,6 @@ julia> py"""
        function()
        """
 ```
-
-#### Turn off compilation cache
-
-PyCall can work with statically linked libpython when compilation
-cache is not used.  This can be done by passing keyword option
-`compiled_modules=False` to `Julia` which is equivalent to command
-line option `--compiled-modules=no`:
-
-```pycon
->>> from julia.api import Julia
->>> jl = Julia(compiled_modules=False)
-```
-
-See also [low-level API](api.md)
 
 #### Ultimate fix: build your own Python
 
