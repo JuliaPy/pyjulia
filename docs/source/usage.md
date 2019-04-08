@@ -91,15 +91,22 @@ In [5]: %julia sum(py"[x**2 for x in arr]")
 Out[5]: 14
 ```
 
-Python interpolation is not performed inside of strings (instead this is treated as regular Julia string interpolation), and can also be overridden elsewhere by using `$$...` to insert a literal `$...`:
+Interpolation from Python is only done outside of strings and quote blocks; to interpolate into these, you'll need to "escape" them one extra time:
 
 ```julia
-In [6]: %julia foo=3; "$foo"
-Out[6]: '3'
-
-In [7]: %julia bar=3; :($$bar)
-Out[7]: 3
+In [6]: foo="Python"
+        %julia foo="Julia"
+        %julia "this is $foo", "this is $($foo)"
+Out[6]: ('this is Julia', 'this is Python')
 ```
+
+Expressions inside of macros are never interpolated from Python:
+
+```julia
+In [7]: %julia @eval $foo
+Out[7]: 'Julia'
+```
+
 
 Variables are automatically converted between equivalent Python/Julia types (should they exist). You can turn this off by appending `o` to the Python string:
 

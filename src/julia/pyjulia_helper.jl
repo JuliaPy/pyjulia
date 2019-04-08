@@ -49,48 +49,61 @@ if VERSION >= v"0.7-"
 end
 
 
+# takes an expression like `$foo + 1` and turns it into a pyfunction
+# `(globals,locals) -> convert(PyAny, pyeval_("foo",globals,locals,PyAny)) + 1`
+# so that Python code can all it and just pass the appropriate globals/locals
+# dicts to perform the interpolation. 
 macro prepare_for_pyjulia_call(ex)
     
-    # f(x) should return a transformed expression x and whether to recurse 
-    # into the new expression
-    function stoppable_walk(f, x)
-        (fx, recurse) = f(x)
-        walk(fx, (recurse ? (x -> stoppable_walk(f,x)) : identity), identity)
+    # f(x, quote_depth) should return a transformed expression x and whether to
+    # recurse into the new expression. quote_depth keeps track of how deep
+    # inside of nested quote objects we arepyeval
+    function stoppable_walk(f, x, quote_depth=1)
+        (fx, recurse) = f(x, quote_depth)
+        if isexpr(fx,:quote)
+            quote_depth += 1
+        end
+        if isexpr(fx,:$)
+            quote_depth -= 1
+        end
+        walk(fx, (recurse ? (x -> stoppable_walk(f,x,quote_depth)) : identity), identity)
     end
     
-    locals = gensym("locals")
-    globals = gensym("globals")
-    
-    function make_pyeval(expr::Union{String,Symbol}, options...)
+    function make_pyeval(globals, locals, expr::Union{String,Symbol}, options...)
         code = string(expr)
         T = length(options) == 1 && 'o' in options[1] ? PyObject : PyAny
         input_type = '\n' in code ? Py_file_input : Py_eval_input
-        :($convert($T, $pyeval_($code, $(Expr(:$,globals)), $(Expr(:$,locals)), $input_type)))
+        :($convert($T, $pyeval_($code, $globals, $locals, $input_type)))
     end
-        
-    ex = stoppable_walk(ex) do x
-        if isexpr(x, :$)
-            if isexpr(x.args[1], :$)
-                x.args[1], false
-            elseif x.args[1] isa Symbol
-                make_pyeval(x.args[1]), false
+    
+    function insert_pyevals(globals, locals, ex)
+        stoppable_walk(ex) do x, quote_depth
+            if quote_depth==1 && isexpr(x, :$)
+                if x.args[1] isa Symbol
+                    make_pyeval(globals, locals, x.args[1]), false
+                else
+                    error("""syntax error in: \$($(string(x.args[1])))
+                    Use py"..." instead of \$(...) for interpolating Python expressions.""")
+                end
+            elseif quote_depth==1 && isexpr(x, :macrocall)
+                if x.args[1]==Symbol("@py_str")
+                    # in Julia 0.7+, x.args[2] is a LineNumberNode, so filter it out
+                    # in a way that's compatible with Julia 0.6:
+                    make_pyeval(globals, locals, filter(s->(s isa String), x.args[2:end])...), false
+                else
+                    x, false
+                end
             else
-                error("""syntax error in: \$($(string(x.args[1])))
-                Use py"..." instead of \$(...) for interpolating Python expressions, 
-                or \$\$(...) for a literal Julia \$(...).
-                """)
+                x, true
             end
-        elseif isexpr(x, :macrocall) && x.args[1]==Symbol("@py_str")
-            # in Julia 0.7+, x.args[2] is a LineNumberNode, so filter it out
-            # in a way that's compatible with Julia 0.6:
-            make_pyeval(filter(s->(s isa String), x.args[2:end])...), false
-        else
-            x, true
-        end 
+        end
     end
     
     esc(quote
-        $pyfunction(($globals,$locals) -> (@eval Main $ex), $PyObject, $PyObject)
+        $pyfunction(
+            (globals, locals)->Base.eval(Main, $insert_pyevals(globals, locals, $(QuoteNode(ex)))),
+            $PyObject, $PyObject
+        )
     end)
 end
 

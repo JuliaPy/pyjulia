@@ -77,18 +77,33 @@ def test_bad_interp(run_cell):
         """)
 
 def test_string_interp(run_cell):
+    run_cell("foo='python'")
     assert run_cell("""
     %%julia 
-    foo=3
-    "$foo"
-    """) == '3'
+    foo="julia"
+    "$foo", "$($foo)"
+    """) == ('julia','python')
 
-def test_interp_escape(run_cell):
+def test_expr_interp(run_cell):
+    run_cell("foo='python'")
+    assert run_cell("""
+    %%julia 
+    foo="julia"
+    :($foo), :($($foo))
+    """) == ('julia','python')
+    
+def test_expr_py_interp(run_cell):
+    assert "baz" in str(run_cell("""
+    %julia :(py"baz")
+    """))
+    
+def test_macro_esc(run_cell):
     assert run_cell("""
     %%julia
-    bar=3
-    :($$bar)
-    """) == 3
+    x = 1
+    @eval y = $x
+    y
+    """) == 1
 
 def test_type_conversion(run_cell):
     assert run_cell("""
