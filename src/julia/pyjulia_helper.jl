@@ -51,7 +51,7 @@ end
 
 # takes an expression like `$foo + 1` and turns it into a pyfunction
 # `(globals,locals) -> convert(PyAny, pyeval_("foo",globals,locals,PyAny)) + 1`
-# so that Python code can all it and just pass the appropriate globals/locals
+# so that Python code can call it and just pass the appropriate globals/locals
 # dicts to perform the interpolation. 
 macro prepare_for_pyjulia_call(ex)
     

@@ -79,9 +79,10 @@ array([[2, 3],
        [4, 5]], dtype=int64)
 ```
 
-You can "interpolate" Python objects into Julia code via `$var` for the value of single variables or `py"expression"` for the result of any arbitrary Python code:
+You can call Python code from inside of `%julia` blocks via `$var` for accessing single variables or `py"..."` for more complex expressions:
+
 ```julia
-In [3]: arr = [1,2,3]
+In [3]: arr = [1, 2, 3]
 
 In [4]: %julia $arr .+ 1
 Out[4]: 
@@ -91,31 +92,30 @@ In [5]: %julia sum(py"[x**2 for x in arr]")
 Out[5]: 14
 ```
 
-Interpolation from Python is only done outside of strings and quote blocks; to interpolate into these, you'll need to "escape" them one extra time:
+Inside of strings and quote blocks, `$var` and `py"..."` don't call Python and instead retain their usual Julia behavior. To call Python code in these cases, you can "escape" one extra time:
 
 ```julia
-In [6]: foo="Python"
-        %julia foo="Julia"
-        %julia "this is $foo", "this is $($foo)"
+In [6]: foo = "Python"
+        %julia foo = "Julia"
+        %julia ("this is $foo", "this is $($foo)")
 Out[6]: ('this is Julia', 'this is Python')
 ```
 
-Expressions inside of macros are never interpolated from Python:
+Expressions in macro arguments also always retain the Julia behavior:
 
 ```julia
 In [7]: %julia @eval $foo
 Out[7]: 'Julia'
 ```
 
-
-Variables are automatically converted between equivalent Python/Julia types (should they exist). You can turn this off by appending `o` to the Python string:
+Results are automatically converted between equivalent Python/Julia types (should they exist). You can turn this off by appending `o` to the Python string:
 
 ```python
 In [8]: %julia typeof(py"1"), typeof(py"1"o)
 Out[8]: (<PyCall.jlwrap Int64>, <PyCall.jlwrap PyObject>)
 ```
 
-Interpolated variables obey Python scope, as expected:
+Code inside `%julia` blocks obeys the Python scope:
 
 ```python
 In [9]: x = "global"
