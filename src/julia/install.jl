@@ -131,8 +131,6 @@ else
     end
 end
 
-# Calling `Base.locate_package` again in case PyCall is just added by
-# `Pkg.add("PyCall")`
 if VERSION < v"0.7.0"
 pkgdir = Pkg.dir("PyCall")
 else
