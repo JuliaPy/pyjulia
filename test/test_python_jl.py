@@ -11,7 +11,12 @@ from julia.python_jl import parse_pyjl_args
 is_windows = os.name == "nt"
 
 PYJULIA_TEST_REBUILD = os.environ.get("PYJULIA_TEST_REBUILD", "no") == "yes"
-JULIA = os.environ.get("PYJULIA_TEST_RUNTIME")
+
+python_jl_required = pytest.mark.skipif(
+    os.environ.get("PYJULIA_TEST_PYTHON_JL_IS_INSTALLED", "no") != "yes"
+    and not which("python-jl"),
+    reason="python-jl command not found",
+)
 
 
 @pytest.mark.parametrize("args", [
@@ -37,6 +42,7 @@ quick_pass_cli_args = [
 ]
 
 
+@python_jl_required
 @pytest.mark.parametrize("args", quick_pass_cli_args)
 def test_cli_quick_pass(args):
     subprocess.check_output(
@@ -44,6 +50,7 @@ def test_cli_quick_pass(args):
     )
 
 
+@python_jl_required
 @pytest.mark.skipif(
     not which("false"),
     reason="false command not found")
@@ -54,23 +61,26 @@ def test_cli_quick_pass_no_julia(args):
     )
 
 
+@python_jl_required
 @pytest.mark.skipif(
     is_windows,
     reason="python-jl is not supported in Windows")
 @pytest.mark.skipif(
+    # This test makes sense only when PyJulia is importable by
+    # `PyCall.python`.  Thus, it is safe to run this test only when
+    # `PYJULIA_TEST_REBUILD=yes`; i.e., PyCall is using this Python
+    # executable.
     not PYJULIA_TEST_REBUILD,
     reason="PYJULIA_TEST_REBUILD=yes is not set")
-@pytest.mark.julia
-def test_cli_import():
-    args = ["-c", dedent("""
+def test_cli_import(juliainfo):
+    code = """
     from julia import Base
     Base.banner()
     from julia import Main
     Main.x = 1
     assert Main.x == 1
-    """)]
-    if JULIA:
-        args = ["--julia", JULIA] + args
+    """
+    args = ["--julia", juliainfo.julia, "-c", dedent(code)]
     output = subprocess.check_output(
         ["python-jl"] + args,
         universal_newlines=True)
