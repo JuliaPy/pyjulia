@@ -127,8 +127,8 @@ def test_getattr_submodule(Main):
 def test_star_import_julia_module(julia, tmp_path):
     # Create a Python module __pyjulia_star_import_test
     path = tmp_path / "__pyjulia_star_import_test.py"
-    path.write_text("from julia.Base.Enums import *")
-    sys.path.insert(0, tmp_path)
+    path.write_text(u"from julia.Base.Enums import *")
+    sys.path.insert(0, str(tmp_path))
 
     import __pyjulia_star_import_test
 
