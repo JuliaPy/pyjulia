@@ -124,10 +124,15 @@ def test_getattr_submodule(Main):
     assert Main._PyJuliaHelper.IOPiper.__name__ == "julia.Main._PyJuliaHelper.IOPiper"
 
 
-def test_star_import_julia_module(julia):
-    from . import _star_import
+def test_star_import_julia_module(julia, tmp_path):
+    # Create a Python module __pyjulia_star_import_test
+    path = tmp_path / "__pyjulia_star_import_test.py"
+    path.write_text("from julia.Base.Enums import *")
+    sys.path.insert(0, tmp_path)
 
-    _star_import.Enum
+    import __pyjulia_star_import_test
+
+    __pyjulia_star_import_test.Enum
 
 
 def test_main_module(julia, Main):
