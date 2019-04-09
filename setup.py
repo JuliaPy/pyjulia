@@ -71,7 +71,9 @@ setup(name='julia',
           "test": [
               "numpy",
               "ipython",
-              "pytest>=4.0",
+              # pytest 4.4 for pytest.skip in doctest:
+              # https://github.com/pytest-dev/pytest/pull/4927
+              "pytest>=4.4",
               "mock",
           ],
       },
