@@ -112,7 +112,14 @@ def main(args=None):
         Command line arguments to be passed to pytest.
         """,
     )
-    ns = parser.parse_args(args)
+    ns, pytest_args = parser.parse_known_args(args)
+    if ns.pytest_args and pytest_args:
+        parser.error(
+            "Ambiguous arguments.  Use `--` to separate pytest options"
+            " from options for julia.runtests."
+        )
+    if pytest_args:
+        ns.pytest_args = pytest_args
     try:
         runtests(**vars(ns))
     except ApplicationError as err:
