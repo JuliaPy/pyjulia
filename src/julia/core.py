@@ -350,7 +350,8 @@ println(VERSION.patch)
 if VERSION < v"0.7.0"
     PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
 else
-    modpath = Base.locate_package(Base.identify_package("PyCall"))
+    pkg = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")
+    modpath = Base.locate_package(pkg)
     if modpath == nothing
         PyCall_depsfile = nothing
     else
