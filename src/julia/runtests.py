@@ -7,7 +7,11 @@ from __future__ import print_function, absolute_import
 import argparse
 import sys
 import os
-import shlex
+
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote  # Python 2.7
 
 
 class ApplicationError(RuntimeError):
@@ -30,7 +34,7 @@ To run `julia.runtests`, use the following command to install `pytest`:
 
 Note that you may need to add option `--user` after `install`.
 """.format(
-    shlex.quote(sys.executable)
+    quote(sys.executable)
 ).strip()
 
 
@@ -76,7 +80,7 @@ def runtests(pytest_args, dry_run):
     ]
     cmd.extend(pytest_args)
     if dry_run:
-        print(*map(shlex.quote, cmd))
+        print(*map(quote, cmd))
         return
     os.execvp(cmd[0], cmd)
 
