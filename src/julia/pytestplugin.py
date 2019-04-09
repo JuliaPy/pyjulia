@@ -1,5 +1,7 @@
 from __future__ import print_function, absolute_import
 
+import sys
+
 import pytest
 
 from .options import JuliaOptions
@@ -54,6 +56,30 @@ def pytest_sessionstart(session):
     enable_debug()
     global _JULIA_INFO
     _JULIA_INFO = info = JuliaInfo.load(julia=julia_runtime)
+
+    if (
+        options.compiled_modules != "no"
+        and not info.is_compatible_python()
+        and info.version_info >= (0, 7)
+    ):
+        print(
+            """
+PyJulia does not fully support this combination of Julia and Python.
+Try:
+
+    * Pass `--julia-compiled-modules=no` option to disable
+      precompilation cache.
+
+    * Use `--julia-runtime` option to specify different Julia
+      executable.
+
+    * Pass `--no-julia` to run tests that do not rely on Julia
+      runtime.
+            """,
+            file=sys.stderr,
+        )
+        pytest.exit("incompatible runtimes", returncode=1)
+
     if (info.version_major, info.version_minor) < (0, 7):
         # In Julia 0.6, we have to load PyCall.jl here to do the
         # fake-julia setup.
