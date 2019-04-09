@@ -67,6 +67,14 @@ setup(name='julia',
       packages=find_packages("src"),
       package_dir={"": "src"},
       package_data={'julia': ['fake-julia/*', "*.jl"]},
+      extras_require={
+          "test": [
+              "numpy",
+              "ipython",
+              "pytest>=4.0",
+              "mock",
+          ],
+      },
       entry_points={
           "console_scripts": [
               "python-jl = julia.python_jl:main",
