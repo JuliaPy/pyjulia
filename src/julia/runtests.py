@@ -42,8 +42,7 @@ def check_test_dependencies():
     # See `extras_require` in setup.py
     try:
         import numpy
-        import IPython
-        import mock
+        import IPython.testing.tools  # may require `mock`
     except ImportError:
         raise ApplicationError(msg_test_dependencies)
 
