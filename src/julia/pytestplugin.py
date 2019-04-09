@@ -38,9 +38,6 @@ def pytest_addoption(parser):
 
 
 def pytest_sessionstart(session):
-    if not session.config.getoption("julia"):
-        return
-
     from .core import LibJulia, JuliaInfo, Julia, enable_debug
 
     options = JuliaOptions()
@@ -52,6 +49,9 @@ def pytest_sessionstart(session):
 
     global _USING_DEFAULT_SETUP
     _USING_DEFAULT_SETUP = not (julia_runtime != "julia" or options.as_args())
+
+    if not session.config.getoption("julia"):
+        return
 
     enable_debug()
     global _JULIA_INFO
@@ -119,7 +119,7 @@ def pytest_runtest_setup(item):
         for mark in item.iter_markers("julia"):
             pytest.skip("--no-julia is given.")
 
-    if not (item.config.getoption("julia") and _USING_DEFAULT_SETUP):
+    if not _USING_DEFAULT_SETUP:
         for mark in item.iter_markers("pyjulia__using_default_setup"):
             pytest.skip(
                 "using non-default setup (e.g., --julia-<julia_option> is given)"

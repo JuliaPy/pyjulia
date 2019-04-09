@@ -153,6 +153,7 @@ def test_module_dir(julia):
 
 
 @pytest.mark.pyjulia__using_default_setup
+@pytest.mark.julia
 def test_import_without_setup():
     command = [sys.executable, "-c", "from julia import Base"]
     print("Executing:", *command)

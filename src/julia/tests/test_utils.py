@@ -45,6 +45,7 @@ def test_raise_separate_cache_error_dynamically_linked():
 
 
 @pytest.mark.pyjulia__using_default_setup
+@pytest.mark.julia
 def test_atexit():
     proc = runcode(
         sys.executable,
