@@ -5,10 +5,12 @@ from IPython.testing import globalipapp
 
 from julia import magic
 
+
 @pytest.fixture
-def julia_magics():
+def julia_magics(julia):
     return magic.JuliaMagics(shell=globalipapp.get_ipython())
-    
+
+
 @pytest.fixture
 def run_cell(julia_magics):
     # a more convenient way to run strings (possibly with magic) as if they were
@@ -26,7 +28,7 @@ def run_cell(julia_magics):
     return run_cell_impl
 
 
-def test_register_magics():
+def test_register_magics(julia):
     magic.load_ipython_extension(globalipapp.get_ipython())
 
 
