@@ -792,35 +792,40 @@ Python interpreter used to import PyJulia and its libpython.
 
 _separate_cache_error_common_footer = """
 For more information, see:
-    https://github.com/JuliaPy/pyjulia
-    https://github.com/JuliaPy/PyCall.jl
+
+    https://pyjulia.readthedocs.io/en/latest/troubleshooting.html
 """
 
 
 _separate_cache_error_statically_linked = """
 Your Python interpreter "{sys.executable}"
-is statically linked to libpython.  Currently, PyJulia does not support
-such Python interpreter.  One easy workaround is to run your Python
-script with `python-jl` command bundled in PyJulia.  You can simply do:
+is statically linked to libpython.  Currently, PyJulia does not fully
+support such Python interpreter.
 
-    python-jl PATH/TO/YOUR/SCRIPT.py
+The easiest workaround is to pass `compiled_modules=False` to `Julia`
+constructor.  To do so, first *reboot* your Python REPL (if this happened
+inside an interactive session) and then evaluate:
+
+    >>> from julia.api import Julia
+    >>> jl = Julia(compiled_modules=False)
+
+Another workaround is to run your Python script with `python-jl`
+command bundled in PyJulia.  You can simply do:
+
+    $ python-jl PATH/TO/YOUR/SCRIPT.py
 
 See `python-jl --help` for more information.
-
-For other available workarounds, see:
-    https://github.com/JuliaPy/pyjulia#troubleshooting
 """
 
 
 _separate_cache_error_incompatible_libpython = """
 In Julia >= 0.7, above two paths to `libpython` have to match exactly
-in order for PyJulia to work.  To configure PyCall.jl to use Python
-interpreter "{sys.executable}",
-run the following commands in the Julia REPL:
+in order for PyJulia to work out-of-the-box.  To configure PyCall.jl to use
+Python interpreter "{sys.executable}",
+run the following code in the Python REPL:
 
-    ENV["PYTHON"] = "{sys.executable}"
-    using Pkg
-    Pkg.build("PyCall")
+    >>> import julia
+    >>> julia.install()
 """
 
 
