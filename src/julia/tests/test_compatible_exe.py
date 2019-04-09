@@ -7,6 +7,7 @@ import textwrap
 
 import pytest
 
+import julia
 from julia.core import _enviorn, which
 
 is_linux = sys.platform.startswith("linux")
@@ -56,8 +57,8 @@ def runcode(python, code, check=False, **kwargs):
         env=dict(
             _enviorn,
             # Make PyJulia importable:
-            PYTHONPATH=os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "src"
+            PYTHONPATH=os.path.dirname(
+                os.path.dirname(os.path.realpath(julia.__file__))
             ),
         ),
         **kwargs
