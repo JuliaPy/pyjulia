@@ -4,7 +4,7 @@ Python interpreter inside a Julia process.
 This command line interface mimics a basic subset of Python program so that
 Python program involving calls to Julia functions can be run in a *Julia*
 process.  This avoids the known problem with pre-compilation cache in
-Deiban-based distribution such as Ubuntu and Python executable installed by
+Debian-based distribution such as Ubuntu and Python executable installed by
 Conda in Linux.
 
 .. WARNING:: This CLI does not work on Windows.
