@@ -43,12 +43,14 @@ def check_test_dependencies():
     try:
         import numpy
         import IPython.testing.tools  # may require `mock`
-    except ImportError:
+    except ImportError as err:
+        print(err, file=sys.stderr)
         raise ApplicationError(msg_test_dependencies)
 
     try:
         import pytest
-    except ImportError:
+    except ImportError as err:
+        print(err, file=sys.stderr)
         raise ApplicationError(msg_test_dependencies)
 
     major, minor, _ = pytest.__version__.split(".", 2)
