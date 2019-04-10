@@ -3,7 +3,6 @@ Unit tests which can be done without loading `libjulia`.
 """
 
 import os
-import sys
 
 import pytest
 
@@ -48,7 +47,6 @@ def test_raise_separate_cache_error_dynamically_linked():
 @pytest.mark.julia
 def test_atexit():
     proc = runcode(
-        sys.executable,
         '''
         import os
         from julia import Julia

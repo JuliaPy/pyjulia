@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from .test_compatible_exe import runcode
@@ -12,7 +10,6 @@ juliainfo = JuliaInfo.load()
 @pytest.mark.julia
 def test_compiled_modules_no():
     runcode(
-        sys.executable,
         """
         from julia.core import Julia
 
@@ -33,7 +30,6 @@ def test_compiled_modules_no():
 def test_custom_sysimage(tmpdir):
     sysimage = str(tmpdir.join("sys.so"))
     runcode(
-        sys.executable,
         """
         from shutil import copyfile
         from julia.core import LibJulia, JuliaInfo, enable_debug
@@ -63,7 +59,6 @@ def test_custom_sysimage(tmpdir):
 @pytest.mark.julia
 def test_non_existing_sysimage(tmpdir):
     proc = runcode(
-        sys.executable,
         """
         import sys
         from julia.core import enable_debug, LibJulia

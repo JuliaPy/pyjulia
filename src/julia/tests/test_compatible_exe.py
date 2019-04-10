@@ -60,13 +60,13 @@ def tmpdir_if(should):
         yield None
 
 
-def runcode(python, code, check=False, env=None, **kwargs):
+def runcode(code, python=None, check=False, env=None, **kwargs):
     """Run `code` in `python`."""
     if env is None:
         env = _enviorn
     env = env.copy()
 
-    with tmpdir_if(python != sys.executable) as path:
+    with tmpdir_if(python) as path:
         if path is not None:
             # Make PyJulia importable.
             shutil.copytree(
@@ -75,7 +75,7 @@ def runcode(python, code, check=False, env=None, **kwargs):
             )
             env["PYTHONPATH"] = path
         proc = run(
-            [python],
+            [python or sys.executable],
             input=textwrap.dedent(code),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -150,12 +150,12 @@ def test_incompatible_python(python, julia):
 
     python = which(python)
     proc = runcode(
-        python,
         """
         import os
         from julia import Julia
         Julia(runtime=os.getenv("PYJULIA_TEST_RUNTIME"), debug=True)
         """,
+        python,
     )
 
     assert proc.returncode == 1
@@ -185,7 +185,6 @@ def test_statically_linked(python):
     """
     python = which(python)
     runcode(
-        python,
         """
         from __future__ import print_function
         from julia.find_libpython import find_libpython
@@ -194,5 +193,6 @@ def test_statically_linked(python):
         enable_debug()
         assert not is_compatible_exe(find_libpython())
         """,
+        python,
         check=True,
     )
