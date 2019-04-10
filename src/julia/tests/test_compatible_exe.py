@@ -1,13 +1,15 @@
 from __future__ import print_function
 
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import textwrap
-
-import pytest
+from contextlib import contextmanager
 
 import julia
+import pytest
 from julia.core import _enviorn, which
 
 is_linux = sys.platform.startswith("linux")
@@ -46,23 +48,41 @@ except ImportError:
     run = _run_fallback
 
 
-def runcode(python, code, check=False, **kwargs):
+@contextmanager
+def tmpdir_if(should):
+    if should:
+        path = tempfile.mkdtemp(prefix="tmp-pyjulia-test")
+        try:
+            yield path
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+    else:
+        yield None
+
+
+def runcode(python, code, check=False, env=None, **kwargs):
     """Run `code` in `python`."""
-    proc = run(
-        [python],
-        input=textwrap.dedent(code),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        env=dict(
-            _enviorn,
-            # Make PyJulia importable:
-            PYTHONPATH=os.path.dirname(
-                os.path.dirname(os.path.realpath(julia.__file__))
-            ),
-        ),
-        **kwargs
-    )
+    if env is None:
+        env = _enviorn
+    env = env.copy()
+
+    with tmpdir_if(python != sys.executable) as path:
+        if path is not None:
+            # Make PyJulia importable.
+            shutil.copytree(
+                os.path.dirname(os.path.realpath(julia.__file__)),
+                os.path.join(path, "julia"),
+            )
+            env["PYTHONPATH"] = path
+        proc = run(
+            [python],
+            input=textwrap.dedent(code),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            env=env,
+            **kwargs
+        )
     print_completed_proc(proc)
     if check:
         assert proc.returncode == 0
