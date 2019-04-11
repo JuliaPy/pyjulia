@@ -7,6 +7,10 @@ from julia.core import _enviorn
 from .test_compatible_exe import run
 
 
+def test_THIS_TEST_MUST_FAIL():
+    assert False
+
+
 def test_runtests_failure(tmp_path):
     testfile = tmp_path / "test.py"
     testcode = u"""
