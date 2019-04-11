@@ -19,8 +19,10 @@ if isempty(compiler_env)
 else
     Pkg.activate(compiler_env)
 end
+@info "Loading PackageCompiler..."
 using PackageCompiler
 
+@info "Installing PyCall..."
 Pkg.activate(".")
 Pkg.add([
     PackageSpec(
@@ -33,6 +35,8 @@ Pkg.add([
     )
 ])
 
+@info "Compiling system image..."
 sysout, _curr_syso = compile_incremental("Project.toml", script)
 
+@info "System image is created at $output"
 cp(sysout, output, force=true)
