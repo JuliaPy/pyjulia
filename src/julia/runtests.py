@@ -6,7 +6,8 @@ from __future__ import print_function, absolute_import
 
 import argparse
 import sys
-import os
+
+from .utils import execprog
 
 try:
     from shlex import quote
@@ -86,7 +87,7 @@ def runtests(pytest_args, dry_run):
     if dry_run:
         print(*map(quote, cmd))
         return
-    os.execvp(cmd[0], cmd)
+    execprog(cmd)
 
 
 class CustomFormatter(

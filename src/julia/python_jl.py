@@ -23,10 +23,10 @@ by::
 
 from __future__ import print_function, absolute_import
 
-import os
 import sys
 
 from .pseudo_python_cli import make_parser, parse_args_with, ARGUMENT_HELP
+from .utils import execprog
 
 PYJL_ARGUMENT_HELP = ARGUMENT_HELP + """
   --julia JULIA  Julia runtime to be used. (default: julia)
@@ -114,7 +114,7 @@ def main(args=None):
         args = sys.argv[1:]
     ns, unused_args = parse_pyjl_args(args)
     julia = ns.julia
-    os.execvp(julia, [julia, "-e", script_jl, "--"] + unused_args)
+    execprog([julia, "-e", script_jl, "--"] + unused_args)
 
 
 if __name__ == "__main__":
