@@ -1,4 +1,4 @@
-script, output = ARGS
+compiler_env, script, output = ARGS
 
 if VERSION < v"0.7-"
     error("Unsupported Julia version $VERSION")
@@ -6,15 +6,19 @@ end
 
 using Pkg
 
-compilerenv = abspath("compilerenv")
-Pkg.activate(compilerenv)
-Pkg.add([
-    PackageSpec(
-        name = "PackageCompiler",
-        uuid = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d",
-        version = "0.6",
-    )
-])
+if isempty(compiler_env)
+    compiler_env = abspath("compiler_env")
+    Pkg.activate(compiler_env)
+    Pkg.add([
+        PackageSpec(
+            name = "PackageCompiler",
+            uuid = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d",
+            version = "0.6",
+        )
+    ])
+else
+    Pkg.activate(compiler_env)
+end
 using PackageCompiler
 
 Pkg.activate(".")

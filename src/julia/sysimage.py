@@ -56,7 +56,11 @@ def temporarydirectory(**kwargs):
 
 
 def build_sysimage(
-    output, julia="julia", script=script_path("precompile.jl"), debug=False
+    output,
+    julia="julia",
+    script=script_path("precompile.jl"),
+    debug=False,
+    compiler_env="",
 ):
     if debug:
         enable_debug()
@@ -68,6 +72,7 @@ def build_sysimage(
 
     # Arguments to ./compile.jl script:
     compile_args = [
+        compiler_env,
         # script -- ./precompile.jl by default
         os.path.realpath(script),
         # output -- path to sys.o file
@@ -93,6 +98,16 @@ def main(args=None):
         "--script",
         default=script_path("precompile.jl"),
         help="Path to Julia script with precopmile instructions.",
+    )
+    parser.add_argument(
+        "--compiler-env",
+        default="",
+        help="""
+        Path to a Julia project with PackageCompiler to be used for
+        system image compilation.  Create a temporary environment with
+        appropriate PackageCompiler by default or when an empty string
+        is given.
+        """,
     )
     parser.add_argument("output", help="Path to system image file sys.o.")
     ns = parser.parse_args(args)
