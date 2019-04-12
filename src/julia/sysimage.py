@@ -36,7 +36,10 @@ def script_path(name):
 
 
 def build_sysimage_cmd(julia_py, julia, compile_args):
-    cmd = [julia_py, "--julia", julia, "--color=yes", script_path("compile.jl")]
+    cmd = [julia_py, "--julia", julia]
+    if sys.stdout.isatty():
+        cmd.append("--color=yes")
+    cmd.append(script_path("compile.jl"))
     cmd.extend(compile_args)
     return cmd
 
