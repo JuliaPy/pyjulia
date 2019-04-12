@@ -1,5 +1,15 @@
 """
 Launch Julia through PyJulia.
+
+Currently, `julia-py` is primary used internally for supporting
+`julia.sysimage` command line interface.  Using `julia-py` like normal
+Julia program requires `--sysimage` to be set to the system image
+created by `julia.sysimage`.
+
+Example::
+
+    $ python3 -m julia.sysimage sys.so
+    $ julia-py --sysimage sys.so
 """
 
 from __future__ import print_function, absolute_import

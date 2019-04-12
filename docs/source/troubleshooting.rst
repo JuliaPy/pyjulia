@@ -1,6 +1,8 @@
 Troubleshooting
 ---------------
 
+.. _statically-linked:
+
 Your Python interpreter is statically linked to libpython
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -33,6 +35,7 @@ need to use one of the workaround below.
 
 Turn off compilation cache
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. versionadded:: 0.3
 
 The easiest workaround is to pass ``compiled_modules=False`` to the
 ``Julia`` constructor.
@@ -49,8 +52,18 @@ Julia packages especially for complex and large ones.
 
 See also API documentation of `Julia`.
 
+Create a custom system image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. versionadded:: 0.4
+
+A very powerful way to avoid this the issue due to precompilation
+cache is to create a custom system image.  This also has an additional
+benefit that initializing PyJulia becomes instant.  See
+:doc:`sysimage` for how to create and use a custom system image.
+
 ``python-jl``: an easy workaround
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. versionadded:: 0.2
 
 Another easy workaround is to use the ``python-jl`` command bundled in
 PyJulia. This can be used instead of normal ``python`` command for basic
