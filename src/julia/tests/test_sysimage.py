@@ -1,10 +1,12 @@
 import pytest
 
 from .test_compatible_exe import runcode
+from .utils import only_in_ci
 from julia.sysimage import build_sysimage
 
 
 @pytest.mark.julia
+@only_in_ci
 def test_build_and_load(tmpdir, juliainfo):
     if juliainfo.version_info < (0, 7):
         pytest.skip("Julia < 0.7 is not supported")

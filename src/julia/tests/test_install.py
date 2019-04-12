@@ -1,17 +1,10 @@
 import os
-
-import pytest
-
-from julia import install
-
 import subprocess
 
-only_in_ci = pytest.mark.skipif(
-    os.environ.get("CI", "false").lower() != "true", reason="CI=true not set"
-)
-"""
-Tests that are too destructive to run with casual `tox` call.
-"""
+import pytest
+from julia import install
+
+from .utils import only_in_ci
 
 
 @only_in_ci
