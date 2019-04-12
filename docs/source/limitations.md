@@ -21,7 +21,7 @@ example, the Julia method `sum!` can be called in PyJulia using
 There was a major overhaul in the module loading system between Julia
 0.6 and 1.0.  As a result, the "hack" supporting the PyJulia to load
 PyCall stopped working.  For the implementation detail of the hack,
-see: <https://github.com/JuliaPy/pyjulia/tree/master/julia/fake-julia>
+see: <https://github.com/JuliaPy/pyjulia/tree/v0.3.0/src/julia/fake-julia>
 
 For the update on this problem, see:
 <https://github.com/JuliaLang/julia/issues/28518>
