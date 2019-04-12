@@ -7,6 +7,10 @@ Example::
 
 Generated system image can be passed to ``sysimage`` option of
 `julia.api.Julia`.
+
+.. note::
+
+   This script is not tested on Windows.
 """
 
 from __future__ import print_function, absolute_import
