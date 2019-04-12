@@ -35,6 +35,15 @@ def script_path(name):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), name)
 
 
+def install_packagecompiler_cmd(julia, compiler_env):
+    cmd = [julia]
+    if sys.stdout.isatty():
+        cmd.append("--color=yes")
+    cmd.append(script_path("install-packagecompiler.jl"))
+    cmd.append(compiler_env)
+    return cmd
+
+
 def build_sysimage_cmd(julia_py, julia, compile_args):
     cmd = [julia_py, "--julia", julia]
     if sys.stdout.isatty():
@@ -73,15 +82,22 @@ def build_sysimage(
 
     julia_py = julia_py_executable()
 
-    # Arguments to ./compile.jl script:
-    compile_args = [
-        compiler_env,
-        # script -- ./precompile.jl by default
-        os.path.realpath(script),
-        # output -- path to sys.o file
-        os.path.realpath(output),
-    ]
     with temporarydirectory(prefix="tmp.pyjulia.sysimage.") as path:
+        if not compiler_env:
+            compiler_env = os.path.join(path, "compiler_env")
+            # Not using julia-py to install PackageCompiler to reduce
+            # method re-definition warnings:
+            check_call(install_packagecompiler_cmd(julia, compiler_env), cwd=path)
+
+        # Arguments to ./compile.jl script:
+        compile_args = [
+            compiler_env,
+            # script -- ./precompile.jl by default
+            os.path.realpath(script),
+            # output -- path to sys.o file
+            os.path.realpath(output),
+        ]
+
         check_call(build_sysimage_cmd(julia_py, julia, compile_args), cwd=path)
 
 
