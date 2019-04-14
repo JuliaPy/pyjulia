@@ -1,8 +1,9 @@
 import pytest
 
+from julia.sysimage import build_sysimage
+
 from .test_compatible_exe import runcode
 from .utils import only_in_ci, skip_in_appveyor
-from julia.sysimage import build_sysimage
 
 
 @pytest.mark.julia

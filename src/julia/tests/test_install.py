@@ -2,6 +2,7 @@ import os
 import subprocess
 
 import pytest
+
 from julia import install
 
 from .utils import only_in_ci

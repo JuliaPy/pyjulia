@@ -2,7 +2,7 @@
 Monkey-patch `TerminalInteractiveShell` to highlight code in ``%%julia``.
 """
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 from IPython.terminal.interactiveshell import TerminalInteractiveShell
 from prompt_toolkit.lexers import PygmentsLexer

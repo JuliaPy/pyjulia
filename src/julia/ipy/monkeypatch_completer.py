@@ -6,7 +6,7 @@ immediate plan for an API to do this:
 https://github.com/ipython/ipython/pull/10722
 """
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import re
 

@@ -13,20 +13,24 @@ Bridge Python and Julia by initializing the Julia runtime inside Python.
 # Imports
 # ----------------------------------------------------------------------------
 
-from __future__ import print_function, absolute_import
-
-from logging import getLogger  # see `.logger`
+from __future__ import absolute_import, print_function
 
 import atexit
 import ctypes
 import ctypes.util
 import os
-import sys
 import subprocess
+import sys
 import textwrap
 import warnings
+from ctypes import POINTER, c_char_p, c_int, c_void_p, pointer, py_object
+from logging import getLogger  # see `.logger`
+from types import ModuleType  # this is python 3.3 specific
 
-from ctypes import py_object, c_char_p, c_int, c_void_p, POINTER, pointer
+from .find_libpython import find_libpython, linked_libpython
+from .options import JuliaOptions, options_docs, parse_jl_options
+from .release import __version__
+from .utils import is_windows
 
 try:
     from shutil import which
@@ -44,12 +48,6 @@ except ImportError:
         b = os.path.realpath(os.path.normcase(f2))
         return a == b
 
-from types import ModuleType  # this is python 3.3 specific
-
-from .find_libpython import find_libpython, linked_libpython
-from .options import JuliaOptions, options_docs, parse_jl_options
-from .release import __version__
-from .utils import is_windows
 
 try:
     string_types = (basestring,)

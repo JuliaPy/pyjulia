@@ -6,8 +6,9 @@ import os
 
 import pytest
 
-from .test_compatible_exe import runcode
 from julia.core import raise_separate_cache_error
+
+from .test_compatible_exe import runcode
 
 try:
     from types import SimpleNamespace

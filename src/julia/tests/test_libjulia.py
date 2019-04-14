@@ -1,7 +1,8 @@
 import pytest
 
-from .test_compatible_exe import runcode
 from julia.core import JuliaInfo
+
+from .test_compatible_exe import runcode
 
 juliainfo = JuliaInfo.load()
 

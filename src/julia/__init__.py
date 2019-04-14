@@ -1,4 +1,5 @@
+from .core import JuliaError
+from .core import LegacyJulia as Julia
+from .ipy.revise import disable_revise, enable_revise
 from .release import __version__
-from .core import JuliaError, LegacyJulia as Julia
-from .ipy.revise import enable_revise, disable_revise
 from .tools import install

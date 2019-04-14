@@ -12,14 +12,14 @@ Example::
     $ julia-py --sysimage sys.so
 """
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import argparse
 import os
 import sys
 
 from .api import LibJulia
-from .core import which, enable_debug
+from .core import enable_debug, which
 from .tools import julia_py_executable
 
 

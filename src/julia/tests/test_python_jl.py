@@ -1,7 +1,7 @@
-from textwrap import dedent
 import os
 import shlex
 import subprocess
+from textwrap import dedent
 
 import pytest
 

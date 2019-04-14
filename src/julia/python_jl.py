@@ -19,11 +19,11 @@ by::
    configured has to have PyJulia installed.
 """
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import sys
 
-from .pseudo_python_cli import make_parser, parse_args_with, ARGUMENT_HELP
+from .pseudo_python_cli import ARGUMENT_HELP, make_parser, parse_args_with
 from .utils import execprog
 
 PYJL_ARGUMENT_HELP = (

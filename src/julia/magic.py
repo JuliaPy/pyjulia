@@ -17,12 +17,12 @@ Usage
 # Imports
 # ----------------------------------------------------------------------------
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
 import sys
 import warnings
 
-from IPython.core.magic import Magics, magics_class, line_cell_magic
+from IPython.core.magic import Magics, line_cell_magic, magics_class
 from IPython.utils import py3compat as compat
 from traitlets import Bool, Enum
 

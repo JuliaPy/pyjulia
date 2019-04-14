@@ -3,13 +3,14 @@ from __future__ import print_function
 import array
 import math
 import subprocess
+import sys
 from types import ModuleType
 
-from julia import JuliaError
-from julia.core import jl_name, py_name, _enviorn as orig_env
-import sys
-
 import pytest
+
+from julia import JuliaError
+from julia.core import _enviorn as orig_env
+from julia.core import jl_name, py_name
 
 python_version = sys.version_info
 

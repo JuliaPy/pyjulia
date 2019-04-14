@@ -27,14 +27,14 @@ Locate libpython associated with this Python executable.
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
-from logging import getLogger  # see `julia.core.logger`
 import ctypes.util
 import functools
 import os
 import sys
 import sysconfig
+from logging import getLogger  # see `julia.core.logger`
 
 logger = getLogger("find_libpython")
 

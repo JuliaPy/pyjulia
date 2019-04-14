@@ -1,1 +1,1 @@
-from .core import Julia, JuliaError, LibJulia, JuliaInfo
+from .core import Julia, JuliaError, JuliaInfo, LibJulia

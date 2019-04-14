@@ -13,20 +13,19 @@ Generated system image can be passed to ``sysimage`` option of
    This script is not tested on Windows.
 """
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
-from contextlib import contextmanager
-from logging import getLogger  # see `.core.logger`
 import argparse
 import os
+import shutil
 import subprocess
 import sys
-import shutil
 import tempfile
+from contextlib import contextmanager
+from logging import getLogger  # see `.core.logger`
 
 from .core import enable_debug
 from .tools import julia_py_executable
-
 
 logger = getLogger("julia.sysimage")
 

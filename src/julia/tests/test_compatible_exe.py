@@ -8,8 +8,9 @@ import tempfile
 import textwrap
 from contextlib import contextmanager
 
-import julia
 import pytest
+
+import julia
 from julia.core import _enviorn, which
 
 is_linux = sys.platform.startswith("linux")

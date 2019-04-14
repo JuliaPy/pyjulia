@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from io import open  # for Python 2 (identical to builtin in Python 3)
-from setuptools import setup, find_packages
 import os
+from io import open  # for Python 2 (identical to builtin in Python 3)
+
+from setuptools import find_packages, setup
 
 
 def pyload(name):

@@ -1,9 +1,10 @@
 # Minimal repl.c to support precompilation with python symbols already loaded
 # fmt: off
 import ctypes
-import sys
 import os
+import sys
 from ctypes import *
+
 if sys.platform.startswith('darwin'):
     sh_ext = ".dylib"
 elif sys.platform.startswith('win32'):

@@ -5,14 +5,14 @@ It tries to mimic a subset of Python CLI:
 https://docs.python.org/3/using/cmdline.html
 """
 
-from __future__ import print_function, absolute_import
+from __future__ import absolute_import, print_function
 
-from collections import namedtuple
 import code
 import copy
 import runpy
 import sys
 import traceback
+from collections import namedtuple
 
 try:
     from types import SimpleNamespace
