@@ -29,7 +29,7 @@ Locate libpython associated with this Python executable.
 
 from __future__ import print_function, absolute_import
 
-from logging import getLogger
+from logging import getLogger  # see `julia.core.logger`
 import ctypes.util
 import functools
 import os

@@ -16,10 +16,7 @@ Bridge Python and Julia by initializing the Julia runtime inside Python.
 # Stdlib
 from __future__ import print_function, absolute_import
 
-from logging import getLogger
-
-# Not importing `logging` module here so that using `logging.debug`
-# instead of `logger.debug` becomes an error.
+from logging import getLogger  # see `.logger`
 
 import atexit
 import ctypes
@@ -71,6 +68,12 @@ python_version = sys.version_info
 
 
 logger = getLogger("julia")
+"""
+Implementation notes: We are not importing `logging` module at the top
+level so that using `logging.debug` instead of `logger.debug` becomes
+an error.
+"""
+
 _loghandler = None
 
 
@@ -80,7 +83,7 @@ def get_loghandler():
     """
     global _loghandler
     if _loghandler is None:
-        import logging
+        import logging  # see `.logger`
 
         formatter = logging.Formatter("%(levelname)s %(message)s")
 
@@ -92,7 +95,7 @@ def get_loghandler():
 
 
 def set_loglevel(level):
-    import logging
+    import logging  # see `.logger`
 
     get_loghandler()
     logger.setLevel(getattr(logging, level, level))

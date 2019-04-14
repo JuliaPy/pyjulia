@@ -16,7 +16,7 @@ Generated system image can be passed to ``sysimage`` option of
 from __future__ import print_function, absolute_import
 
 from contextlib import contextmanager
-from logging import getLogger
+from logging import getLogger  # see `.core.logger`
 import argparse
 import os
 import subprocess
