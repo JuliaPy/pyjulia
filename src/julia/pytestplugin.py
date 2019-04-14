@@ -57,6 +57,21 @@ def pytest_sessionstart(session):
     global _JULIA_INFO
     _JULIA_INFO = info = JuliaInfo.load(julia=julia_runtime)
 
+    if not info.is_pycall_built():
+        print(
+            """
+PyCall is not installed or built.  Run the following code in Python REPL:
+
+    >>> import julia
+    >>> julia.install()
+
+See:
+    https://pyjulia.readthedocs.io/en/latest/installation.html
+            """,
+            file=sys.stderr,
+        )
+        pytest.exit("PyCall not built", returncode=1)
+
     if (
         options.compiled_modules != "no"
         and not info.is_compatible_python()

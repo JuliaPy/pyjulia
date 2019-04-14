@@ -69,6 +69,7 @@ def test_juliainfo_without_pycall(tmpdir):
     check_core_juliainfo(jlinfo)
     assert jlinfo.python is None
     assert jlinfo.libpython_path is None
+    assert not jlinfo.is_pycall_built()
     assert not jlinfo.is_compatible_python()
 
 

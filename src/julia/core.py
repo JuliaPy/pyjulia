@@ -465,6 +465,9 @@ class JuliaInfo(object):
         logger.debug("bindir = %s", bindir)
         logger.debug("libjulia_path = %s", libjulia_path)
 
+    def is_pycall_built(self):
+        return bool(self.libpython_path)
+
     def is_compatible_python(self):
         """
         Check if python used by PyCall.jl is compatible with `sys.executable`.
