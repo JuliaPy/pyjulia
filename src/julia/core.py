@@ -55,6 +55,7 @@ from types import ModuleType
 
 from .find_libpython import find_libpython, linked_libpython
 from .options import JuliaOptions, options_docs, parse_jl_options
+from .release import __version__
 
 try:
     string_types = (basestring,)
@@ -97,6 +98,9 @@ def set_loglevel(level):
 
 def enable_debug():
     set_loglevel("DEBUG")
+    logger.debug("")  # flush whatever in the line
+    logger.debug("Debug-level logging is enabled for PyJulia.")
+    logger.debug("PyJulia version: %s", __version__)
 
 
 # As setting up Julia modifies os.environ, we need to cache it for
