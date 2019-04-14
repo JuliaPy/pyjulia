@@ -1,4 +1,8 @@
 repos:
+-   repo: https://github.com/pre-commit/mirrors-isort
+    rev: v4.3.17
+    hooks:
+    -   id: isort
 -   repo: https://github.com/ambv/black
     rev: 19.3b0
     hooks:

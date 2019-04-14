@@ -13,7 +13,6 @@ Bridge Python and Julia by initializing the Julia runtime inside Python.
 # Imports
 # ----------------------------------------------------------------------------
 
-# Stdlib
 from __future__ import print_function, absolute_import
 
 from logging import getLogger  # see `.logger`
@@ -45,9 +44,7 @@ except ImportError:
         b = os.path.realpath(os.path.normcase(f2))
         return a == b
 
-
-# this is python 3.3 specific
-from types import ModuleType
+from types import ModuleType  # this is python 3.3 specific
 
 from .find_libpython import find_libpython, linked_libpython
 from .options import JuliaOptions, options_docs, parse_jl_options
