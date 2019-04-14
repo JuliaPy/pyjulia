@@ -469,7 +469,7 @@ class JuliaInfo(object):
         """
         Check if python used by PyCall.jl is compatible with `sys.executable`.
         """
-        return is_compatible_exe(self.libpython_path)
+        return self.libpython_path and is_compatible_exe(self.libpython_path)
 
 
 def is_compatible_exe(jl_libpython):

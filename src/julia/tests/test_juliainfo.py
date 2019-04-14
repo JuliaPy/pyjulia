@@ -6,6 +6,20 @@ import pytest
 from julia.core import JuliaInfo, _enviorn, which
 
 
+def dummy_juliainfo(**kwargs):
+    defaults = dict(
+        julia="julia",
+        bindir="/dummy/bin",
+        libjulia_path="/dummy/libjulia.so",
+        sysimage="/dummy/sys.so",
+        version_raw="1.1.1",
+        version_major="1",
+        version_minor="1",
+        version_patch="1",
+    )
+    return JuliaInfo(**dict(defaults, **kwargs))
+
+
 def check_core_juliainfo(jlinfo):
     assert os.path.exists(jlinfo.bindir)
     assert os.path.exists(jlinfo.libjulia_path)
@@ -18,6 +32,12 @@ def test_juliainfo_normal():
     assert os.path.exists(jlinfo.python)
     # Note: jlinfo.libpython is probably not a full path so we are not
     # testing it here.
+
+
+def test_is_compatible_exe_without_pycall():
+    jlinfo = dummy_juliainfo()
+    jlinfo.libpython_path = None
+    assert not jlinfo.is_compatible_python()
 
 
 def test_juliainfo_without_pycall(tmpdir):
@@ -49,6 +69,7 @@ def test_juliainfo_without_pycall(tmpdir):
     check_core_juliainfo(jlinfo)
     assert jlinfo.python is None
     assert jlinfo.libpython_path is None
+    assert not jlinfo.is_compatible_python()
 
 
 @pytest.mark.skipif(
