@@ -56,6 +56,7 @@ from types import ModuleType
 from .find_libpython import find_libpython, linked_libpython
 from .options import JuliaOptions, options_docs, parse_jl_options
 from .release import __version__
+from .utils import is_windows
 
 try:
     string_types = (basestring,)
@@ -915,6 +916,11 @@ class Julia(object):
                 "`jl_runtime_path` is deprecated. Please use `runtime`.",
                 DeprecationWarning)
 
+        if not init_julia and runtime is None and is_windows:
+            warnings.warn(
+                "It is recommended to pass `runtime` when `init_julia=False` in Windows"
+            )
+
         if runtime is None:
             if jl_runtime_path is None:
                 runtime = "julia"
@@ -1013,7 +1019,13 @@ class Julia(object):
             jl_atexit_hook = self.api.jl_atexit_hook
             atexit.register(jl_atexit_hook, 0)
         else:
-            self.api = InProcessLibJulia()
+            if is_windows:
+                # `InProcessLibJulia` does not work on Windows at the
+                # moment.  See:
+                # https://github.com/JuliaPy/pyjulia/issues/287
+                self.api = LibJulia.load(runtime)
+            else:
+                self.api = InProcessLibJulia()
 
         # Currently, PyJulia assumes that `Main.PyCall` exsits.  Thus, we need
         # to import `PyCall` again here in case `init_julia=False` is passed:
