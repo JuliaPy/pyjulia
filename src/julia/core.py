@@ -1023,7 +1023,7 @@ class Julia(object):
                 # `InProcessLibJulia` does not work on Windows at the
                 # moment.  See:
                 # https://github.com/JuliaPy/pyjulia/issues/287
-                self.api = LibJulia.load(runtime)
+                self.api = LibJulia.load(julia=runtime)
             else:
                 self.api = InProcessLibJulia()
 
