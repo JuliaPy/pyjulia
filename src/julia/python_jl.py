@@ -7,8 +7,6 @@ process.  This avoids the known problem with pre-compilation cache in
 Debian-based distribution such as Ubuntu and Python executable installed by
 Conda in Linux.
 
-.. WARNING:: This CLI does not work on Windows.
-
 Although this script has -i option and it can do a basic REPL, contrl-c may
 crash the whole process.  Consider using IPython >= 7 which can be launched
 by::
