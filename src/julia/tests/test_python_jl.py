@@ -8,8 +8,6 @@ import pytest
 from julia.core import which
 from julia.python_jl import parse_pyjl_args
 
-is_windows = os.name == "nt"
-
 PYJULIA_TEST_REBUILD = os.environ.get("PYJULIA_TEST_REBUILD", "no") == "yes"
 
 python_jl_required = pytest.mark.skipif(
@@ -62,9 +60,6 @@ def test_cli_quick_pass_no_julia(args):
 
 
 @python_jl_required
-@pytest.mark.skipif(
-    is_windows,
-    reason="python-jl is not supported in Windows")
 @pytest.mark.skipif(
     # This test makes sense only when PyJulia is importable by
     # `PyCall.python`.  Thus, it is safe to run this test only when
