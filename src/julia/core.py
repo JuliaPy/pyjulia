@@ -1024,6 +1024,7 @@ class Julia(object):
                 # moment.  See:
                 # https://github.com/JuliaPy/pyjulia/issues/287
                 self.api = LibJulia.load(julia=runtime)
+                set_libjulia(self.api)
             else:
                 self.api = InProcessLibJulia()
 
