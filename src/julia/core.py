@@ -542,6 +542,8 @@ def setup_libjulia(libjulia):
     libjulia.jl_parse_opts.argtypes = [POINTER(c_int),
                                        POINTER(POINTER(c_char_p))]
     libjulia.jl_set_ARGS.argtypes = [c_int, POINTER(c_char_p)]
+    libjulia.jl_is_initialized.argtypes = []
+    libjulia.jl_is_initialized.restype = ctypes.c_int
     libjulia.jl_atexit_hook.argtypes = [ctypes.c_int]
 
 
@@ -967,7 +969,11 @@ class Julia(object):
                 os.environ["JULIA_BINDIR"] = PYCALL_JULIA_HOME
                 self.api.bindir = PYCALL_JULIA_HOME
 
-            self.api.init_julia(options)
+            was_initialized = self.api.jl_is_initialized()
+            if was_initialized:
+                set_libjulia(self.api)
+            else:
+                self.api.init_julia(options)
 
             if use_separate_cache:
                 if jlinfo.version_info < (0, 6):
@@ -1016,8 +1022,17 @@ class Julia(object):
                 end
                 """)
 
-            jl_atexit_hook = self.api.jl_atexit_hook
-            atexit.register(jl_atexit_hook, 0)
+            # We are assuming that `jl_is_initialized()` was true only
+            # if this process was a Julia process (hence PyCall had
+            # already called `atexit(Py_Finalize)`).  This is not true
+            # if `libjulia` is initialized in a Python process with
+            # other mechanisms.  Julia's atexit hooks will not be
+            # called if this happens.  As it's not clear what should
+            # be done for such cases (the other mechanisms may or may
+            # not register the atexit hook), let's play on the safer
+            # side for now.
+            if not was_initialized:
+                atexit.register(self.api.jl_atexit_hook, 0)
         else:
             if is_windows:
                 # `InProcessLibJulia` does not work on Windows at the
