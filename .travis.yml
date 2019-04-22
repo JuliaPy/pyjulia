@@ -71,7 +71,7 @@ matrix:
           - ./ci/install-julia.sh "$JULIA_VERSION"
           - pip install --quiet tox
         script:
-          - cd ci/test-upload && tox
+          - (cd ci/test-upload && tox)
         after_script:
           - cat ci/test-upload/.tox/py/log/pytest.log
         after_success: skip
