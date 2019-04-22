@@ -41,11 +41,48 @@ matrix:
           - JULIA_VERSION=0.6.4
           - CROSS_VERSION=1
         os: osx
+
+      # Upload the package to `test.pypi.org` when there is a push to
+      # `release/test` branch:
+      - stage: "Test deploy"
+        python: "3.6"
+        env: []
+        deploy:
+          provider: pypi
+          server: https://test.pypi.org/legacy/
+          user: tkf
+          password:
+            secure: dHo58o6r/V2QvsCOoPwGxwn8gEKfeUXFpYCtYXmqH/MPFOqEq2sXHQJ0v4CsFciwYqLnFNsNBpn0k6gvzmFkmulux4ELs33+noTgPRXNLNYmQqW1WqYHKGxv76c/olN4X17vvFafsNXB50MzdZuH5zMO9NcG36c86/UlT42L+ek=
+          distributions: "sdist bdist_wheel"
+          on:
+            branch: release/test
+            repo: JuliaPy/pyjulia
+        if: branch = release/test
+        script: skip
+        after_success: skip
+
+      # Test the package uploaded to `test.pypi.org`:
+      - stage: "Test upload"
+        if: branch = release/test OR branch = upload/test
+        python: "3.6"
+        env:
+          - JULIA_VERSION=1.0
+        before_script:
+          - ./ci/install-julia.sh "$JULIA_VERSION"
+          - pip install --quiet tox
+        script:
+          - cd ci/test-upload && tox
+        after_script:
+          - cat ci/test-upload/.tox/py/log/pytest.log
+        after_success: skip
+
   allow_failures:
     - env: JULIA_VERSION=nightly
 branches:
   only:
     - master
+    - release/test
+    - upload/test
 notifications:
   email: false
 before_script:

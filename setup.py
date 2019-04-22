@@ -73,6 +73,7 @@ setup(name='julia',
       package_dir={"": "src"},
       package_data={'julia': ['fake-julia/*', "*.jl"]},
       extras_require={
+          # Update `ci/test-upload/tox.ini` when "test" is changed:
           "test": [
               "numpy",
               "ipython",
