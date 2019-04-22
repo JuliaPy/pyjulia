@@ -58,6 +58,7 @@ matrix:
             branch: release/test
             repo: JuliaPy/pyjulia
         if: branch = release/test
+        before_script: skip
         script: skip
         after_success: skip
 
