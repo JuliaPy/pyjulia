@@ -42,7 +42,6 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
-    'recommonmark',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -53,7 +52,6 @@ templates_path = ['_templates']
 #
 source_suffix = {
     '.rst': 'restructuredtext',
-    '.md': 'markdown',
 }
 
 # The master toctree document.
@@ -204,17 +202,3 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
-
-# -- Options for recommonmark extension --------------------------------------
-
-github_doc_root = 'https://github.com/JuliaPy/pyjulia/tree/master/docs/source'
-
-
-def setup(app):
-    from recommonmark.transform import AutoStructify
-
-    app.add_config_value('recommonmark_config', {
-        'url_resolver': lambda url: github_doc_root + url,
-        'auto_toc_tree_section': 'Contents',
-    }, True)
-    app.add_transform(AutoStructify)
