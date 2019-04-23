@@ -60,7 +60,11 @@ matrix:
         if: branch = release/test
         before_script: skip
         script: skip
-        after_success: skip
+        after_success:
+          - echo "skipped"
+          # Do not use `after_success: skip` as it would skip the deploy
+          # step.
+          # https://github.com/travis-ci/travis-ci/issues/8337#issuecomment-326838809
 
       # Test the package uploaded to `test.pypi.org`:
       - stage: "Test upload"
