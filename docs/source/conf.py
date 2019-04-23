@@ -24,9 +24,9 @@ copyright = '2019, The Julia and IPython development teams'
 author = 'The Julia and IPython development teams'
 
 # The short X.Y version
-version = '0.4.1'
+version = '0.5.0'
 # The full version, including alpha/beta/rc tags
-release = '0.4.1'
+release = '0.5.0.dev'
 
 
 # -- General configuration ---------------------------------------------------
