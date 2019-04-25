@@ -27,9 +27,7 @@ import subprocess
 import textwrap
 import warnings
 
-from ctypes import c_void_p as void_p
-from ctypes import c_char_p as char_p
-from ctypes import py_object, c_int, c_char_p, POINTER, pointer
+from ctypes import py_object, c_char_p, c_int, c_void_p, POINTER, pointer
 
 try:
     from shutil import which
@@ -510,40 +508,40 @@ def is_compatible_exe(jl_libpython):
 
 def setup_libjulia(libjulia):
     # Store the running interpreter reference so we can start using it via self.call
-    libjulia.jl_.argtypes = [void_p]
+    libjulia.jl_.argtypes = [c_void_p]
     libjulia.jl_.restype = None
 
     # Set the return types of some of the bridge functions in ctypes terminology
-    libjulia.jl_eval_string.argtypes = [char_p]
-    libjulia.jl_eval_string.restype = void_p
+    libjulia.jl_eval_string.argtypes = [c_char_p]
+    libjulia.jl_eval_string.restype = c_void_p
 
-    libjulia.jl_exception_occurred.restype = void_p
-    libjulia.jl_typeof_str.argtypes = [void_p]
-    libjulia.jl_typeof_str.restype = char_p
-    libjulia.jl_call2.argtypes = [void_p, void_p, void_p]
-    libjulia.jl_call2.restype = void_p
-    libjulia.jl_get_field.argtypes = [void_p, char_p]
-    libjulia.jl_get_field.restype = void_p
-    libjulia.jl_typename_str.restype = char_p
-    libjulia.jl_unbox_voidpointer.argtypes = [void_p]
+    libjulia.jl_exception_occurred.restype = c_void_p
+    libjulia.jl_typeof_str.argtypes = [c_void_p]
+    libjulia.jl_typeof_str.restype = c_char_p
+    libjulia.jl_call2.argtypes = [c_void_p, c_void_p, c_void_p]
+    libjulia.jl_call2.restype = c_void_p
+    libjulia.jl_get_field.argtypes = [c_void_p, c_char_p]
+    libjulia.jl_get_field.restype = c_void_p
+    libjulia.jl_typename_str.restype = c_char_p
+    libjulia.jl_unbox_voidpointer.argtypes = [c_void_p]
     libjulia.jl_unbox_voidpointer.restype = py_object
 
     for c_type in UNBOXABLE_TYPES:
         jl_unbox = getattr(libjulia, "jl_unbox_{}".format(c_type))
-        jl_unbox.argtypes = [void_p]
+        jl_unbox.argtypes = [c_void_p]
         jl_unbox.restype = getattr(ctypes, "c_{}".format({
             "float32": "float",
             "float64": "double",
         }.get(c_type, c_type)))
 
-    libjulia.jl_typeof.argtypes = [void_p]
-    libjulia.jl_typeof.restype = void_p
+    libjulia.jl_typeof.argtypes = [c_void_p]
+    libjulia.jl_typeof.restype = c_void_p
 
     libjulia.jl_exception_clear.restype = None
     libjulia.jl_stderr_obj.argtypes = []
-    libjulia.jl_stderr_obj.restype = void_p
+    libjulia.jl_stderr_obj.restype = c_void_p
     libjulia.jl_stderr_stream.argtypes = []
-    libjulia.jl_stderr_stream.restype = void_p
+    libjulia.jl_stderr_stream.restype = c_void_p
     libjulia.jl_printf.restype = ctypes.c_int
 
     libjulia.jl_parse_opts.argtypes = [POINTER(c_int),
@@ -759,7 +757,7 @@ class LibJulia(BaseLibJulia):
                 argv_list = [s.encode('utf-8') for s in argv_list]
 
             argc = c_int(len(argv_list))
-            argv = POINTER(char_p)((char_p * len(argv_list))(*argv_list))
+            argv = POINTER(c_char_p)((c_char_p * len(argv_list))(*argv_list))
 
             logger.debug("argv_list = %r", argv_list)
             logger.debug("argc = %r", argc)
@@ -1139,9 +1137,9 @@ class Julia(object):
                          .format(exception, src))
 
     def _typeof_julia_exception_in_transit(self):
-        exception = void_p.in_dll(self.api, 'jl_exception_in_transit')
+        exception = c_void_p.in_dll(self.api, 'jl_exception_in_transit')
         msg = self.api.jl_typeof_str(exception)
-        return char_p(msg).value
+        return c_char_p(msg).value
 
     def help(self, name):
         """ Return help string for function by name. """
