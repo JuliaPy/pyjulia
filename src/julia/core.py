@@ -28,13 +28,7 @@ from types import ModuleType  # this is python 3.3 specific
 
 from .find_libpython import find_libpython, linked_libpython
 from .juliainfo import JuliaInfo
-from .libjulia import (
-    UNBOXABLE_TYPES,
-    LibJulia,
-    get_inprocess_libjulia,
-    get_libjulia,
-    set_libjulia,
-)
+from .libjulia import UNBOXABLE_TYPES, LibJulia, get_inprocess_libjulia, get_libjulia
 from .options import JuliaOptions, options_docs
 from .release import __version__
 from .utils import is_windows
@@ -503,11 +497,7 @@ class Julia(object):
             if not (options.compiled_modules == "no" or is_compatible_python):
                 raise UnsupportedPythonError(jlinfo)
 
-            was_initialized = self.api.jl_is_initialized()
-            if was_initialized:
-                set_libjulia(self.api)
-            else:
-                self.api.init_julia(options)
+            self.api.init_julia(options)
 
             # We are assuming that `jl_is_initialized()` was true only
             # if this process was a Julia process (hence PyCall had
@@ -518,7 +508,7 @@ class Julia(object):
             # be done for such cases (the other mechanisms may or may
             # not register the atexit hook), let's play on the safer
             # side for now.
-            if not was_initialized:
+            if not self.api.was_initialized:  # = jl_is_initialized()
                 atexit.register(self.api.jl_atexit_hook, 0)
         else:
             self.api = get_inprocess_libjulia(julia=runtime)

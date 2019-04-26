@@ -240,6 +240,11 @@ class LibJulia(BaseLibJulia):
         if get_libjulia():
             return
 
+        self.was_initialized = self.jl_is_initialized()
+        if self.was_initialized:
+            set_libjulia(self)
+            return
+
         if hasattr(options, "as_args"):  # JuliaOptions
             options = options.as_args()
         if options:
