@@ -773,8 +773,10 @@ class InProcessLibJulia(BaseLibJulia):
         setup_libjulia(self.libjulia)
         set_libjulia(self)
 
+# fmt: on
 
-_separate_cache_error_common_header = """\
+
+_unsupported_error_common_header = """\
 It seems your Julia and PyJulia setup are not supported.
 
 Julia executable:
@@ -788,14 +790,14 @@ Python interpreter used to import PyJulia and its libpython.
 """
 
 
-_separate_cache_error_common_footer = """
+_unsupported_error_common_footer = """
 For more information, see:
 
     https://pyjulia.readthedocs.io/en/latest/troubleshooting.html
 """
 
 
-_separate_cache_error_statically_linked = """
+_unsupported_error_statically_linked = """
 Your Python interpreter "{sys.executable}"
 is statically linked to libpython.  Currently, PyJulia does not fully
 support such Python interpreter.
@@ -816,7 +818,7 @@ See `python-jl --help` for more information.
 """
 
 
-_separate_cache_error_incompatible_libpython = """
+_unsupported_error_incompatible_libpython = """
 In Julia >= 0.7, above two paths to `libpython` have to match exactly
 in order for PyJulia to work out-of-the-box.  To configure PyCall.jl to use
 Python interpreter "{sys.executable}",
@@ -827,23 +829,28 @@ run the following code in the Python REPL:
 """
 
 
-def raise_separate_cache_error(
-        runtime, jlinfo,
-        # For test:
-        _determine_if_statically_linked=determine_if_statically_linked):
-    template = _separate_cache_error_common_header
-    if _determine_if_statically_linked():
-        template += _separate_cache_error_statically_linked
-    else:
-        template += _separate_cache_error_incompatible_libpython
-    template += _separate_cache_error_common_footer
-    message = template.format(
-        runtime=runtime,
-        jlinfo=jlinfo,
-        py_libpython=find_libpython(),
-        jl_libpython=jlinfo.libpython_path,
-        sys=sys)
-    raise RuntimeError(message)
+class UnsupportedPythonError(Exception):
+    def __init__(self, jlinfo):
+        self.jlinfo = jlinfo
+        self.statically_linked = determine_if_statically_linked()
+
+    def __str__(self):
+        template = _unsupported_error_common_header
+        if self.statically_linked:
+            template += _unsupported_error_statically_linked
+        else:
+            template += _unsupported_error_incompatible_libpython
+        template += _unsupported_error_common_footer
+        return template.format(
+            runtime=self.jlinfo.julia,
+            jlinfo=self.jlinfo,
+            py_libpython=find_libpython(),
+            jl_libpython=self.jlinfo.libpython_path,
+            sys=sys,
+        )
+
+
+# fmt: off
 
 
 UNBOXABLE_TYPES = (
@@ -953,7 +960,7 @@ class Julia(object):
             logger.debug("is_compatible_python = %r", is_compatible_python)
             logger.debug("compiled_modules = %r", options.compiled_modules)
             if not (options.compiled_modules == "no" or is_compatible_python):
-                raise_separate_cache_error(runtime, jlinfo)
+                raise UnsupportedPythonError(jlinfo)
 
             was_initialized = self.api.jl_is_initialized()
             if was_initialized:
