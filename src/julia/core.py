@@ -613,6 +613,8 @@ class Julia(object):
         ctypes.pythonapi.Py_IncRef(ctypes.py_object(pyobj))
         return pyobj
 
+    # fmt: on
+
     def using(self, module):
         """Load module in Julia by calling the `using module` command"""
         self.eval("using %s" % module)
@@ -626,22 +628,20 @@ class Julia(object):
 
         return fullnamestr(module)
 
-    def isdefined(self, parent, member=None):
+    def isdefined(self, fullname):
         from .Main._PyJuliaHelper import isdefinedstr
 
-        if member is None:
-            if not isinstance(parent, string_types):
-                raise ValueError("`julia.isdefined(name)` requires string `name`")
-            if "." not in parent:
-                raise ValueError(
-                    "`julia.isdefined(name)` requires at least one dot in `name`."
-                )
-            parent, member = parent.rsplit(".", 1)
+        if not isinstance(fullname, string_types):
+            raise ValueError("`julia.isdefined(name)` requires string `name`")
+        if "." not in fullname:
+            raise ValueError(
+                "`julia.isdefined(name)` requires at least one dot in `name`."
+            )
+        parent, member = fullname.rsplit(".", 1)
+
         if isinstance(parent, string_types):
             parent = self.eval(parent)
         return isdefinedstr(parent, member)
-
-    # fmt: on
 
     def _isdefined(self, parent, member):
         # `_isdefined` is used in context that `isdefined` is not available
