@@ -26,7 +26,7 @@
 See below for more detailed explanations.
 
 **Note:** If you are using Python installed with Ubuntu or ``conda``,
-PyJulia may not work with Julia ≥ 0.7. For workarounds, see
+PyJulia may not work with the default setting. For workarounds, see
 :doc:`Troubleshooting <troubleshooting>`. Same caution applies to any
 Debian-based and possibly other GNU/Linux distributions.
 
@@ -115,7 +115,7 @@ Alternatively, you can use Julia's builtin package manager.
 
 .. code-block:: jlcon
 
-   julia> using Pkg  # for julia ≥ 0.7
+   julia> using Pkg
    julia> Pkg.add("PyCall")
 
 Note that PyCall must be built with Python executable that is used to

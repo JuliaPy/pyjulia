@@ -311,6 +311,8 @@ def is_accessible_name(name):
                 isprotected(name) or
                 notascii(name))
 
+# fmt: on
+
 
 def isdefined(julia, parent, member):
     return julia.eval("isdefined({}, :({}))".format(parent, member))
@@ -336,39 +338,6 @@ def isafunction(julia, julia_name, mod_name=""):
 def determine_if_statically_linked():
     """Determines if this python executable is statically linked"""
     return linked_libpython() is None
-
-
-juliainfo_script = """
-println(VERSION < v"0.7.0-DEV.3073" ? JULIA_HOME : Base.Sys.BINDIR)
-if VERSION >= v"0.7.0-DEV.3630"
-    using Libdl
-    using Pkg
-end
-println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
-println(unsafe_string(Base.JLOptions().image_file))
-
-println(VERSION)
-println(VERSION.major)
-println(VERSION.minor)
-println(VERSION.patch)
-
-if VERSION < v"0.7.0"
-    PyCall_depsfile = Pkg.dir("PyCall","deps","deps.jl")
-else
-    pkg = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")
-    modpath = Base.locate_package(pkg)
-    if modpath == nothing
-        PyCall_depsfile = nothing
-    else
-        PyCall_depsfile = joinpath(dirname(modpath),"..","deps","deps.jl")
-    end
-end
-if PyCall_depsfile !== nothing && isfile(PyCall_depsfile)
-    include(PyCall_depsfile)
-    println(pyprogramname)
-    println(libpython)
-end
-"""
 
 
 class JuliaInfo(object):
@@ -417,16 +386,22 @@ class JuliaInfo(object):
         # object file: No such file or directory":
         popen_kwargs.setdefault("env", _enviorn)
 
+        juliainfo_script = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "juliainfo.jl"
+        )
         proc = subprocess.Popen(
-            [julia, "--startup-file=no", "-e", juliainfo_script],
+            [julia, "--startup-file=no", juliainfo_script],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
-            **popen_kwargs)
+            **popen_kwargs
+        )
 
         stdout, stderr = proc.communicate()
         retcode = proc.wait()
         if retcode != 0:
+            logger.debug("STDOUT from %s:\n%s", julia, stdout)
+            logger.debug("STDERR from %s:\n%s", julia, stderr)
             if sys.version_info[0] < 3:
                 output = "\n".join(["STDOUT:", stdout, "STDERR:", stderr])
                 raise subprocess.CalledProcessError(
@@ -445,9 +420,19 @@ class JuliaInfo(object):
 
         return cls(julia, *args)
 
-    def __init__(self, julia, bindir, libjulia_path, sysimage,
-                 version_raw, version_major, version_minor, version_patch,
-                 python=None, libpython_path=None):
+    def __init__(
+        self,
+        julia,
+        version_raw,
+        version_major,
+        version_minor,
+        version_patch,
+        bindir=None,
+        libjulia_path=None,
+        sysimage=None,
+        python=None,
+        libpython_path=None,
+    ):
         self.julia = julia
         self.bindir = bindir
         self.libjulia_path = libjulia_path
@@ -499,6 +484,9 @@ def is_compatible_exe(jl_libpython):
     # if it's statically linked).  `jl_libpython` may be `None` if
     # libpython used for PyCall is removed so we can't expect
     # `jl_libpython` to be a `str` always.
+
+
+# fmt: off
 
 
 def setup_libjulia(libjulia):
@@ -951,6 +939,9 @@ class Julia(object):
             self.api = get_libjulia()
         elif init_julia:
             jlinfo = JuliaInfo.load(runtime)
+            if jlinfo.version_info < (0, 7):
+                raise RuntimeError("PyJulia does not support Julia < 0.7 anymore")
+
             self.api = LibJulia.from_juliainfo(jlinfo)
 
             if jl_init_path:
@@ -958,69 +949,17 @@ class Julia(object):
 
             options = JuliaOptions(**julia_options)
 
-            use_separate_cache = not (
-                options.compiled_modules == "no" or jlinfo.is_compatible_python()
-            )
-            logger.debug("use_separate_cache = %s", use_separate_cache)
-            if use_separate_cache:
-                PYCALL_JULIA_HOME = os.path.join(
-                    os.path.dirname(os.path.realpath(__file__)), "fake-julia").replace("\\", "\\\\")
-                os.environ["JULIA_HOME"] = PYCALL_JULIA_HOME  # TODO: this line can be removed when dropping Julia v0.6
-                os.environ["JULIA_BINDIR"] = PYCALL_JULIA_HOME
-                self.api.bindir = PYCALL_JULIA_HOME
+            is_compatible_python = jlinfo.is_compatible_python()
+            logger.debug("is_compatible_python = %r", is_compatible_python)
+            logger.debug("compiled_modules = %r", options.compiled_modules)
+            if not (options.compiled_modules == "no" or is_compatible_python):
+                raise_separate_cache_error(runtime, jlinfo)
 
             was_initialized = self.api.jl_is_initialized()
             if was_initialized:
                 set_libjulia(self.api)
             else:
                 self.api.init_julia(options)
-
-            if use_separate_cache:
-                if jlinfo.version_info < (0, 6):
-                    raise RuntimeError(
-                        "PyJulia does not support Julia < 0.6 anymore")
-                elif jlinfo.version_info >= (0, 7):
-                    raise_separate_cache_error(runtime, jlinfo)
-                # Intercept precompilation
-                os.environ["PYCALL_PYTHON_EXE"] = sys.executable
-                os.environ["PYCALL_JULIA_HOME"] = PYCALL_JULIA_HOME
-                os.environ["PYJULIA_IMAGE_FILE"] = jlinfo.sysimage
-                os.environ["PYCALL_LIBJULIA_PATH"] = os.path.dirname(jlinfo.libjulia_path)
-                # Add a private cache directory. PyCall needs a different
-                # configuration and so do any packages that depend on it.
-                self._call(u"unshift!(Base.LOAD_CACHE_PATH, abspath(Pkg.Dir._pkgroot()," +
-                    "\"lib\", \"pyjulia%s-v$(VERSION.major).$(VERSION.minor)\"))" % sys.version_info[0])
-
-                # If PyCall.jl is already pre-compiled, for the global
-                # environment, hide it while we are loading PyCall.jl
-                # for PyJulia which has to compile a new cache if it
-                # does not exist.  However, Julia does not compile a
-                # new cache if it exists in Base.LOAD_CACHE_PATH[2:end].
-                # https://github.com/JuliaPy/pyjulia/issues/92#issuecomment-289303684
-                self._call(u"""
-                for path in Base.LOAD_CACHE_PATH[2:end]
-                    cache = joinpath(path, "PyCall.ji")
-                    backup = joinpath(path, "PyCall.ji.backup")
-                    if isfile(cache)
-                        mv(cache, backup; remove_destination=true)
-                    end
-                end
-                """)
-
-            # This is mainly for initiating the precompilation:
-            self._call(u"using PyCall")
-
-            if use_separate_cache:
-                self._call(u"""
-                for path in Base.LOAD_CACHE_PATH[2:end]
-                    cache = joinpath(path, "PyCall.ji")
-                    backup = joinpath(path, "PyCall.ji.backup")
-                    if !isfile(cache) && isfile(backup)
-                        mv(backup, cache)
-                    end
-                    rm(backup; force=true)
-                end
-                """)
 
             # We are assuming that `jl_is_initialized()` was true only
             # if this process was a Julia process (hence PyCall had

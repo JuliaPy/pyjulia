@@ -78,8 +78,6 @@ def runtests(pytest_args, dry_run):
         "julia.pytestplugin",
         "--doctest-modules",
         "--runpytest=subprocess",
-        "-o",
-        "norecursedirs=fake-julia",
         "--pyargs",
         "julia",
     ]

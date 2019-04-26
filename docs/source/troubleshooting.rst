@@ -8,7 +8,7 @@ Your Python interpreter is statically linked to libpython
 
 If you use Python installed with Debian-based Linux distribution such as
 Ubuntu or install Python by ``conda``, you might have noticed that
-PyJulia cannot be initialized properly with Julia ≥ 0.7. This is because
+PyJulia cannot be initialized properly out-of-the-box. This is because
 those Python executables are statically linked to libpython. (See
 :doc:`limitations` for why that's a problem.)
 

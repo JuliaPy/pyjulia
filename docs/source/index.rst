@@ -5,7 +5,7 @@ Welcome to PyJulia’s documentation!
 
 Experimenting with developing a better interface to
 `Julia language <https://julialang.org/>`_ that works with
-`Python <https://www.python.org/>`_ 2 & 3 and Julia v0.6+.
+`Python <https://www.python.org/>`_ 2 & 3 and Julia v1.0+.
 
 PyJulia is tested against Python versions 2.7, 3.5, 3.6, and 3.7.
 

@@ -7,12 +7,6 @@ environment:
   # for more python versions have a look at
   # https://github.com/ogrisel/python-appveyor-demo/blob/master/appveyor.yml
   matrix:
-  # 32 julia-0.6 Python-35
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.6/julia-0.6-latest-win32.exe"
-    PYTHONDIR: "C:\\Python35"
-    BATDIR: ci\appveyor\win32
-    CROSS_VERSION: 1
-
   # 32 julia-1.0 Python-35
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/1.0/julia-1.0-latest-win32.exe"
     PYTHONDIR: "C:\\Python35"
@@ -22,12 +16,6 @@ environment:
   # - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
   #   PYTHONDIR: "C:\\Python35"
   #   BATDIR: ci\appveyor\win32
-
-  # 64 julia-0.6 Python-35
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
-    PYTHONDIR: "C:\\Python35-x64"
-    BATDIR: ci\appveyor\win64
-    CROSS_VERSION: 1
 
   # 64 julia-1.0 Python-35
   - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/1.0/julia-1.0-latest-win64.exe"
@@ -77,14 +65,6 @@ build_script:
 test_script:
   - "SET PATH=%cd%\\%BATDIR%;%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
   - dir
-
-  # Run cross-version tests but ignore the failures (from Python 2).
-  # Once cross-version in Windows is fmixed, stop using
-  # Invoke-Expression (which ignores the exit status).
-  - ps: if ($env:CROSS_VERSION -eq 1) { Invoke-Expression "tox" }
-  # - ps: if ($env:CROSS_VERSION -eq 1) { tox }
-  - ps: if ($env:CROSS_VERSION -eq 1) { Invoke-Expression "cat .tox\py\log\pytest.log" }
-  - ps: if ($env:CROSS_VERSION -eq 1) { Invoke-Expression "cat .tox\py27\log\pytest.log" }
 
   # Rebuild PyCall.ji for each Python interpreter before testing:
   - "SET PYJULIA_TEST_REBUILD=yes"

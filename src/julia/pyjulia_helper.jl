@@ -4,24 +4,6 @@ using PyCall
 using PyCall: pyeval_, Py_eval_input, Py_file_input
 using PyCall.MacroTools: isexpr, walk
 
-if VERSION < v"0.7-"
-nameof(m::Module) = ccall(:jl_module_name, Ref{Symbol}, (Any,), m)
-
-parentmodule(m::Module) = ccall(:jl_module_parent, Ref{Module}, (Any,), m)
-
-function fullname(m::Module)
-    mn = nameof(m)
-    if m === Main || m === Base || m === Core
-        return (mn,)
-    end
-    mp = parentmodule(m)
-    if mp === m
-        return (mn,)
-    end
-    return (fullname(mp)..., mn)
-end
-end  # if
-
 """
     fullnamestr(m)
 
@@ -34,19 +16,6 @@ julia> fullnamestr(Base.Enums)
 fullnamestr(m) = join(fullname(m), ".")
 
 isdefinedstr(parent, member) = isdefined(parent, Symbol(member))
-
-if VERSION >= v"0.7-"
-    import REPL
-
-    function completions(str, pos)
-        ret, ran, should_complete = REPL.completions(str, pos)
-        return (
-            map(REPL.completion_text, ret),
-            (first(ran), last(ran)),
-            should_complete,
-        )
-    end
-end
 
 
 # takes an expression like `$foo + 1` and turns it into a pyfunction
@@ -115,15 +84,9 @@ const orig_stdout = Ref{IO}()
 const orig_stderr = Ref{IO}()
 
 function __init__()
-@static if VERSION < v"0.7-"
-    orig_stdin[]  = STDIN
-    orig_stdout[] = STDOUT
-    orig_stderr[] = STDERR
-else
     orig_stdin[]  = stdin
     orig_stdout[] = stdout
     orig_stderr[] = stderr
-end
 end
 
 """

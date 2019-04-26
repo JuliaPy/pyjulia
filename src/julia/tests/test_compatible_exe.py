@@ -144,11 +144,6 @@ def is_dynamically_linked(executable):
 
 @pytest.mark.parametrize("python", incompatible_pythons)
 def test_incompatible_python(python, julia):
-
-    if julia.eval("(VERSION.major, VERSION.minor)") == (0, 6):
-        # Julia 0.6 implements mixed version
-        return
-
     python = which(python)
     proc = runcode(
         """

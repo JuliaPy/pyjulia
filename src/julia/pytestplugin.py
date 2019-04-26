@@ -95,13 +95,8 @@ Try:
         )
         pytest.exit("incompatible runtimes", returncode=1)
 
-    if (info.version_major, info.version_minor) < (0, 7):
-        # In Julia 0.6, we have to load PyCall.jl here to do the
-        # fake-julia setup.
-        Julia(runtime=julia_runtime)
-    else:
-        api = LibJulia.from_juliainfo(info)
-        api.init_julia(options)
+    api = LibJulia.from_juliainfo(info)
+    api.init_julia(options)
 
 
 # Initialize Julia runtime as soon as possible (or more precisely
