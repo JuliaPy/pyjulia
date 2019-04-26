@@ -176,8 +176,9 @@ def test_statically_linked(python):
     runcode(
         """
         from __future__ import print_function
+        from julia.core import enable_debug
         from julia.find_libpython import find_libpython
-        from julia.core import is_compatible_exe, enable_debug
+        from julia.juliainfo import is_compatible_exe
 
         enable_debug()
         assert not is_compatible_exe(find_libpython())
