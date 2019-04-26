@@ -3,7 +3,7 @@ import subprocess
 
 import pytest
 
-from julia.core import JuliaInfo, _enviorn, which
+from julia.core import JuliaInfo, which
 
 
 def dummy_juliainfo(**kwargs):
@@ -47,29 +47,21 @@ def test_juliainfo_without_pycall(tmpdir):
 
     runtime = os.getenv("PYJULIA_TEST_RUNTIME", "julia")
 
-    env_var = subprocess.check_output(
+    depot = subprocess.check_output(
         [
             runtime,
             "--startup-file=no",
             "-e",
             """
-        if VERSION < v"0.7-"
-            println("JULIA_PKGDIR")
-            print(ARGS[1])
-        else
             paths = [ARGS[1], DEPOT_PATH[2:end]...]
-            println("JULIA_DEPOT_PATH")
             print(join(paths, Sys.iswindows() ? ';' : ':'))
-        end
-        """,
+            """,
             str(tmpdir),
         ],
-        env=_enviorn,
         universal_newlines=True,
-    )
-    name, val = env_var.split("\n", 1)
+    ).strip()
 
-    jlinfo = JuliaInfo.load(runtime, env=dict(_enviorn, **{name: val}))
+    jlinfo = JuliaInfo.load(runtime, env=dict(os.environ, JULIA_DEPOT_PATH=depot))
 
     check_core_juliainfo(jlinfo)
     assert jlinfo.python is None

@@ -9,7 +9,6 @@ from types import ModuleType
 import pytest
 
 from julia import JuliaError
-from julia.core import _enviorn as orig_env
 from julia.core import jl_name, py_name
 
 python_version = sys.version_info
@@ -158,7 +157,7 @@ def test_module_dir(julia):
 def test_import_without_setup():
     command = [sys.executable, "-c", "from julia import Base"]
     print("Executing:", *command)
-    subprocess.check_call(command, env=orig_env)
+    subprocess.check_call(command)
 
 
 # TODO: this causes a segfault

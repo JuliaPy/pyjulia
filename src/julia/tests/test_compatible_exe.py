@@ -11,7 +11,7 @@ from contextlib import contextmanager
 import pytest
 
 import julia
-from julia.core import _enviorn, which
+from julia.core import which
 
 is_linux = sys.platform.startswith("linux")
 is_windows = os.name == "nt"
@@ -63,9 +63,7 @@ def tmpdir_if(should):
 
 def runcode(code, python=None, check=False, env=None, **kwargs):
     """Run `code` in `python`."""
-    if env is None:
-        env = _enviorn
-    env = env.copy()
+    env = (env or os.environ).copy()
 
     with tmpdir_if(python) as path:
         if path is not None:
@@ -120,17 +118,12 @@ def is_dynamically_linked(executable):
     path = which(executable)
     assert os.path.exists(path)
     if is_linux and which("ldd"):
-        proc = run(
-            ["ldd", path], stdout=subprocess.PIPE, env=_enviorn, universal_newlines=True
-        )
+        proc = run(["ldd", path], stdout=subprocess.PIPE, universal_newlines=True)
         print_completed_proc(proc)
         return "libpython" in proc.stdout
     elif is_apple and which("otool"):
         proc = run(
-            ["otool", "-L", path],
-            stdout=subprocess.PIPE,
-            env=_enviorn,
-            universal_newlines=True,
+            ["otool", "-L", path], stdout=subprocess.PIPE, universal_newlines=True
         )
         print_completed_proc(proc)
         return (

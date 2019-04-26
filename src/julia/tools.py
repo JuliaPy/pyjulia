@@ -6,7 +6,7 @@ import re
 import subprocess
 import sys
 
-from .core import JuliaNotFound, _enviorn, which
+from .core import JuliaNotFound, which
 from .find_libpython import linked_libpython
 
 
@@ -40,7 +40,7 @@ def _julia_version(julia):
         return (0, 0, 0)
 
 
-def install(julia="julia", color="auto", env=None, python=None, quiet=False):
+def install(julia="julia", color="auto", python=None, quiet=False):
     """
     install(*, julia="julia", color="auto")
     Install Julia packages required by PyJulia in `julia`.
@@ -61,8 +61,6 @@ def install(julia="julia", color="auto", env=None, python=None, quiet=False):
         raise JuliaNotFound(julia, kwargname="julia")
 
     libpython = linked_libpython() or ""
-
-    env = env or _enviorn.copy()
 
     julia_cmd = [julia, "--startup-file=no"]
     if quiet:
@@ -88,7 +86,7 @@ def install(julia="julia", color="auto", env=None, python=None, quiet=False):
         libpython,
     ]
 
-    kwargs = dict(env=env)
+    kwargs = {}
     if quiet:
         kwargs.update(
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
@@ -107,7 +105,7 @@ def install(julia="julia", color="auto", env=None, python=None, quiet=False):
         print("Precompiling PyCall...", file=sys.stderr)
         sys.stderr.flush()
     precompile_cmd = julia_cmd + ["-e", "using PyCall"]
-    returncode = subprocess.call(precompile_cmd, env=env)
+    returncode = subprocess.call(precompile_cmd)
     if returncode != 0:
         raise PyCallInstallError("Precompiling")
     if not quiet:

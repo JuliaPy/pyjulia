@@ -101,11 +101,6 @@ def enable_debug():
     logger.debug("PyJulia version: %s", __version__)
 
 
-# As setting up Julia modifies os.environ, we need to cache it for
-# launching subprocesses later in the original environment.
-_enviorn = os.environ.copy()
-
-
 class JuliaError(Exception):
     """
     Wrapper for Julia exceptions.
@@ -380,11 +375,6 @@ class JuliaInfo(object):
         """
         Get basic information from `julia`.
         """
-
-        # Use the original environment variables to avoid a cryptic
-        # error "fake-julia/../lib/julia/sys.so: cannot open shared
-        # object file: No such file or directory":
-        popen_kwargs.setdefault("env", _enviorn)
 
         juliainfo_script = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "juliainfo.jl"

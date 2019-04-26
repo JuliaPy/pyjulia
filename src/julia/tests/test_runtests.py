@@ -2,8 +2,6 @@ import subprocess
 import sys
 from textwrap import dedent
 
-from julia.core import _enviorn
-
 from .test_compatible_exe import run
 
 
@@ -29,7 +27,6 @@ def test_runtests_failure(tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
-        env=_enviorn,
     )
     assert proc.returncode == 1
     assert "1 failed" in proc.stdout
