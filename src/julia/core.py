@@ -179,14 +179,14 @@ class JuliaModule(ModuleType):
         jl_module = remove_prefix(self.__name__, "julia.")
         jl_fullname = ".".join((jl_module, name))
 
-        if isamodule(self._julia, jl_fullname):
+        if self._julia.isamodule(jl_fullname):
             realname = self._julia.fullname(self._julia.eval(jl_fullname))
             if self._julia.isdefined(realname):
                 return self.__loader__.load_module("julia." + realname)
             # Otherwise, it may be, e.g., "Main.anonymous", created by
             # Module().
 
-        if isdefined(self._julia, jl_module, name):
+        if self._julia._isdefined(jl_module, name):
             return self._julia.eval(jl_fullname)
 
         raise AttributeError(name)
@@ -238,7 +238,7 @@ class JuliaModuleLoader(object):
         if juliapath == 'Main':
             return sys.modules.setdefault(fullname,
                                           JuliaMainModule(self, fullname))
-        elif isafunction(self.julia, juliapath):
+        elif self.julia.isafunction(juliapath):
             return self.julia.eval(juliapath)
 
         try:
@@ -246,7 +246,7 @@ class JuliaModuleLoader(object):
         except JuliaError:
             pass
         else:
-            if isamodule(self.julia, juliapath):
+            if self.julia.isamodule(juliapath):
                 return sys.modules.setdefault(fullname,
                                               JuliaModule(self, fullname))
 
@@ -298,27 +298,6 @@ def is_accessible_name(name):
                 notascii(name))
 
 # fmt: on
-
-
-def isdefined(julia, parent, member):
-    return julia.eval("isdefined({}, :({}))".format(parent, member))
-
-
-def isamodule(julia, julia_name):
-    try:
-        return julia.eval("isa({}, Module)".format(julia_name))
-    except JuliaError:
-        return False  # assuming this is an `UndefVarError`
-
-
-def isafunction(julia, julia_name, mod_name=""):
-    code = "isa({}, Function)".format(julia_name)
-    if mod_name:
-        code = "isa({}.{}, Function)".format(mod_name, julia_name)
-    try:
-        return julia.eval(code)
-    except:
-        return False
 
 
 def determine_if_statically_linked():
@@ -400,15 +379,14 @@ class UnsupportedPythonError(Exception):
         )
 
 
-# fmt: off
-
-
 class Julia(object):
     """
     Implements a bridge to the Julia runtime.
     This uses the Julia PyCall module to perform type conversions and allow
     full access to the entire Julia runtime.
     """
+
+    # fmt: off
 
     def __init__(self, init_julia=True, jl_init_path=None, runtime=None,
                  jl_runtime_path=None, debug=False, **julia_options):
@@ -531,7 +509,7 @@ class Julia(object):
             self.eval("@eval Main import Base.MainInclude: eval, include")
             # https://github.com/JuliaLang/julia/issues/28825
 
-        if not isdefined(self, "Main", "_PyJuliaHelper"):
+        if not self._isdefined("Main", "_PyJuliaHelper"):
             self.eval("include")(
                 os.path.join(
                     os.path.dirname(os.path.realpath(__file__)), "pyjulia_helper.jl"
@@ -662,6 +640,28 @@ class Julia(object):
         if isinstance(parent, string_types):
             parent = self.eval(parent)
         return isdefinedstr(parent, member)
+
+    # fmt: on
+
+    def _isdefined(self, parent, member):
+        # `_isdefined` is used in context that `isdefined` is not available
+        return self.eval("isdefined({}, :({}))".format(parent, member))
+
+    def isamodule(self, julia_name):
+        try:
+            return self.eval("isa({}, Module)".format(julia_name))
+        except JuliaError:
+            return False  # assuming this is an `UndefVarError`
+
+    def isafunction(self, julia_name):
+        code = "isa({}, Function)".format(julia_name)
+        try:
+            return self.eval(code)
+        except Exception:
+            return False
+
+
+# fmt: off
 
 
 if sys.version_info[0] > 2:
