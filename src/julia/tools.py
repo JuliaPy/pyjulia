@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function
 import glob
 import os
 import re
+import site
 import subprocess
 import sys
 
@@ -139,8 +140,11 @@ def julia_py_executable(executable=sys.executable):
     """
     Path to ``julia-py`` executable installed for this Python executable.
     """
-    stempath = os.path.join(os.path.dirname(executable), "julia-py")
-    candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
+    basedirs = {os.path.dirname(executable),
+                os.path.join(site.USER_BASE, "bin")}
+    stempaths = {os.path.join(basedir, "julia-py") for basedir in basedirs}
+    candidates = {os.path.basename(p): p for stempath in stempaths
+                                         for p in glob.glob(stempath + "*")}
     if not candidates:
         raise RuntimeError(
             "``julia-py`` executable is not found for Python installed at {}".format(
