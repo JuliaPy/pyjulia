@@ -59,7 +59,8 @@ build_script:
   - "SET PATH=%PYTHONDIR%;%PYTHONDIR%\\Scripts;C:\\projects\\julia\\bin;%PATH%"
   - "\"C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\editbin.exe\" %PYTHONDIR%\\python.exe /STACK:8000000"
   - "SET PYTHON=%PYTHONDIR%\\python.exe"
-  - "%PYTHONDIR%\\python.exe -m pip install --quiet tox==3.9.0"
+  - "%PYTHONDIR%\\python.exe -m pip install --quiet --upgrade pip"
+  - "%PYTHONDIR%\\python.exe -m pip install --quiet tox"
   - "%PYTHONDIR%\\python.exe ci\\install_pycall.py"
 
 test_script:

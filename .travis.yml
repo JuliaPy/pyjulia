@@ -96,6 +96,7 @@ before_script:
   # Following which command will catch installation failure:
   - PYTHON=${PYTHON:-python}
   - which $PYTHON
+  - $PYTHON -m pip install --quiet --upgrade pip
   - $PYTHON -m pip --version
   - $PYTHON -m pip install --quiet tox coveralls
   - $PYTHON ci/install_pycall.py
