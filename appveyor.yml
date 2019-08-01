@@ -61,7 +61,7 @@ build_script:
   - "SET PYTHON=%PYTHONDIR%\\python.exe"
   - "%PYTHONDIR%\\python.exe -m pip install --quiet --upgrade pip virtualenv setuptools"
   - "%PYTHONDIR%\\python.exe -m pip --version"
-  - "%PYTHONDIR%\\python.exe -m pip install --quiet tox==3.9.0"
+  - "%PYTHONDIR%\\python.exe -m pip install --quiet tox==3.10.0"
   - "python2.7 -m pip install --quiet --upgrade pip virtualenv setuptools"
   - "python2.7 -m pip --version"
   - "%PYTHONDIR%\\python.exe ci\\install_pycall.py"
