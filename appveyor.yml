@@ -18,9 +18,9 @@ environment:
   #   BATDIR: ci\appveyor\win32
 
   # 64 julia-1.0 Python-35
-  - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/1.0/julia-1.0-latest-win64.exe"
-    PYTHONDIR: "C:\\Python35-x64"
-    BATDIR: ci\appveyor\win64
+  # - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/1.0/julia-1.0-latest-win64.exe"
+  #   PYTHONDIR: "C:\\Python35-x64"
+  #   BATDIR: ci\appveyor\win64
 
   # 64 julia latest Python-35
   # - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
@@ -73,7 +73,7 @@ test_script:
   # Rebuild PyCall.ji for each Python interpreter before testing:
   - "SET PYJULIA_TEST_REBUILD=yes"
   - tox --version
-  - tox
+  - tox -rvv -e py27
 
 on_finish:
   - ps: cat .tox\py\log\pytest.log
