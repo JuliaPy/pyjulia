@@ -115,13 +115,15 @@ class JuliaMagics(Magics):
         while caller_frame.f_globals.get('__name__').startswith("IPython"):
             caller_frame = caller_frame.f_back
         
-        ret_value = self._julia.eval("""
-        _PyJuliaHelper.@prepare_for_pyjulia_call begin %s end
-        """%src)(self.shell.user_ns, caller_frame.f_locals)
+        return_value = "nothing" if src.strip().endswith(";") else ""
         
-        if not src.strip().endswith(";"):
-            return ret_value
-
+        return self._julia.eval("""
+        _PyJuliaHelper.@prepare_for_pyjulia_call begin 
+            begin %s end
+            %s
+        end
+        """%(src,return_value))(self.shell.user_ns, caller_frame.f_locals)
+        
         # fmt: on
 
 

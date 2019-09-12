@@ -136,6 +136,7 @@ def test_global_scope(run_cell):
     
 def test_noretvalue(run_cell):
     assert run_cell("""
+    %%julia
     1+2;
     """) is None
 
