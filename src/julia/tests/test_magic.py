@@ -133,6 +133,13 @@ def test_global_scope(run_cell):
         return ret
     f()
     """) == "global"
+    
+def test_noretvalue(run_cell):
+    assert run_cell("""
+    %%julia
+    1+2;
+    """) is None
+
 
 def test_revise_error():
     from julia.ipy import revise
