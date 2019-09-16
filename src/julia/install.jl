@@ -64,7 +64,7 @@ catch err
 end
 
 
-ENV["PYTHON"] = python
+ENV["PYTHON"] = lowercase(python)
 
 # TODO: warn if some relevant JULIA_* environment variables are set
 # TODO: use PackageSpec to specify PyCall's UUID

@@ -210,7 +210,10 @@ class LibJulia(BaseLibJulia):
         if sys.version_info >= (2, 7, 13) and sys.version_info < (2, 7, 14):
             libjulia_path = libjulia_path.encode("ascii")
 
+        cwd = os.getcwd()
+        os.chdir(os.path.dirname(libjulia_path))
         self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
+        os.chdir(cwd)
         setup_libjulia(self.libjulia)
 
     @property
