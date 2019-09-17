@@ -210,12 +210,19 @@ class LibJulia(BaseLibJulia):
         if sys.version_info >= (2, 7, 13) and sys.version_info < (2, 7, 14):
             libjulia_path = libjulia_path.encode("ascii")
 
+        # Using `os.chdir` as a workaround for an error in Windows
+        # "The specified procedure could not be found."  It may be
+        # possible to fix this on libjulia side and/or by tweaking
+        # load paths directly only in Windows.  However, this solution
+        # is reported to work by many users:
+        # https://github.com/JuliaPy/pyjulia/issues/67
         cwd = os.getcwd()
         try:
             os.chdir(os.path.dirname(libjulia_path))
             self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
         finally:
             os.chdir(cwd)
+
         setup_libjulia(self.libjulia)
 
     @property
