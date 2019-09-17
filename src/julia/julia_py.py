@@ -37,6 +37,9 @@ def julia_py(julia, pyjulia_debug, jl_args):
     api = LibJulia.load(julia=julia)
     api.init_julia(jl_args)
     code = 1
+    if not api.jl_eval_string(b"Base.PCRE.__init__()"):
+        print("julia-py: Error while calling `Base.PCRE.__init__()`", file=sys.stderr)
+        sys.exit(code)
     if api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
         if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
             code = 0
