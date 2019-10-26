@@ -17,7 +17,8 @@ versioninfo(verbose=true)
 
 @info "Julia executable: $(Base.julia_cmd().exec[1])"
 
-pycall_is_installed = haskey(Pkg.installed(), "PyCall")
+pkgid = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")
+pycall_is_installed = Base.locate_package(pkgid) !== nothing
 
 @info "Trying to import PyCall..."
 
@@ -102,8 +103,7 @@ else
     end
 end
 
-pkg = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")
-modpath = Base.locate_package(pkg)
+modpath = Base.locate_package(pkgid)
 pkgdir = joinpath(dirname(modpath), "..")
 
 if print_logfile
