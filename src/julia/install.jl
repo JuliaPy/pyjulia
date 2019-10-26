@@ -6,35 +6,18 @@ code_no_precompile_needed = 113
 
 
 if VERSION < v"0.7.0"
-macro info(x)
-    :(info($(esc(x))))
+    error("Unsupported Julia version $VERSION")
 end
-macro warn(x)
-    :(warn($(esc(x))))
-end
-stderr = STDERR
-else
-using Pkg
-end  # if
 
+using Pkg
+using InteractiveUtils
 
 @info "Julia version info"
-if VERSION >= v"0.7.0-DEV.3630"
-using InteractiveUtils
 versioninfo(verbose=true)
-else
-versioninfo(true)
-end  # if
 
 @info "Julia executable: $(Base.julia_cmd().exec[1])"
 
-
-if VERSION < v"0.7.0"
-pycall_is_installed = Pkg.installed("PyCall") !== nothing
-else
 pycall_is_installed = haskey(Pkg.installed(), "PyCall")
-end  # if
-
 
 @info "Trying to import PyCall..."
 
@@ -45,21 +28,9 @@ end
 
 try
     # `import PyCall` cannot be caught?
-    if VERSION < v"0.7.0"
-    Base.require(:PyCall)
-    @assert PyCall.python isa String
-    else
     global PyCall = Base.require(Main, :PyCall)
-    end  # if
 catch err
-    @static if VERSION < v"0.7.0"
-    @warn """
-    `import PyCall` failed with:
-    $err
-    """
-    else
     @error "`import PyCall` failed" exception=(err, catch_backtrace())
-    end  # if
     global PyCall = DummyPyCall
 end
 
@@ -131,13 +102,9 @@ else
     end
 end
 
-if VERSION < v"0.7.0"
-pkgdir = Pkg.dir("PyCall")
-else
 pkg = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")
 modpath = Base.locate_package(pkg)
 pkgdir = joinpath(dirname(modpath), "..")
-end  # if
 
 if print_logfile
     logfile = joinpath(pkgdir, "deps", "build.log")
