@@ -41,6 +41,12 @@ except ImportError:
     from distutils.spawn import find_executable as which
 
 try:
+    FutureWarning
+except NameError:
+    # Python 2
+    FutureWarning = DeprecationWarning
+
+try:
     string_types = (basestring,)
 except NameError:
     string_types = (str,)
@@ -423,8 +429,8 @@ class Julia(object):
 
         if jl_runtime_path is not None:
             warnings.warn(
-                "`jl_runtime_path` is deprecated. Please use `runtime`.",
-                DeprecationWarning)
+                "`jl_runtime_path` is deprecated. Please use `runtime`.", FutureWarning
+            )
 
         if not init_julia and runtime is None and is_windows:
             warnings.warn(
@@ -447,8 +453,8 @@ class Julia(object):
 
         if jl_init_path:
             warnings.warn(
-                "`jl_init_path` is deprecated. Please use `bindir`.",
-                DeprecationWarning)
+                "`jl_init_path` is deprecated. Please use `bindir`.", FutureWarning
+            )
             if "bindir" in julia_options:
                 raise TypeError("Both `jl_init_path` and `bindir` are specified.")
 
@@ -661,9 +667,6 @@ class Julia(object):
             return False
 
 
-# fmt: off
-
-
 if sys.version_info[0] > 2:
     Julia.__init__.__doc__ = textwrap.dedent(Julia.__init__.__doc__) + options_docs
 
@@ -673,15 +676,18 @@ class LegacyJulia(object):
 
     def __init__(self, *args, **kwargs):
         self.__julia = Julia(*args, **kwargs)
+
     __init__.__doc__ = Julia.__init__.__doc__
 
     def __getattr__(self, name):
         from julia import Main
+
         warnings.warn(
             "Accessing `Julia().<name>` to obtain Julia objects is"
             " deprecated.  Use `from julia import Main; Main.<name>` or"
             " `jl = Julia(); jl.eval('<name>')`.",
-            DeprecationWarning)
+            FutureWarning,
+        )
         try:
             return getattr(self.__julia, name)
         except AttributeError:
