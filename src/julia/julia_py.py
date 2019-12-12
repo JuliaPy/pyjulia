@@ -40,6 +40,18 @@ def julia_py(julia, pyjulia_debug, jl_args):
     if not api.jl_eval_string(b"Base.PCRE.__init__()"):
         print("julia-py: Error while calling `Base.PCRE.__init__()`", file=sys.stderr)
         sys.exit(code)
+    if not api.jl_eval_string(
+        b"""
+        Base.require(
+            Base.PkgId(
+                Base.UUID("9a3f8284-a2c9-5f02-9a11-845980a1fd5c"),
+                "Random",
+            ),
+        ).__init__()
+        """
+    ):
+        print("julia-py: Error while calling `Random.__init__()`", file=sys.stderr)
+        sys.exit(code)
     if api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
         if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
             code = 0
