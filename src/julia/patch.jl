@@ -14,14 +14,17 @@ else
     # * Suggestion: Use different precompilation cache path for different
     #   system image -- https://github.com/JuliaLang/julia/pull/29914
     #
-    Base.eval(Base, quote
-        function package_slug(uuid::UUID, p::Int=5)
-            crc = _crc32c(uuid)
-            crc = _crc32c(unsafe_string(JLOptions().image_file), crc)
-            crc = _crc32c($julia_py, crc)
-            return slug(crc, p)
-        end
-    end)
+    if VERSION < v"1.4.0-DEV.389"
+        Base.eval(Base, quote
+            function package_slug(uuid::UUID, p::Int=5)
+                crc = _crc32c(uuid)
+                crc = _crc32c(unsafe_string(JLOptions().image_file), crc)
+                crc = _crc32c(unsafe_string(JLOptions().julia_bin), crc)
+                crc = _crc32c($julia_py, crc)
+                return slug(crc, p)
+            end
+        end)
+    end
 
     # Monkey patch `Base.julia_exename`.
     #
