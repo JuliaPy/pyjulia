@@ -1,5 +1,6 @@
 module _PyJuliaHelper
 
+import REPL
 using PyCall
 using PyCall: pyeval_, Py_eval_input, Py_file_input
 using PyCall.MacroTools: isexpr, walk
@@ -16,6 +17,15 @@ julia> fullnamestr(Base.Enums)
 fullnamestr(m) = join(fullname(m), ".")
 
 isdefinedstr(parent, member) = isdefined(parent, Symbol(member))
+
+function completions(str, pos)
+    ret, ran, should_complete = REPL.completions(str, pos)
+    return (
+        map(REPL.completion_text, ret),
+        (first(ran), last(ran)),
+        should_complete,
+    )
+end
 
 
 # takes an expression like `$foo + 1` and turns it into a pyfunction
