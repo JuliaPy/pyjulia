@@ -1,9 +1,11 @@
 from textwrap import dedent
 
 import pytest
+from IPython.core.completer import provisionalcompleter
 from IPython.testing import globalipapp
 
 from julia import magic
+from julia.ipy.monkeypatch_completer import JuliaCompleter
 
 
 @pytest.fixture
@@ -141,6 +143,7 @@ def test_noretvalue(run_cell):
     """) is None
 
 
+# fmt: on
 def test_revise_error():
     from julia.ipy import revise
 
@@ -168,3 +171,11 @@ def test_revise_error():
         assert revise.revise_errors == 1
     finally:
         revise.revise_errors = 0
+
+
+def test_completions():
+    jc = JuliaCompleter()
+    t = "%julia Base.si"
+    with provisionalcompleter():
+        completions = jc.julia_completions(t, len(t))
+    assert {"sin", "sign", "sizehint!"} <= {c.text for c in completions}
