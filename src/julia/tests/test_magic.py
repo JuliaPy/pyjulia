@@ -1,11 +1,10 @@
+import sys
 from textwrap import dedent
 
 import pytest
-from IPython.core.completer import provisionalcompleter
 from IPython.testing import globalipapp
 
 from julia import magic
-from julia.ipy.monkeypatch_completer import JuliaCompleter
 
 
 @pytest.fixture
@@ -173,7 +172,11 @@ def test_revise_error():
         revise.revise_errors = 0
 
 
+@pytest.mark.skipif(sys.version_info[0] < 3, reason="Python 2 not supported")
 def test_completions():
+    from IPython.core.completer import provisionalcompleter
+    from julia.ipy.monkeypatch_completer import JuliaCompleter
+
     jc = JuliaCompleter()
     t = "%julia Base.si"
     with provisionalcompleter():
