@@ -107,6 +107,14 @@ Try:
 # https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_sessionstart
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "julia: mark tests to be skipped with --no-julia."
+    )
+    # https://docs.pytest.org/en/latest/writing_plugins.html#registering-markers
+    # https://docs.pytest.org/en/latest/mark.html#registering-marks
+
+
 @pytest.fixture(scope="session")
 def julia(request):
     """ pytest fixture for providing a `Julia` instance. """
