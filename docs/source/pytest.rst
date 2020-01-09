@@ -49,6 +49,10 @@ Following options can be passed to :program:`pytest`
 
    Skip tests that require julia.
 
+.. option:: --julia
+
+   Undo ``--no-julia``; i.e., run tests that require julia.
+
 .. option:: --julia-runtime
 
    Julia executable to be used.  Defaults to environment variable

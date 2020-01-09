@@ -1,6 +1,12 @@
+import os
+
+import pytest
+
 from julia.core import which
 
 pytest_plugins = ["pytester"]
+
+is_windows = os.name == "nt"
 
 
 def test__using_default_setup(testdir, request):
@@ -35,3 +41,42 @@ def test__using_default_setup(testdir, request):
 
     r2 = testdir.runpytest("--julia-inline=yes", *args)
     r2.assert_outcomes(skipped=1)
+
+
+@pytest.mark.skipif(
+    is_windows, reason="cannot run on Windows; symlink is used inside test"
+)
+def test_undo_no_julia(testdir, request):
+    if request.config.getoption("runpytest") != "subprocess":
+        raise ValueError("Need `-p pytester --runpytest=subprocess` options.")
+
+    # TODO: Support `JULIA_DEPOT_PATH`; or a better approach would be
+    # to not depend on user's depot at all.
+    testdepot = os.path.join(str(testdir.tmpdir), ".julia")
+    userdepot = os.path.join(os.path.expanduser("~"), ".julia")
+    os.symlink(userdepot, testdepot)
+
+    # create a temporary conftest.py file
+    testdir.makeini(
+        """
+        [pytest]
+        addopts =
+            -p julia.pytestplugin --no-julia
+        """
+    )
+
+    testdir.makepyfile(
+        """
+        import pytest
+
+        @pytest.mark.julia
+        def test():
+            pass
+        """
+    )
+
+    r0 = testdir.runpytest()
+    r0.assert_outcomes(skipped=1)
+
+    r1 = testdir.runpytest("--julia")
+    r1.assert_outcomes(passed=1)

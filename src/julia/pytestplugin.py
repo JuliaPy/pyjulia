@@ -19,7 +19,15 @@ def pytest_addoption(parser):
         "--no-julia",
         action="store_false",
         dest="julia",
+        default=True,
         help="Skip tests that require julia.",
+    )
+    parser.addoption(
+        "--julia",
+        action="store_true",
+        dest="julia",
+        default=True,
+        help="Undo `--no-julia`; i.e., run tests that require julia.",
     )
     parser.addoption(
         "--julia-runtime",
