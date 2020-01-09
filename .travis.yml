@@ -91,7 +91,15 @@ notifications:
 before_script:
   - echo ./ci/install-julia.sh "$JULIA_VERSION"
   - ./ci/install-julia.sh "$JULIA_VERSION"
-  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python3" ]; then brew update; brew upgrade python || echo "Ignoring errors..."; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python3" ];
+    then
+        brew update;
+        brew upgrade python || echo "Ignoring errors...";
+        if ! which $PYTHON;
+        then
+            PYTHON="$(ls -1 /usr/local/opt/python@3.*/bin/python3 | head -n1)";
+        fi;
+    fi
   - if [ "$TRAVIS_OS_NAME" = "osx" -a "$PYTHON" = "python2" ]; then brew update; brew list python@2 &>/dev/null || brew install python@2 || echo "Ignoring errors..."; fi
   # Ignoring errors from brew since it may actually be OK to do so.
   # Following which command will catch installation failure:
