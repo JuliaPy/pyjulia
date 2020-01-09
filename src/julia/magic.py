@@ -23,11 +23,15 @@ import sys
 import warnings
 
 from IPython.core.magic import Magics, line_cell_magic, magics_class
-from IPython.utils import py3compat as compat
 from traitlets import Bool, Enum
 
 from .core import Julia, JuliaError
 from .tools import redirect_output_streams
+
+try:
+    unicode
+except NameError:
+    unicode = str
 
 try:
     from IPython.core.magic import no_var_expand
@@ -103,7 +107,7 @@ class JuliaMagics(Magics):
         Execute code in Julia, and pull some of the results back into the
         Python namespace.
         """
-        src = compat.unicode_type(line if cell is None else cell)
+        src = unicode(line if cell is None else cell)
 
         # We assume the caller's frame is the first parent frame not in the
         # IPython module. This seems to work with IPython back to ~v5, and
