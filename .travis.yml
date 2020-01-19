@@ -3,7 +3,7 @@ os:
   - linux
 python:
   - "2.7"
-  - "3.6"
+  - "3.8"
 env:
   matrix:
     - JULIA_VERSION=1.0
@@ -19,7 +19,7 @@ matrix:
         env:
           - TOXENV=style
         os: linux
-        python: "3.6"
+        python: "3.8"
         before_script:
           - python -m pip --version
           - python -m pip install --quiet tox
@@ -43,7 +43,7 @@ matrix:
       # Upload the package to `test.pypi.org` when there is a push to
       # `release/test` branch:
       - stage: "Test deploy"
-        python: "3.6"
+        python: "3.8"
         env: []
         deploy:
           provider: pypi
@@ -67,7 +67,7 @@ matrix:
       # Test the package uploaded to `test.pypi.org`:
       - stage: "Test upload"
         if: branch = release/test OR branch = upload/test
-        python: "3.6"
+        python: "3.8"
         env:
           - JULIA_VERSION=1.0
         before_script:
