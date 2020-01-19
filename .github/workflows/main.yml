@@ -50,6 +50,7 @@ jobs:
       - name: Run test
         run: python -m tox
         env:
+          CI: 'true'  # run tests marked by @only_in_ci
           TOXENV: py
           PYJULIA_TEST_REBUILD: 'yes'
       - run: cat .tox/py/log/pytest.log
