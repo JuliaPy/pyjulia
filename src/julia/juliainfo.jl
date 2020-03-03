@@ -9,7 +9,7 @@ using Libdl
 using Pkg
 
 println(Base.Sys.BINDIR)
-println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
+println(Libdl.dlpath("libjulia"))
 println(unsafe_string(Base.JLOptions().image_file))
 
 pkg = Base.PkgId(Base.UUID(0x438e738f_606a_5dbb_bf0a_cddfbfd45ab0), "PyCall")

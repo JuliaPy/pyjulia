@@ -2,8 +2,11 @@ from __future__ import absolute_import, print_function
 
 import glob
 import os
+import platform
 import re
+import site
 import subprocess
+import sysconfig
 import sys
 
 from .core import JuliaNotFound, which
@@ -139,27 +142,44 @@ def julia_py_executable(executable=sys.executable):
     """
     Path to ``julia-py`` executable installed for this Python executable.
     """
-    stempath = os.path.join(os.path.dirname(executable), "julia-py")
-    candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
-    if not candidates:
-        raise RuntimeError(
-            "``julia-py`` executable is not found for Python installed at {}".format(
-                executable
-            )
-        )
+    basenames = []
+    basedirs = []
+    platform_sys = platform.system()
 
-    for basename in ["julia-py", "julia-py.exe", "julia-py.cmd"]:
-        try:
-            return candidates[basename]
-        except KeyError:
+    if platform_sys in {"Linux", "Darwin"}:
+        basenames = ["julia-py"]
+        basedirs = [
+            basedirs.append(os.path.join(site.USER_BASE, "bin")),
+            os.path.join(site.PREFIXES[0], "bin"),
+            os.path.dirname(executable)
+          ]
+    elif platform_sys == "win32":
+        basenames = ["julia-py.exe", "julia-py.cmd"]
+        basedirs = [
+            os.path.join(site.USER_BASE,
+                         "Python" + sysconfig.get_config_vars("VERSION"),
+                         "Scripts"),
+            os.path.join(site.PREFIXES[0], "Scripts"),
+            os.path.dirname(executable)
+          ]
+    else:
+        raise RuntimeError("Unsupported platform: {}".format(platform_sys))
+
+    for basedir in basedirs:
+        stempath = os.path.join(basedir, "julia-py")
+        candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
+        if not candidates:
             continue
+        for basename in basenames:
+            try:
+                return candidates[basename]
+            except KeyError:
+                continue
 
     raise RuntimeError(
-        """\
-``julia-py`` with following unrecognized extension(s) are found.
-Please report it at https://github.com/JuliaPy/pyjulia/issues
-with the full traceback.
-Files found:
-    """
-        + "    \n".join(sorted(candidates))
-    )
+                    """\``julia-py`` executable not found in {} looking for
+                    {}. If the file exists with another extension, please report it
+                    at https://github.com/JuliaPy/pyjulia/issues
+                    with the full traceback.
+                    """.format(basedirs, basenames)
+                )
