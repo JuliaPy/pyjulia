@@ -4,6 +4,7 @@ import ctypes
 import os
 import sys
 from ctypes import POINTER, c_char_p, c_int, c_void_p, pointer, py_object
+from ctypes import cdll, LibraryLoader
 from logging import getLogger  # see `.core.logger`
 
 from .juliainfo import JuliaInfo
@@ -11,7 +12,11 @@ from .options import parse_jl_options
 from .utils import is_windows
 
 logger = getLogger("julia")
-
+dlext = {
+    "win32": ".dll",
+    "cygwin": ".dll",
+    "darwin": ".dylib"
+}.get(sys.platform, ".so")
 
 UNBOXABLE_TYPES = (
     "bool",
@@ -220,6 +225,12 @@ class LibJulia(BaseLibJulia):
         try:
             os.chdir(os.path.dirname(libjulia_path))
             self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
+            # fix initialization issues
+            dll_dir = os.path.dirname(libjulia_path)
+            for dll_file in os.listdir(dll_dir):
+                if dll_file.endswith(dlext):
+                    cdll.LoadLibrary(os.path.join(dll_dir, dll_file))
+
         finally:
             os.chdir(cwd)
 
