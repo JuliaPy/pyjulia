@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function
 
+import sysconfig
 import glob
 import os
 import re
@@ -135,11 +136,10 @@ def redirect_output_streams():
     # terminates the whole Python process.  Find out why.
 
 
-def julia_py_executable(executable=sys.executable):
+def julia_py_executable():
     """
     Path to ``julia-py`` executable installed for this Python executable.
     """
-    import sysconfig
     stempath = sysconfig.get_path('scripts')
     stempath = os.path.join(stempath, 'julia-py')
     candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
