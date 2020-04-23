@@ -14,9 +14,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # macOS does not have libpython at the moment:
-          # https://github.com/actions/virtual-environments/issues/125
-          # - macos-latest
+          - macos-latest
           - windows-latest
         architecture: [x64, x86]
         python-version: ['3.7', '3.8']
