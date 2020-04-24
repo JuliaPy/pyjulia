@@ -218,6 +218,9 @@ class LibJulia(BaseLibJulia):
 
     @contextmanager
     def _windows_pathhack(self):
+        if not is_windows:
+            yield
+            return
         # Using `os.chdir` as a workaround for an error in Windows
         # "The specified procedure could not be found."  It may be
         # possible to fix this on libjulia side and/or by tweaking
