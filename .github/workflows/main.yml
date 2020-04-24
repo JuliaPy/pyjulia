@@ -22,6 +22,8 @@ jobs:
         exclude:
           - os: ubuntu-latest
             architecture: x86
+          - os: macos-latest
+            architecture: x86
       fail-fast: false
     name: ${{ matrix.os }} ${{ matrix.architecture }}
       Python ${{ matrix.python-version }}
