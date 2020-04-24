@@ -7,6 +7,7 @@ from julia.core import which
 pytest_plugins = ["pytester"]
 
 is_windows = os.name == "nt"
+userhome = os.path.expanduser("~")
 
 
 def test__using_default_setup(testdir, request):
@@ -53,7 +54,7 @@ def test_undo_no_julia(testdir, request):
     # TODO: Support `JULIA_DEPOT_PATH`; or a better approach would be
     # to not depend on user's depot at all.
     testdepot = os.path.join(str(testdir.tmpdir), ".julia")
-    userdepot = os.path.join(os.path.expanduser("~"), ".julia")
+    userdepot = os.path.join(userhome, ".julia")
     os.symlink(userdepot, testdepot)
 
     # create a temporary conftest.py file
