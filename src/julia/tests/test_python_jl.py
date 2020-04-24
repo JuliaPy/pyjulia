@@ -1,18 +1,23 @@
 import os
 import shlex
 import subprocess
+import sys
 from textwrap import dedent
 
 import pytest
 
 from julia.core import which
 from julia.python_jl import parse_pyjl_args
+from julia.utils import is_apple
 
 PYJULIA_TEST_REBUILD = os.environ.get("PYJULIA_TEST_REBUILD", "no") == "yes"
 
 python_jl_required = pytest.mark.skipif(
     os.environ.get("PYJULIA_TEST_PYTHON_JL_IS_INSTALLED", "no") != "yes"
-    and not which("python-jl"),
+    and not which("python-jl")
+    # Skip for Python 2 on macOS. (This is just a quick fix. Python 2
+    # support should be removed soon.)
+    or (sys.version_info[0] < 3 and is_apple),
     reason="python-jl command not found",
 )
 
