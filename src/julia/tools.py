@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import sys
+import sysconfig
 
 from .core import JuliaNotFound, which
 from .find_libpython import linked_libpython
@@ -135,16 +136,17 @@ def redirect_output_streams():
     # terminates the whole Python process.  Find out why.
 
 
-def julia_py_executable(executable=sys.executable):
+def julia_py_executable():
     """
     Path to ``julia-py`` executable installed for this Python executable.
     """
-    stempath = os.path.join(os.path.dirname(executable), "julia-py")
+    scripts_path = sysconfig.get_path("scripts")
+    stempath = os.path.join(scripts_path, "julia-py")
     candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
     if not candidates:
         raise RuntimeError(
             "``julia-py`` executable is not found for Python installed at {}".format(
-                executable
+                scripts_path
             )
         )
 
