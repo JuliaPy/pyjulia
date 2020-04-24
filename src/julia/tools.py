@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function
 
-
 import glob
 import os
 import re
@@ -141,8 +140,8 @@ def julia_py_executable():
     """
     Path to ``julia-py`` executable installed for this Python executable.
     """
-    scripts_path = sysconfig.get_path('scripts')
-    stempath = os.path.join(scripts_path, 'julia-py')
+    scripts_path = sysconfig.get_path("scripts")
+    stempath = os.path.join(scripts_path, "julia-py")
     candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
     if not candidates:
         raise RuntimeError(
