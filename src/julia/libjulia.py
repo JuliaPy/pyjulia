@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function
 import ctypes
 import os
 import sys
+from contextlib import contextmanager
 from ctypes import POINTER, c_char_p, c_int, c_void_p, pointer, py_object
 from logging import getLogger  # see `.core.logger`
 
@@ -210,20 +211,29 @@ class LibJulia(BaseLibJulia):
         if sys.version_info >= (2, 7, 13) and sys.version_info < (2, 7, 14):
             libjulia_path = libjulia_path.encode("ascii")
 
+        with self._windows_pathhack():
+            self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
+
+        setup_libjulia(self.libjulia)
+
+    @contextmanager
+    def _windows_pathhack(self):
+        if not is_windows:
+            yield
+            return
         # Using `os.chdir` as a workaround for an error in Windows
         # "The specified procedure could not be found."  It may be
         # possible to fix this on libjulia side and/or by tweaking
         # load paths directly only in Windows.  However, this solution
         # is reported to work by many users:
         # https://github.com/JuliaPy/pyjulia/issues/67
+        # https://github.com/JuliaPy/pyjulia/pull/367
         cwd = os.getcwd()
         try:
-            os.chdir(os.path.dirname(libjulia_path))
-            self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
+            os.chdir(os.path.dirname(self.libjulia_path))
+            yield
         finally:
             os.chdir(cwd)
-
-        setup_libjulia(self.libjulia)
 
     @property
     def jl_init_with_image(self):
@@ -311,7 +321,10 @@ class LibJulia(BaseLibJulia):
                 logger.debug("argv[%d] = %r", i, argv[i])
 
         logger.debug("calling jl_init_with_image(%s, %s)", jl_init_path, sysimage)
-        self.jl_init_with_image(jl_init_path.encode("utf-8"), sysimage.encode("utf-8"))
+        with self._windows_pathhack():
+            self.jl_init_with_image(
+                jl_init_path.encode("utf-8"), sysimage.encode("utf-8")
+            )
         logger.debug("seems to work...")
 
         set_libjulia(self)
