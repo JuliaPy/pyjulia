@@ -10,8 +10,8 @@ from .utils import only_in_ci, skip_in_appveyor
 @only_in_ci
 @skip_in_appveyor  # Avoid "LVM ERROR: out of memory"
 def test_build_and_load(tmpdir, juliainfo):
-    if juliainfo.version_info < (0, 7):
-        pytest.skip("Julia < 0.7 is not supported")
+    if juliainfo.version_info < (1, 3, 1):
+        pytest.skip("Julia < 1.3.1 is not supported")
 
     sysimage_path = str(tmpdir.join("sys.so"))
     build_sysimage(sysimage_path, julia=juliainfo.julia)
