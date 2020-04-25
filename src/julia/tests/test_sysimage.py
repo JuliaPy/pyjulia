@@ -23,12 +23,18 @@ def test_build_and_load(tmpdir, juliainfo):
 
         sysimage_path = {sysimage_path!r}
         very_random_string = {very_random_string!r}
-        jl = Julia(debug=True, sysimage=sysimage_path)
+        jl = Julia(
+            debug=True,
+            sysimage=sysimage_path,
+            runtime={juliainfo.julia!r},
+        )
 
         from julia import Main
         Main.println(very_random_string)
         """.format(
-            sysimage_path=sysimage_path, very_random_string=very_random_string
+            juliainfo=juliainfo,
+            sysimage_path=sysimage_path,
+            very_random_string=very_random_string,
         )
     )
     assert very_random_string in proc.stdout
