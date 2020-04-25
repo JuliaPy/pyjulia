@@ -16,15 +16,15 @@ Pkg.add([
     PackageSpec(
         name = "PyCall",
         uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0",
-    )
-    PackageSpec(
-        name = "MacroTools",
-        uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09",
-    )
+    ),
 ])
 
 @info "Compiling system image..."
-sysout, _curr_syso = compile_incremental("Project.toml", script)
+create_sysimage(
+    [:PyCall],
+    sysimage_path = output,
+    project = ".",
+    precompile_execution_file = script,
+)
 
 @info "System image is created at $output"
-cp(sysout, output, force=true)
