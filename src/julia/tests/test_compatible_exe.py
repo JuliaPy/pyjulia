@@ -82,6 +82,8 @@ def runcode(code, python=None, check=False, env=None, **kwargs):
             env=env,
             **kwargs
         )
+    print("# --- Code evaluated:")
+    print(code)
     print_completed_proc(proc)
     if check:
         assert proc.returncode == 0
