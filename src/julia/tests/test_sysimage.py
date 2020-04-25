@@ -16,13 +16,25 @@ def test_build_and_load(tmpdir, juliainfo):
     sysimage_path = str(tmpdir.join("sys.so"))
     build_sysimage(sysimage_path, julia=juliainfo.julia)
 
-    runcode(
+    very_random_string = "4903dc03-950f-4a54-98a3-c57a354b62df"
+    proc = runcode(
         """
         from julia.api import Julia
 
-        sysimage_path = {!r}
-        jl = Julia(sysimage=sysimage_path)
+        sysimage_path = {sysimage_path!r}
+        very_random_string = {very_random_string!r}
+        jl = Julia(
+            debug=True,
+            sysimage=sysimage_path,
+            runtime={juliainfo.julia!r},
+        )
+
+        from julia import Main
+        Main.println(very_random_string)
         """.format(
-            sysimage_path
+            juliainfo=juliainfo,
+            sysimage_path=sysimage_path,
+            very_random_string=very_random_string,
         )
     )
+    assert very_random_string in proc.stdout
