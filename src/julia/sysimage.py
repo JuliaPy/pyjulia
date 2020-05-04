@@ -76,6 +76,7 @@ def build_sysimage(
     script=script_path("precompile.jl"),
     debug=False,
     compiler_env="",
+    base_sysimage=None,
 ):
     if debug:
         enable_debug()
@@ -99,6 +100,8 @@ def build_sysimage(
             os.path.realpath(script),
             # output -- path to sys.o file
             os.path.realpath(output),
+            # optional base system image to build on
+            "" if base_sysimage is None else os.path.realpath(base_sysimage),
         ]
 
         check_call(build_sysimage_cmd(julia_py, julia, compile_args), cwd=path)
@@ -119,7 +122,7 @@ def main(args=None):
     parser.add_argument(
         "--script",
         default=script_path("precompile.jl"),
-        help="Path to Julia script with precopmile instructions.",
+        help="Path to Julia script with precompile instructions.",
     )
     parser.add_argument(
         "--compiler-env",
@@ -131,7 +134,14 @@ def main(args=None):
         is given.
         """,
     )
-    parser.add_argument("output", help="Path to system image file sys.o.")
+    parser.add_argument(
+        "--base-sysimage",
+        help="""
+        Path to a Julia system image to build on rather than the default
+        Julia system image.
+        """,
+    )
+    parser.add_argument("output", help="Path to new system image file sys.o.")
     ns = parser.parse_args(args)
     try:
         build_sysimage(**vars(ns))

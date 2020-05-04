@@ -1,4 +1,8 @@
-compiler_env, script, output = ARGS
+compiler_env, script, output, base_sysimage = ARGS
+println("compiler_env: ", compiler_env)
+println("script: ", script)
+println("output: ", output)
+println("base_sysimage: '", base_sysimage, "'")
 
 if VERSION < v"0.7-"
     error("Unsupported Julia version $VERSION")
@@ -26,6 +30,7 @@ create_sysimage(
     sysimage_path = output,
     project = ".",
     precompile_execution_file = script,
+    base_sysimage = isempty(base_sysimage) ? nothing : base_sysimage,
 )
 
 @info "System image is created at $output"
