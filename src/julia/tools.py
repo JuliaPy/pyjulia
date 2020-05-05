@@ -145,7 +145,9 @@ def julia_py_executable():
     # we check the alternate schemes first, at most one of which should give us a julia-py script
     # if no candidate in an alternate scheme, try the standard install location
     # see https://docs.python.org/3/install/index.html#alternate-installation
-    scripts_paths = [sysconfig.get_path("scripts", scheme) for scheme in sysconfig.get_scheme_names()]
+    scripts_paths = [
+        sysconfig.get_path("scripts", scheme) for scheme in sysconfig.get_scheme_names()
+    ]
     scripts_paths.append(sysconfig.get_path("scripts"))
 
     for scripts_path in scripts_paths:

@@ -1,8 +1,9 @@
-import pytest
+import glob
+import os
 import platform
 import sysconfig
-import os
-import glob
+
+import pytest
 
 from julia.tools import julia_py_executable
 
@@ -29,10 +30,14 @@ def julia_py_with_command_extension():
     return "julia-py" + extension
 
 
-def glob_mock(path = None):
+def glob_mock(path=None):
     # we're only handling the case when the glob is ".../julia-py*" or nothing
     # if path is None then return empty list - this is indicator that we don't want to "find" any files matching a glob
-    return [] if path == None else [os.path.join(os.path.dirname(path), julia_py_with_command_extension())]
+    return (
+        []
+        if path == None
+        else [os.path.join(os.path.dirname(path), julia_py_with_command_extension())]
+    )
 
 
 def test_find_julia_py_executable_by_scheme(monkeypatch):
@@ -40,7 +45,9 @@ def test_find_julia_py_executable_by_scheme(monkeypatch):
     # right now we just fake the "posix_user" scheme and standard scheme, giving two paths to look in
 
     monkeypatch.setattr("sysconfig.get_scheme_names", lambda: ("posix_user",))
-    monkeypatch.setattr("sysconfig.get_path", lambda x, scheme = None: get_path_mock_scheme(scheme))
+    monkeypatch.setattr(
+        "sysconfig.get_path", lambda x, scheme=None: get_path_mock_scheme(scheme)
+    )
     monkeypatch.setattr("glob.glob", glob_mock)
 
     jp = julia_py_executable()
@@ -52,7 +59,9 @@ def test_find_julia_py_executable_standard(monkeypatch):
     # as though we only have standard install available, or didn't find julia-py in any alternate install location
 
     monkeypatch.setattr("sysconfig.get_scheme_names", lambda: ())
-    monkeypatch.setattr("sysconfig.get_path", lambda x, scheme = None: get_path_mock_scheme(scheme))
+    monkeypatch.setattr(
+        "sysconfig.get_path", lambda x, scheme=None: get_path_mock_scheme(scheme)
+    )
     monkeypatch.setattr("glob.glob", glob_mock)
 
     jp = julia_py_executable()
@@ -64,7 +73,9 @@ def test_find_julia_py_executable_not_found(monkeypatch):
     # look in posix_user and standard locations but don't find anything
 
     monkeypatch.setattr("sysconfig.get_scheme_names", lambda: ("posix_user",))
-    monkeypatch.setattr("sysconfig.get_path", lambda x, scheme = None: get_path_mock_scheme(scheme))
+    monkeypatch.setattr(
+        "sysconfig.get_path", lambda x, scheme=None: get_path_mock_scheme(scheme)
+    )
     monkeypatch.setattr("glob.glob", lambda x: glob_mock())
 
     with pytest.raises(RuntimeError) as excinfo:
