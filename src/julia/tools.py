@@ -143,28 +143,21 @@ def julia_py_executable():
 
     # try to find installed julia-py script - check scripts folders under different installation schemes
     # we check the alternate schemes first, at most one of which should give us a julia-py script
+    # if no candidate in an alternate scheme, try the standard install location
     # see https://docs.python.org/3/install/index.html#alternate-installation
-    scripts_paths_failed = []
-    for scheme in sysconfig.get_scheme_names():
-        scripts_path = sysconfig.get_path("scripts", scheme)
+    scripts_paths = [sysconfig.get_path("scripts", scheme) for scheme in sysconfig.get_scheme_names()]
+    scripts_paths.append(sysconfig.get_path("scripts"))
+
+    for scripts_path in scripts_paths:
         stempath = os.path.join(scripts_path, "julia-py")
         candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
         if candidates:
             break
-        else:
-            scripts_paths_failed.append(scripts_path)
-
-    # try standard install scripts path if nothing found in alternate scheme
-    if not candidates:
-        scripts_path = sysconfig.get_path("scripts")
-        stempath = os.path.join(scripts_path, "julia-py")
-        candidates = {os.path.basename(p): p for p in glob.glob(stempath + "*")}
 
     if not candidates:
-        scripts_paths_failed.append(scripts_path)
         raise RuntimeError(
             "``julia-py`` executable is not found for Python installed at {}".format(
-                scripts_paths_failed
+                scripts_paths
             )
         )
 
