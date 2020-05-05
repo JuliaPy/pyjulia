@@ -1,8 +1,4 @@
 compiler_env, script, output, base_sysimage = ARGS
-println("compiler_env: ", compiler_env)
-println("script: ", script)
-println("output: ", output)
-println("base_sysimage: '", base_sysimage, "'")
 
 if VERSION < v"0.7-"
     error("Unsupported Julia version $VERSION")
