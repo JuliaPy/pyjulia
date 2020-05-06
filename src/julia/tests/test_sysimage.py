@@ -56,6 +56,8 @@ def test_build_with_basesysimage_and_load(tmpdir, juliainfo):
 
     sysimage_path = str(tmpdir.join("sys.so"))
     base_sysimage_path = juliainfo.sysimage
-    build_sysimage(sysimage_path, julia=juliainfo.julia, base_sysimage=base_sysimage_path)
+    build_sysimage(
+        sysimage_path, julia=juliainfo.julia, base_sysimage=base_sysimage_path
+    )
 
     assert_sample_julia_code_runs(juliainfo, sysimage_path)
