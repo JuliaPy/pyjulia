@@ -36,7 +36,7 @@ macro prepare_for_pyjulia_call(ex)
     
     # f(x, quote_depth) should return a transformed expression x and whether to
     # recurse into the new expression. quote_depth keeps track of how deep
-    # inside of nested quote objects we arepyeval
+    # inside of nested quote objects we are
     function stoppable_walk(f, x, quote_depth=1)
         (fx, recurse) = f(x, quote_depth)
         if isexpr(fx,:quote)
@@ -48,18 +48,11 @@ macro prepare_for_pyjulia_call(ex)
         walk(fx, (recurse ? (x -> stoppable_walk(f,x,quote_depth)) : identity), identity)
     end
     
-    function make_pyeval(globals, locals, expr::Union{String,Symbol}, options...)
-        code = string(expr)
-        T = length(options) == 1 && 'o' in options[1] ? PyObject : PyAny
-        input_type = '\n' in code ? Py_file_input : Py_eval_input
-        :($convert($T, $pyeval_($code, $globals, $locals, $input_type)))
-    end
-    
     function insert_pyevals(globals, locals, ex)
         stoppable_walk(ex) do x, quote_depth
             if quote_depth==1 && isexpr(x, :$)
                 if x.args[1] isa Symbol
-                    make_pyeval(globals, locals, x.args[1]), false
+                    macroexpand(__module__, :(PyCall.@_py_str($globals, $locals, $(string(x.args[1]))))), false
                 else
                     error("""syntax error in: \$($(string(x.args[1])))
                     Use py"..." instead of \$(...) for interpolating Python expressions.""")
@@ -68,7 +61,8 @@ macro prepare_for_pyjulia_call(ex)
                 if x.args[1]==Symbol("@py_str")
                     # in Julia 0.7+, x.args[2] is a LineNumberNode, so filter it out
                     # in a way that's compatible with Julia 0.6:
-                    make_pyeval(globals, locals, filter(s->(s isa String), x.args[2:end])...), false
+                    code_and_options = filter(s->(s isa String), x.args[2:end])
+                    macroexpand(__module__, :(PyCall.@_py_str($globals, $locals, $(code_and_options...)))), false
                 else
                     x, false
                 end
@@ -81,7 +75,7 @@ macro prepare_for_pyjulia_call(ex)
     esc(quote
         $pyfunction(
             (globals, locals)->Base.eval(Main, $insert_pyevals(globals, locals, $(QuoteNode(ex)))),
-            $PyObject, $PyObject
+            $PyDict, $PyDict
         )
     end)
 end
