@@ -52,7 +52,7 @@ macro prepare_for_pyjulia_call(ex)
         stoppable_walk(ex) do x, quote_depth
             if quote_depth==1 && isexpr(x, :$)
                 if x.args[1] isa Symbol
-                    :(PyCall.@_py_str($globals, $locals, $(string(x.args[1])))), false
+                    :(PyCall.@_py_str($globals, $locals, "", $(string(x.args[1])))), false
                 else
                     error("""syntax error in: \$($(string(x.args[1])))
                     Use py"..." instead of \$(...) for interpolating Python expressions.""")
@@ -62,7 +62,7 @@ macro prepare_for_pyjulia_call(ex)
                     # in Julia 0.7+, x.args[2] is a LineNumberNode, so filter it out
                     # in a way that's compatible with Julia 0.6:
                     code_and_options = filter(s->(s isa String), x.args[2:end])
-                    :(PyCall.@_py_str($globals, $locals, $(code_and_options...))), false
+                    :(PyCall.@_py_str($globals, $locals, "", $(code_and_options...))), false
                 else
                     x, false
                 end
