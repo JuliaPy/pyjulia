@@ -117,8 +117,9 @@ class JuliaNotFound(RuntimeError):
 Julia executable `{}` cannot be found.
 
 If you have installed Julia, make sure Julia executable is in the
-system PATH.  Alternatively, specify file path to the Julia executable
-using `{}` keyword argument.
+system PATH (not with ~/julia, a full PATH needed). It likely needs
+to be 64-bit julia, and 32-bit julia snap will conflict. Alternatively,
+specify file path to the Julia executable using `{}` keyword argument.
 
 If you have not installed Julia, download Julia from
 https://julialang.org/downloads/ and install it.
