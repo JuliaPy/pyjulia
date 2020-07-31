@@ -17,10 +17,13 @@ from __future__ import absolute_import, print_function
 import argparse
 import os
 import sys
+from logging import getLogger  # see `.core.logger`
 
 from .api import LibJulia
 from .core import enable_debug, which
 from .tools import julia_py_executable
+
+logger = getLogger("julia")
 
 
 def julia_py(julia, pyjulia_debug, jl_args):
@@ -30,16 +33,18 @@ def julia_py(julia, pyjulia_debug, jl_args):
     julia = which(julia)
     os.environ["_PYJULIA_JULIA"] = julia
     os.environ["_PYJULIA_JULIA_PY"] = julia_py_executable()
-    os.environ["_PYJULIA_PATCH_JL"] = os.path.join(
+    os.environ["_PYJULIA_PATCH_JL"] = patch_jl_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "patch.jl"
     )
 
     api = LibJulia.load(julia=julia)
     api.init_julia(jl_args)
     code = 1
+    logger.debug("Calling `Base.PCRE.__init__()`")
     if not api.jl_eval_string(b"Base.PCRE.__init__()"):
         print("julia-py: Error while calling `Base.PCRE.__init__()`", file=sys.stderr)
         sys.exit(code)
+    logger.debug("Calling `Random.__init__()`")
     if not api.jl_eval_string(
         b"""
         Base.require(
@@ -52,9 +57,12 @@ def julia_py(julia, pyjulia_debug, jl_args):
     ):
         print("julia-py: Error while calling `Random.__init__()`", file=sys.stderr)
         sys.exit(code)
+    logger.debug("Loading %s", patch_jl_path)
     if api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
+        logger.debug("Calling `Base._start()`")
         if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
             code = 0
+    logger.debug("Exiting with code %s", code)
     api.jl_atexit_hook(code)
     sys.exit(code)
 

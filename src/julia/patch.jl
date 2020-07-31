@@ -40,4 +40,6 @@ else
         julia_exename() = $julia_py
     end)
     @assert Base.julia_cmd().exec[1] == julia_py
+
+    @debug "Successfully monkey-patched" julia_py
 end
