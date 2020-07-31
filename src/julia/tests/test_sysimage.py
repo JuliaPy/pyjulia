@@ -50,7 +50,7 @@ def test_build_and_load(tmpdir, juliainfo):
 
 @pytest.mark.julia
 @only_in_ci
-@skip_in_appveyor  # Avoid "LVM ERROR: out of memory"
+@skip_in_windows  # Avoid "LVM ERROR: out of memory"
 def test_build_with_basesysimage_and_load(tmpdir, juliainfo):
     skip_early_julia_versions(juliainfo)
 
