@@ -25,7 +25,7 @@ Pkg.add([
     PackageSpec(
         name = "PackageCompiler",
         uuid = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d",
-        version = "0.6",
+        version = "1",
     )
 ])
 cat_build_log(Base.PkgId(

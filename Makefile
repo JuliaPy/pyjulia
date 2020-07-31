@@ -20,8 +20,12 @@ upload: dist
 	# upload to Python package index`
 	twine upload dist/*
 
-release:
+download-testpypi: dist/.download-testpypi
+dist/.download-testpypi:
 	rm -rf dist
 	pip download --dest dist --no-deps --index-url https://test.pypi.org/simple/ julia
 	pip download --dest dist --no-deps --index-url https://test.pypi.org/simple/ julia --no-binary :all:
+	touch $@
+
+release: dist/.download-testpypi
 	twine upload dist/julia-*-any.whl dist/julia-*.tar.gz

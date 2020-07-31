@@ -5,8 +5,10 @@ println(VERSION.patch)
 
 VERSION < v"0.7.0" && exit()
 
-using Libdl
-using Pkg
+const Libdl =
+    Base.require(Base.PkgId(Base.UUID("8f399da3-3557-5675-b5ff-fb832c97cbdb"), "Libdl"))
+const Pkg =
+    Base.require(Base.PkgId(Base.UUID("44cfe95a-1eb2-52ea-b672-e2afdf69b78f"), "Pkg"))
 
 println(Base.Sys.BINDIR)
 println(Libdl.dlpath(string("lib", splitext(Base.julia_exename())[1])))
