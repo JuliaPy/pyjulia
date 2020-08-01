@@ -71,8 +71,9 @@ def julia_py(julia, pyjulia_debug, jl_args):
     logger.debug("Calling `Base._start()`")
     if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
         code = 0
-    logger.debug("Exiting with code %s", code)
+    logger.debug("Calling `jl_atexit_hook(%s)`", code)
     api.jl_atexit_hook(code)
+    logger.debug("Exiting with code %s", code)
     sys.exit(code)
 
 
