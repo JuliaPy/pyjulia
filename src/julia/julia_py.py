@@ -27,7 +27,6 @@ logger = getLogger("julia")
 
 
 def julia_py(julia, pyjulia_debug, jl_args):
-    pyjulia_debug = True
     if pyjulia_debug:
         enable_debug()
 
@@ -83,6 +82,15 @@ class CustomFormatter(
     pass
 
 
+def is_pyjulia_in_julia_debug(julia_debug=os.environ.get("JULIA_DEBUG", "")):
+    syms = list(filter(None, map(str.strip, julia_debug.split(","))))
+    if "pyjulia" in syms:
+        return True
+    elif "all" in syms and "!pyjulia" not in syms:
+        return True
+    return False
+
+
 def parse_args(args, **kwargs):
     options = dict(
         prog="julia-py",
@@ -102,8 +110,19 @@ def parse_args(args, **kwargs):
     parser.add_argument(
         "--pyjulia-debug",
         action="store_true",
+        default=is_pyjulia_in_julia_debug(),
         help="""
-        Print PyJulia's debugging messages to standard error.
+        Print PyJulia's debugging messages to standard error.  It is
+        automatically set if `pyjulia` is in the environment variable
+        `JULIA_DEBUG` (e.g., `JULIA_DEBUG=pyjulia,Main`).
+        """,
+    )
+    parser.add_argument(
+        "--no-pyjulia-debug",
+        dest="pyjulia_debug",
+        action="store_false",
+        help="""
+        Toggle off `--pyjulia_debug`.
         """,
     )
     ns, jl_args = parser.parse_known_args(args)

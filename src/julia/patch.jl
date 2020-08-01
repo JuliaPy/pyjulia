@@ -28,6 +28,14 @@ try
                     end
                 end,
             )
+        else
+            Base.eval(Base, quote
+                function package_slug(uuid::UUID, p::Int = 5)
+                    crc = _crc32c(uuid)
+                    crc = _crc32c($julia_py, crc)
+                    return slug(crc, p)
+                end
+            end)
         end
 
         # Monkey patch `Base.julia_exename`.
