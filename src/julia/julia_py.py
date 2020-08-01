@@ -19,7 +19,7 @@ import os
 import sys
 from logging import getLogger  # see `.core.logger`
 
-from .api import LibJulia
+from .api import JuliaInfo, LibJulia
 from .core import enable_debug, which
 from .tools import julia_py_executable
 
@@ -37,31 +37,38 @@ def julia_py(julia, pyjulia_debug, jl_args):
         os.path.dirname(os.path.realpath(__file__)), "patch.jl"
     )
 
-    api = LibJulia.load(julia=julia)
+    juliainfo = JuliaInfo.load(julia=julia)
+    api = LibJulia.from_juliainfo(juliainfo)
     api.init_julia(jl_args)
     code = 1
-    logger.debug("Calling `Base.PCRE.__init__()`")
-    if not api.jl_eval_string(b"Base.PCRE.__init__()"):
-        print("julia-py: Error while calling `Base.PCRE.__init__()`", file=sys.stderr)
-        sys.exit(code)
-    logger.debug("Calling `Random.__init__()`")
-    if not api.jl_eval_string(
-        b"""
-        Base.require(
-            Base.PkgId(
-                Base.UUID("9a3f8284-a2c9-5f02-9a11-845980a1fd5c"),
-                "Random",
-            ),
-        ).__init__()
-        """
-    ):
-        print("julia-py: Error while calling `Random.__init__()`", file=sys.stderr)
-        sys.exit(code)
-    logger.debug("Loading %s", patch_jl_path)
-    if api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
-        logger.debug("Calling `Base._start()`")
-        if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
-            code = 0
+    if juliainfo.version_info >= (1, 5, 0):
+        logger.debug("Skipping `__init__()` hacks in `julia` %s", juliainfo.version_raw)
+    else:
+        logger.debug("Calling `Base.PCRE.__init__()`")
+        if not api.jl_eval_string(b"Base.PCRE.__init__()"):
+            print(
+                "julia-py: Error while calling `Base.PCRE.__init__()`", file=sys.stderr
+            )
+            sys.exit(code)
+        logger.debug("Calling `Random.__init__()`")
+        if not api.jl_eval_string(
+            b"""
+            Base.require(
+                Base.PkgId(
+                    Base.UUID("9a3f8284-a2c9-5f02-9a11-845980a1fd5c"),
+                    "Random",
+                ),
+            ).__init__()
+            """
+        ):
+            print("julia-py: Error while calling `Random.__init__()`", file=sys.stderr)
+            sys.exit(code)
+        logger.debug("Loading %s", patch_jl_path)
+        if api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
+            logger.debug("Calling `Base._start()`")
+            sys.exit(code)
+    if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
+        code = 0
     logger.debug("Exiting with code %s", code)
     api.jl_atexit_hook(code)
     sys.exit(code)
