@@ -41,6 +41,11 @@ def _julia_version(julia):
         return (0, 0, 0)
 
 
+def build_pycall(julia="julia", python=sys.executable, **kwargs):
+    # Passing `python` to force build (OP="build")
+    install(julia=julia, python=python, **kwargs)
+
+
 def install(julia="julia", color="auto", python=None, quiet=False):
     """
     install(*, julia="julia", color="auto")

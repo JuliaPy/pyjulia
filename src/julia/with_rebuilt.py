@@ -14,7 +14,7 @@ import sys
 from contextlib import contextmanager
 
 from .core import JuliaInfo
-from .tools import install
+from .tools import build_pycall
 
 # fmt: off
 
@@ -26,8 +26,7 @@ def maybe_rebuild(rebuild, julia):
 
         print('Building PyCall.jl with PYTHON =', sys.executable)
         sys.stdout.flush()
-        # Passing `python` to force build (OP="build")
-        install(julia=julia, python=sys.executable)
+        build_pycall(julia=julia, python=sys.executable)
         try:
             yield
         finally:
@@ -37,7 +36,7 @@ def maybe_rebuild(rebuild, julia):
                 python = str(info.python)
                 print()  # clear out messages from py.test
                 print('Restoring previous PyCall.jl build with PYTHON =', python)
-                install(julia=julia, python=python, quiet=True)
+                build_pycall(julia=julia, python=python, quiet=True)
     else:
         yield
 
