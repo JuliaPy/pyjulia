@@ -27,6 +27,7 @@ logger = getLogger("julia")
 
 
 def julia_py(julia, pyjulia_debug, jl_args):
+    pyjulia_debug = True
     if pyjulia_debug:
         enable_debug()
 
