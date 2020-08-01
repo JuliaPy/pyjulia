@@ -6,6 +6,7 @@ import pytest
 
 from julia.sysimage import build_sysimage
 
+from ..tools import build_pycall
 from .test_compatible_exe import runcode
 from .utils import only_in_ci, skip_in_windows
 
@@ -48,6 +49,7 @@ def test_build_and_load(tmpdir, juliainfo, with_pycall_cache):
     skip_early_julia_versions(juliainfo)
 
     if with_pycall_cache:
+        build_pycall(julia=juliainfo.julia)
         check_call([juliainfo.julia, "--startup-file=no", "-e", "using PyCall"])
     else:
         # TODO: don't remove user's compile cache
