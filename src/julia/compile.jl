@@ -20,7 +20,7 @@ Pkg.add([
     ),
 ])
 
-if VERSION >= v"1.5-"
+if false  # VERSION >= v"1.5-"
     mktempdir() do dir
         tmpimg = joinpath(dir, basename(output))
         @info "Compiling a temporary system image without `PyCall`..."
