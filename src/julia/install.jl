@@ -57,6 +57,13 @@ function build_pycall()
             print(stderr, read(logfile, String))
         end
     end
+    depsfile = joinpath(pkgdir, "deps", "deps.jl")
+    if isfile(depsfile)
+        @info "`$depsfile`"
+        print(stderr, read(depsfile, String))
+    else
+        @error "Missing `deps.jl` file at: `$depsfile`"
+    end
 end
 
 if OP == "build"
