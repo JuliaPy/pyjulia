@@ -41,16 +41,21 @@ ENV["PYTHON"] = python
 # TODO: warn if some relevant JULIA_* environment variables are set
 # TODO: use PackageSpec to specify PyCall's UUID
 
-print_logfile = true
-
 function build_pycall()
+    modpath = Base.locate_package(pkgid)
+    pkgdir = joinpath(dirname(modpath), "..")
+
     if VERSION >= v"1.1.0-rc1"
         @info """Run `Pkg.build("PyCall"; verbose=true)`"""
         Pkg.build("PyCall"; verbose=true)
-        global print_logfile = false
     else
         @info """Run `Pkg.build("PyCall")`"""
         Pkg.build("PyCall")
+        logfile = joinpath(pkgdir, "deps", "build.log")
+        if isfile(logfile)
+            @info "Build log in $logfile"
+            print(stderr, read(logfile, String))
+        end
     end
 end
 
@@ -100,16 +105,5 @@ else
     else
         @info "Installing PyCall..."
         Pkg.add("PyCall")
-    end
-end
-
-modpath = Base.locate_package(pkgid)
-pkgdir = joinpath(dirname(modpath), "..")
-
-if print_logfile
-    logfile = joinpath(pkgdir, "deps", "build.log")
-    if isfile(logfile)
-        @info "Build log in $logfile"
-        print(stderr, read(logfile, String))
     end
 end
