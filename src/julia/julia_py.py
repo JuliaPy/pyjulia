@@ -65,8 +65,8 @@ def julia_py(julia, pyjulia_debug, jl_args):
             sys.exit(code)
         logger.debug("Loading %s", patch_jl_path)
         if api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
-            logger.debug("Calling `Base._start()`")
             sys.exit(code)
+    logger.debug("Calling `Base._start()`")
     if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
         code = 0
     logger.debug("Exiting with code %s", code)
