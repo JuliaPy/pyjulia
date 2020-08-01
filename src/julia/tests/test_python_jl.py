@@ -10,6 +10,8 @@ from julia.core import which
 from julia.python_jl import parse_pyjl_args
 from julia.utils import is_apple
 
+from .utils import skip_in_github_actions_windows
+
 PYJULIA_TEST_REBUILD = os.environ.get("PYJULIA_TEST_REBUILD", "no") == "yes"
 
 python_jl_required = pytest.mark.skipif(
@@ -67,6 +69,7 @@ def test_cli_quick_pass_no_julia(args):
 
 
 @python_jl_required
+@skip_in_github_actions_windows
 @pytest.mark.skipif(
     # This test makes sense only when PyJulia is importable by
     # `PyCall.python`.  Thus, it is safe to run this test only when
