@@ -64,10 +64,10 @@ def julia_py(julia, pyjulia_debug, jl_args):
         ):
             print("julia-py: Error while calling `Random.__init__()`", file=sys.stderr)
             sys.exit(code)
-        logger.debug("Loading %s", patch_jl_path)
-        if not api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
-            print("julia-py: Error in", patch_jl_path, file=sys.stderr)
-            sys.exit(code)
+    logger.debug("Loading %s", patch_jl_path)
+    if not api.jl_eval_string(b"""Base.include(Main, ENV["_PYJULIA_PATCH_JL"])"""):
+        print("julia-py: Error in", patch_jl_path, file=sys.stderr)
+        sys.exit(code)
     logger.debug("Calling `Base._start()`")
     if api.jl_eval_string(b"Base.invokelatest(Base._start)"):
         code = 0
