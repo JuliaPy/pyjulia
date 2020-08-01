@@ -42,7 +42,7 @@ def julia_py(julia, pyjulia_debug, jl_args):
     api = LibJulia.from_juliainfo(juliainfo)
     api.init_julia(jl_args)
     code = 1
-    if True:
+    if False:
         logger.debug("Skipping `__init__()` hacks in `julia` %s", juliainfo.version_raw)
     else:
         logger.debug("Calling `Base.PCRE.__init__()`")
