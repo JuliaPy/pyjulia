@@ -20,13 +20,34 @@ Pkg.add([
     ),
 ])
 
-@info "Compiling system image..."
-create_sysimage(
-    [:PyCall],
-    sysimage_path = output,
-    project = ".",
-    precompile_execution_file = script,
-    base_sysimage = isempty(base_sysimage) ? nothing : base_sysimage,
-)
+if VERSION >= v"1.5-"
+    mktempdir() do dir
+        tmpimg = joinpath(dir, basename(output))
+        @info "Compiling a temporary system image without `PyCall`..."
+        create_sysimage(
+            Symbol[];
+            sysimage_path = tmpimg,
+            project = ".",
+            base_sysimage = isempty(base_sysimage) ? nothing : base_sysimage,
+        )
+        @info "Compiling system image..."
+        create_sysimage(
+            [:PyCall];
+            sysimage_path = output,
+            project = ".",
+            precompile_execution_file = script,
+            base_sysimage = tmpimg,
+        )
+    end
+else
+    @info "Compiling system image..."
+    create_sysimage(
+        [:PyCall],
+        sysimage_path = output,
+        project = ".",
+        precompile_execution_file = script,
+        base_sysimage = isempty(base_sysimage) ? nothing : base_sysimage,
+    )
+end
 
 @info "System image is created at $output"
