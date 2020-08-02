@@ -5,7 +5,7 @@ on:
     branches:
       - release/test-uploaded
       - release/test
-      # - release/main
+      - release/main
   workflow_dispatch:
 
 jobs:
