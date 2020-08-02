@@ -4,44 +4,37 @@ Development
 Release
 -------
 
-Step 1: Test the release candidate using ``test.pypi.org``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Bump the version number and push the change to ``release/test`` branch
-in https://github.com/JuliaPy/pyjulia.  This triggers a CI that:
-
-1. runs the tests,
-2. releases the package on ``test.pypi.org``,
-3. installs the released package, and
-4. then runs the test with the installed package.
-
-
-Step 2: Release
+Step 1: Release
 ^^^^^^^^^^^^^^^
 
-If the CI pass, run:
+Bump the version number and push the change to ``release/main`` branch
+in https://github.com/JuliaPy/pyjulia.  This triggers a CI that:
 
-.. code-block:: console
+1. releases the package on ``test.pypi.org``,
+2. installs the released package,
+3. runs the test with the installed package and then
+4. re-releases the package on ``pypi.org``.
 
-   $ make release
 
-
-Step 3: Tag
+Step 2: Tag
 ^^^^^^^^^^^
 
-Create a Git tag with the form ``vX.Y.Z``, merge ``release/test`` to
+Create a Git tag with the form ``vX.Y.Z``, merge ``release/main`` to
 ``master`` branch, and then push the tag and ``master`` branch.
 
 
 Special branches
 ----------------
 
-``release/test``
-    Push to this branch triggers the deploy to ``test.pypi.org`` if all
-    the tests are passed.  Uploaded package is tested in the next
-    stage.
+``release/main``
+    Push to this branch triggers the deploy to ``test.pypi.org``, test
+    the uploaded package, and then re-upload it to ``pypi.org``.
 
-``upload/test``
+``release/test``
+    Push to this branch triggers the deploy to ``test.pypi.org`` and
+    test the uploaded package.
+
+``release/test-uploaded``
     Push to this branch triggers the test that would be run for the
     final stage for ``release/test``.  Handy for just testing this
     stage.
