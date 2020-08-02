@@ -1,9 +1,16 @@
 module _PyJuliaHelper
 
-import REPL
-using PyCall
-using PyCall: pyeval_, Py_eval_input, Py_file_input
-using PyCall.MacroTools: isexpr, walk
+const REPL =
+    Base.require(Base.PkgId(Base.UUID("3fa0cd96-eef1-5676-8a61-b3b8758bbffb"), "REPL"))
+const PyCall =
+    Base.require(Base.PkgId(Base.UUID("438e738f-606a-5dbb-bf0a-cddfbfd45ab0"), "PyCall"))
+const MacroTools = Base.require(Base.PkgId(
+    Base.UUID("1914dd2f-81c6-5fcd-8719-6d5c9610ff09"),
+    "MacroTools",
+))
+
+using .PyCall: pyeval_, Py_eval_input, Py_file_input
+using .MacroTools: isexpr, walk
 
 """
     fullnamestr(m)
