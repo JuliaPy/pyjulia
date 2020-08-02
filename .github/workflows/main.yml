@@ -59,3 +59,19 @@ jobs:
           PYJULIA_TEST_REBUILD: 'yes'
       - run: cat .tox/py/log/pytest.log
         if: always()
+
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toxenv: ['style', 'doc']
+      fail-fast: false
+    name: Check ${{ matrix.toxenv }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+      - run: python -m pip install --upgrade tox
+      - run: python -m tox -e ${{ matrix.toxenv }}
