@@ -50,6 +50,7 @@ def install_packagecompiler_cmd(julia, compiler_env):
 def build_sysimage_cmd(julia_py, julia, compile_args):
     cmd = [julia_py, "--julia", julia]
     if _julia_version(julia) >= (1, 5, 0):
+        # Avoid precompiling PackageCompiler.jl. See the notes in compile.jl.
         cmd.append("--compiled-modules=no")
     if sys.stdout.isatty():
         cmd.append("--color=yes")

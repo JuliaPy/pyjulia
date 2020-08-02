@@ -83,6 +83,23 @@ class CustomFormatter(
 
 
 def is_pyjulia_in_julia_debug(julia_debug=os.environ.get("JULIA_DEBUG", "")):
+    """
+    Parse `JULIA_DEBUG` and return the debug flag.
+
+    >>> is_pyjulia_in_julia_debug("")
+    False
+    >>> is_pyjulia_in_julia_debug("Main,loading")
+    False
+    >>> is_pyjulia_in_julia_debug("pyjulia")
+    True
+    >>> is_pyjulia_in_julia_debug("all")
+    True
+    >>> is_pyjulia_in_julia_debug("all,!pyjulia")
+    False
+
+    Ref:
+    https://github.com/JuliaLang/julia/pull/32432
+    """
     syms = list(filter(None, map(str.strip, julia_debug.split(","))))
     if "pyjulia" in syms:
         return True
