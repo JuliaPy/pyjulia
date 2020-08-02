@@ -33,8 +33,3 @@ Special branches
 ``release/test``
     Push to this branch triggers the deploy to ``test.pypi.org`` and
     test the uploaded package.
-
-``release/test-uploaded``
-    Push to this branch triggers the test that would be run for the
-    final stage for ``release/test``.  Handy for just testing this
-    stage.
