@@ -52,13 +52,18 @@ jobs:
       - name: Install PyCall
         run: python ci/install_pycall.py
       - name: Run test
-        run: python -m tox
+        run: python -m tox -- --cov=julia
         env:
           CI: 'true'  # run tests marked by @only_in_ci
           TOXENV: py
           PYJULIA_TEST_REBUILD: 'yes'
       - run: cat .tox/py/log/pytest.log
         if: always()
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          name: codecov-umbrella
 
   check:
     runs-on: ubuntu-latest
