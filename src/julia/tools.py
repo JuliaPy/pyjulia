@@ -33,7 +33,7 @@ Some useful information may also be stored in the build log file
 
 
 def _julia_version(julia):
-    output = subprocess.check_output(["julia", "--version"], universal_newlines=True)
+    output = subprocess.check_output([julia, "--version"], universal_newlines=True)
     match = re.search(r"([0-9]+)\.([0-9]+)\.([0-9]+)", output)
     if match:
         return tuple(int(match.group(i + 1)) for i in range(3))
