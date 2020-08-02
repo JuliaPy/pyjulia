@@ -18,14 +18,49 @@ is_windows = os.name == "nt"
 is_apple = sys.platform == "darwin"
 
 
+def discover_other_pythons():
+    this_version = subprocess.check_output(
+        [sys.executable, "--version"], universal_newlines=True, stderr=subprocess.STDOUT
+    )
+
+    candidate_names = ["python", "python2", "python2.7", "python3"] + [
+        "python3.{}".format(i) for i in range(20)
+    ]
+    found = {}
+    for python in filter(None, map(which, candidate_names)):
+        try:
+            version = subprocess.check_output(
+                [python, "--version"], universal_newlines=True, stderr=subprocess.STDOUT
+            )
+        except Exception:
+            continue
+        if "Python" in version and version != this_version:
+            found[version] = python
+
+    return sorted(found.values())
+
+
 def _get_paths(path):
     return list(filter(None, path.split(":")))
 
 
-# Environment variable PYJULIA_TEST_INCOMPATIBLE_PYTHONS is the
-# :-separated list of Python executables incompatible with the current
-# Python:
-incompatible_pythons = _get_paths(os.getenv("PYJULIA_TEST_INCOMPATIBLE_PYTHONS", ""))
+def get_incompatible_pythons(
+    env=os.environ.get("PYJULIA_TEST_INCOMPATIBLE_PYTHONS", "")
+):
+    # Environment variable PYJULIA_TEST_INCOMPATIBLE_PYTHONS is the
+    # :-separated list of Python executables incompatible with the
+    # current Python:
+    if env == "no":
+        return []
+    paths = _get_paths(env)
+    if paths:
+        return paths
+    if os.environ.get("CI", "false") == "true":
+        return list(discover_other_pythons())
+    return []
+
+
+incompatible_pythons = get_incompatible_pythons()
 
 
 try:
