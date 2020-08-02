@@ -2,9 +2,9 @@ try
     julia_py = ENV["_PYJULIA_JULIA_PY"]
 
     if Base.julia_cmd().exec[1] == julia_py
-        @debug "Already monkey-patched. Skipping..." julia_py
+        @debug "Already monkey-patched. Skipping..." julia_py getpid()
     else
-        @debug "Monkey-patching..." julia_py
+        @debug "Monkey-patching..." julia_py getpid()
 
         # Monkey patch `Base.package_slug`
         #
@@ -53,9 +53,9 @@ try
         end)
         @assert Base.julia_cmd().exec[1] == julia_py
 
-        @debug "Successfully monkey-patched" julia_py
+        @debug "Successfully monkey-patched" julia_py getpid()
     end
 catch err
-    @error "Failed to monkey-patch `julia`" exception = (err, catch_backtrace())
+    @error "Failed to monkey-patch `julia`" exception = (err, catch_backtrace()) getpid()
     rethrow()
 end

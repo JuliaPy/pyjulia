@@ -18,6 +18,7 @@ from __future__ import absolute_import, print_function
 import atexit
 import ctypes
 import ctypes.util
+import logging as _logging  # see `.logger`
 import os
 import sys
 import textwrap
@@ -73,11 +74,9 @@ def get_loghandler():
     """
     global _loghandler
     if _loghandler is None:
-        import logging  # see `.logger`
+        formatter = _logging.Formatter("%(levelname)s %(message)s")
 
-        formatter = logging.Formatter("%(levelname)s %(message)s")
-
-        _loghandler = logging.StreamHandler()
+        _loghandler = _logging.StreamHandler()
         _loghandler.setFormatter(formatter)
 
         logger.addHandler(_loghandler)
@@ -85,14 +84,16 @@ def get_loghandler():
 
 
 def set_loglevel(level):
-    import logging  # see `.logger`
-
     get_loghandler()
-    logger.setLevel(getattr(logging, level, level))
+    logger.setLevel(getattr(_logging, level, level))
 
 
 def enable_debug():
     set_loglevel("DEBUG")
+
+    handler = get_loghandler()
+    handler.setFormatter(_logging.Formatter("%(levelname)s (%(process)d) %(message)s"))
+
     logger.debug("")  # flush whatever in the line
     logger.debug("Debug-level logging is enabled for PyJulia.")
     logger.debug("PyJulia version: %s", __version__)
