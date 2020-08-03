@@ -32,7 +32,7 @@ from .juliainfo import JuliaInfo
 from .libjulia import UNBOXABLE_TYPES, LibJulia, get_inprocess_libjulia, get_libjulia
 from .options import JuliaOptions, options_docs
 from .release import __version__
-from .utils import is_windows
+from .utils import IMPORT_PYCALL, is_windows
 
 try:
     from shutil import which
@@ -500,7 +500,8 @@ class Julia(object):
 
         # Currently, PyJulia assumes that `Main.PyCall` exsits.  Thus, we need
         # to import `PyCall` again here in case `init_julia=False` is passed:
-        self._call(u"using PyCall")
+        self._call(IMPORT_PYCALL)
+        self._call(u"using .PyCall")
 
         # Whether we initialized Julia or not, we MUST create at least one
         # instance of PyObject and the convert function. Since these will be

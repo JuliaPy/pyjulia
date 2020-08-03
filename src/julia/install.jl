@@ -9,11 +9,15 @@ if VERSION < v"0.7.0"
     error("Unsupported Julia version $VERSION")
 end
 
-using Pkg
-using InteractiveUtils
+const Pkg =
+    Base.require(Base.PkgId(Base.UUID("44cfe95a-1eb2-52ea-b672-e2afdf69b78f"), "Pkg"))
+const InteractiveUtils = Base.require(Base.PkgId(
+    Base.UUID("b77e0a4c-d291-57a0-90e8-8db25a27a240"),
+    "InteractiveUtils",
+))
 
 @info "Julia version info"
-versioninfo(verbose=true)
+InteractiveUtils.versioninfo(verbose=true)
 
 @info "Julia executable: $(Base.julia_cmd().exec[1])"
 
@@ -29,7 +33,7 @@ end
 
 try
     # `import PyCall` cannot be caught?
-    global PyCall = Base.require(Main, :PyCall)
+    global PyCall = Base.require(pkgid)
 catch err
     @error "`import PyCall` failed" exception=(err, catch_backtrace())
     global PyCall = DummyPyCall

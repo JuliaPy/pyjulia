@@ -22,3 +22,9 @@ if is_windows:
     execprog = _execprog_subprocess
 else:
     execprog = _execprog_os
+
+
+PYCALL_PKGID = """\
+Base.PkgId(Base.UUID("438e738f-606a-5dbb-bf0a-cddfbfd45ab0"), "PyCall")"""
+
+IMPORT_PYCALL = "const PyCall = Base.require({})".format(PYCALL_PKGID)
