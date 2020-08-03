@@ -9,7 +9,8 @@ const MacroTools = Base.require(Base.PkgId(
     "MacroTools",
 ))
 
-using .PyCall: pyeval_, Py_eval_input, Py_file_input
+using .PyCall
+using .PyCall: Py_eval_input, Py_file_input, pyeval_
 using .MacroTools: isexpr, walk
 
 """
