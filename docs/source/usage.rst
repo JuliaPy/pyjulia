@@ -26,8 +26,8 @@ Other variants of Python import syntax also work:
 .. code-block:: pycon
 
    >>> import julia.Base
-   >>> from julia.Base import Enums    # import a submodule
-   >>> from julia.Base import sin      # import a function from a module
+   >>> from julia.Base import Enums     # import a submodule
+   >>> from julia.Base import sin, sind # import a function from a module
 
 The global namespace of Julia’s interpreter can be accessed via a
 special module ``julia.Main``:
