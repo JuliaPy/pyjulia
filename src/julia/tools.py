@@ -41,6 +41,17 @@ def _julia_version(julia):
         return (0, 0, 0)
 
 
+def _non_default_julia_warning_message(julia):
+    # Avoid confusion like
+    # https://github.com/JuliaPy/pyjulia/issues/416
+    return (
+        "PyCall is setup for non-default Julia runtime (executable) `{julia}`.\n"
+        "To use this Julia runtime, PyJulia has to be initialized first by\n"
+        "    from julia import Julia\n"
+        "    Julia(runtime={julia!r})"
+    ).format(julia=julia)
+
+
 def build_pycall(julia="julia", python=sys.executable, **kwargs):
     # Passing `python` to force build (OP="build")
     install(julia=julia, python=python, **kwargs)
@@ -117,6 +128,9 @@ def install(julia="julia", color="auto", python=None, quiet=False):
     if not quiet:
         print("Precompiling PyCall... DONE", file=sys.stderr)
         print("PyCall is installed and built successfully.", file=sys.stderr)
+        if julia != "julia":
+            print(file=sys.stderr)
+            print(_non_default_julia_warning_message(julia), file=sys.stderr)
         sys.stderr.flush()
 
 
