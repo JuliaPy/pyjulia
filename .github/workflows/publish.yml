@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:  # using `matrix` to define a constant
-        package: ['julia==0.5.5.dev']
+        package: ['julia==0.5.5']
     steps:
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
