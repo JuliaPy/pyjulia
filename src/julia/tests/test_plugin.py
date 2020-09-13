@@ -10,9 +10,10 @@ is_windows = os.name == "nt"
 userhome = os.path.expanduser("~")
 
 
-def test__using_default_setup(testdir, request):
+def test__using_default_setup(testdir, request, monkeypatch):
     if request.config.getoption("runpytest") != "subprocess":
         raise ValueError("Need `-p pytester --runpytest=subprocess` options.")
+    monkeypatch.delenv("PYJULIA_TEST_RUNTIME", raising=False)
 
     # create a temporary conftest.py file
     testdir.makeini(
