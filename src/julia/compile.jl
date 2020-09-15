@@ -12,26 +12,27 @@ Pkg.activate(compiler_env)
 using PackageCompiler
 
 Pkg.activate(pycall_env)
-pycall = Pkg.PackageSpec(
-    name = "PyCall",
-    uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0",
-)
-if !(pycall.uuid in keys(Pkg.dependencies()))
+if pycall_env == "."
     @info "Installing PyCall..."
-    Pkg.add([pycall])
+    Pkg.add([
+        Pkg.PackageSpec(
+            name = "PyCall",
+            uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0",
+        ),
+    ])
 end
 
 if VERSION >= v"1.5-"
     mktempdir() do dir
         tmpimg = joinpath(dir, basename(output))
-        @info "Compiling a temporary system image without `PyCall`..."
+        @info "Compiling a temporary system image without PyCall..."
         create_sysimage(
             Symbol[];
             sysimage_path = tmpimg,
             project = pycall_env,
             base_sysimage = isempty(base_sysimage) ? nothing : base_sysimage,
         )
-        @info "Compiling system image with `PyCall` from $pycall_env..."
+        @info "Compiling system image with PyCall from $pycall_env..."
         create_sysimage(
             [:PyCall];
             sysimage_path = output,
@@ -41,7 +42,7 @@ if VERSION >= v"1.5-"
         )
     end
 else
-    @info "Compiling system image with `PyCall` from $pycall_env..."
+    @info "Compiling system image with PyCall from $pycall_env..."
     create_sysimage(
         [:PyCall],
         sysimage_path = output,
