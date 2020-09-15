@@ -1,4 +1,4 @@
-compiler_env, script, output, base_sysimage = ARGS
+compiler_env, pycall_env, script, output, base_sysimage = ARGS
 
 if VERSION < v"0.7-"
     error("Unsupported Julia version $VERSION")
@@ -11,14 +11,15 @@ Pkg.activate(compiler_env)
 @info "Loading PackageCompiler..."
 using PackageCompiler
 
-@info "Installing PyCall..."
-Pkg.activate(".")
-Pkg.add([
-    Pkg.PackageSpec(
-        name = "PyCall",
-        uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0",
-    ),
-])
+Pkg.activate(pycall_env)
+pycall = Pkg.PackageSpec(
+    name = "PyCall",
+    uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0",
+)
+if !(pycall.uuid in keys(Pkg.dependencies()))
+    @info "Installing PyCall..."
+    Pkg.add([pycall])
+end
 
 if VERSION >= v"1.5-"
     mktempdir() do dir
@@ -27,24 +28,24 @@ if VERSION >= v"1.5-"
         create_sysimage(
             Symbol[];
             sysimage_path = tmpimg,
-            project = ".",
+            project = pycall_env,
             base_sysimage = isempty(base_sysimage) ? nothing : base_sysimage,
         )
-        @info "Compiling system image..."
+        @info "Compiling system image with `PyCall` from $pycall_env..."
         create_sysimage(
             [:PyCall];
             sysimage_path = output,
-            project = ".",
+            project = pycall_env,
             precompile_execution_file = script,
             base_sysimage = tmpimg,
         )
     end
 else
-    @info "Compiling system image..."
+    @info "Compiling system image with `PyCall` from $pycall_env..."
     create_sysimage(
         [:PyCall],
         sysimage_path = output,
-        project = ".",
+        project = pycall_env,
         precompile_execution_file = script,
         base_sysimage = isempty(base_sysimage) ? nothing : base_sysimage,
     )

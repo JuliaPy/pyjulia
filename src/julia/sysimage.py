@@ -79,6 +79,7 @@ def build_sysimage(
     script=script_path("precompile.jl"),
     debug=False,
     compiler_env="",
+    pycall_env="",
     base_sysimage=None,
 ):
     if debug:
@@ -90,15 +91,24 @@ def build_sysimage(
     julia_py = julia_py_executable()
 
     with temporarydirectory(prefix="tmp.pyjulia.sysimage.") as path:
-        if not compiler_env:
+        
+        if compiler_env:
+            compiler_env = os.path.abspath(compiler_env)
+        else:
             compiler_env = os.path.join(path, "compiler_env")
             # Not using julia-py to install PackageCompiler to reduce
             # method re-definition warnings:
             check_call(install_packagecompiler_cmd(julia, compiler_env), cwd=path)
+            
+        if pycall_env:
+            pycall_env = os.path.abspath(".")
+        else:
+            pycall_env = "."
 
         # Arguments to ./compile.jl script:
         compile_args = [
             compiler_env,
+            pycall_env,
             # script -- ./precompile.jl by default
             os.path.realpath(script),
             # output -- path to sys.o file
@@ -131,10 +141,18 @@ def main(args=None):
         "--compiler-env",
         default="",
         help="""
-        Path to a Julia project with PackageCompiler to be used for
-        system image compilation.  Create a temporary environment with
-        appropriate PackageCompiler by default or when an empty string
-        is given.
+        Path to a Julia project with PackageCompiler to be used for system image
+        compilation. If none is provided, will create a temporary environment
+        with the latest version of PackageCompiler.
+        """,
+    )
+    parser.add_argument(
+        "--pycall-env",
+        default="",
+        help="""
+        Path to a Julia project with PyCall to be used for system image
+        compilation. If none is provided, will create a temporary environment
+        with the latest version of PyCall.
         """,
     )
     parser.add_argument(
