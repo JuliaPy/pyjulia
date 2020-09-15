@@ -91,7 +91,7 @@ def build_sysimage(
     julia_py = julia_py_executable()
 
     with temporarydirectory(prefix="tmp.pyjulia.sysimage.") as path:
-        
+
         if compiler_env:
             compiler_env = os.path.abspath(compiler_env)
         else:
@@ -99,7 +99,7 @@ def build_sysimage(
             # Not using julia-py to install PackageCompiler to reduce
             # method re-definition warnings:
             check_call(install_packagecompiler_cmd(julia, compiler_env), cwd=path)
-            
+
         if pycall_env:
             pycall_env = os.path.abspath(".")
         else:
