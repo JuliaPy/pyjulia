@@ -101,7 +101,7 @@ def build_sysimage(
             check_call(install_packagecompiler_cmd(julia, compiler_env), cwd=path)
 
         if pycall_env:
-            pycall_env = os.path.abspath(".")
+            pycall_env = os.path.abspath(pycall_env)
         else:
             pycall_env = "."
 
