@@ -237,10 +237,13 @@ class LibJulia(BaseLibJulia):
 
     @property
     def jl_init_with_image(self):
-        try:
-            return self.libjulia.jl_init_with_image
+        try: 
+            try:
+                return self.libjulia.jl_init_with_image
+            except AttributeError:
+                return self.libjulia.jl_init_with_image__threading
         except AttributeError:
-            return self.libjulia.jl_init_with_image__threading
+            return self.libjulia.jl_init__threading
 
     def init_julia(self, options=None):
         """
