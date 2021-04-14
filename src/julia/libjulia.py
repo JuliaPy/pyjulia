@@ -237,7 +237,7 @@ class LibJulia(BaseLibJulia):
 
     @property
     def jl_init_with_image(self):
-        try: 
+        try:
             try:
                 return self.libjulia.jl_init_with_image
             except AttributeError:
