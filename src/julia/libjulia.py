@@ -30,10 +30,6 @@ UNBOXABLE_TYPES = (
 
 
 def setup_libjulia(libjulia):
-    # Store the running interpreter reference so we can start using it via self.call
-    libjulia.jl_.argtypes = [c_void_p]
-    libjulia.jl_.restype = None
-
     # Set the return types of some of the bridge functions in ctypes terminology
     libjulia.jl_eval_string.argtypes = [c_char_p]
     libjulia.jl_eval_string.restype = c_void_p
