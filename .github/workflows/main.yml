@@ -18,7 +18,9 @@ jobs:
           - macos-latest
           - windows-latest
         architecture: [x64, x86]
-        python-version: ['3.7', '3.8']
+        python-version:
+          - '3.9'
+          - '3.10'
         julia-version:
           - '1.0'
           - '1.6'
@@ -32,12 +34,29 @@ jobs:
           - os: macos-latest
             julia-version: '1.6'
           - os: windows-latest
+            architecture: x86
+            python-version: '3.10'  # not added yet?
+          - os: windows-latest
             julia-version: '1.6'
           - os: macos-latest
             julia-version: 'nightly'
           - os: windows-latest
             julia-version: 'nightly'
         include:
+          # Python 3.8 for testing `test_compiled_modules_no`:
+          - os: ubuntu-latest
+            architecture: x64
+            python-version: '3.8'
+            julia-version: '1'
+          - os: macos-latest
+            architecture: x64
+            python-version: '3.8'
+            julia-version: '1'
+          - os: windows-latest
+            architecture: x64
+            python-version: '3.8'
+            julia-version: '1'
+          # Python 2.7 (TODO: drop):
           - os: ubuntu-latest
             architecture: x64
             python-version: '2.7'
@@ -95,6 +114,6 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v1
         with:
-          python-version: '3.8'
+          python-version: '3.10'
       - run: python -m pip install --upgrade tox
       - run: python -m tox -e ${{ matrix.toxenv }}
