@@ -26,6 +26,8 @@ jobs:
         exclude:
           - python-version: '2.7'
             architecture: x86
+          - python-version: '2.7'
+            os: macos-latest
           - os: ubuntu-latest
             architecture: x86
           - os: macos-latest
