@@ -70,9 +70,11 @@ jobs:
             py2="$(which python2)"
             echo "PYJULIA_TEST_INCOMPATIBLE_PYTHONS=$py2" >> $GITHUB_ENV
           fi
+        shell: bash
       - name: Check PYJULIA_TEST_INCOMPATIBLE_PYTHONS
         if: ${{ matrix.python-version != '2.7' }}
         run: echo "$PYJULIA_TEST_INCOMPATIBLE_PYTHONS"
+        shell: bash
       - name: Run test
         run: python -m tox -- --cov=julia
         env:
