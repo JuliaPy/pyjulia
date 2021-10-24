@@ -23,7 +23,7 @@ jobs:
             - '1.0'
             - '1.6'
             - '~1.7.0-rc1'
-            - 'nightly'
+            # - 'nightly'  # TODO: reenable
         exclude:
           - os: ubuntu-latest
             architecture: x86
