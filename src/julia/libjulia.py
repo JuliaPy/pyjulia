@@ -9,7 +9,7 @@ from logging import getLogger  # see `.core.logger`
 
 from .juliainfo import JuliaInfo
 from .options import parse_jl_options
-from .utils import is_windows
+from .utils import is_apple, is_windows
 
 logger = getLogger("julia")
 
@@ -31,8 +31,13 @@ UNBOXABLE_TYPES = (
 
 def setup_libjulia(libjulia):
     # Store the running interpreter reference so we can start using it via self.call
-    libjulia.jl_.argtypes = [c_void_p]
-    libjulia.jl_.restype = None
+    try:
+        jl_ = libjulia.jl_
+    except AttributeError:
+        pass
+    else:
+        jl_.argtypes = [c_void_p]
+        jl_.restype = None
 
     # Set the return types of some of the bridge functions in ctypes terminology
     libjulia.jl_eval_string.argtypes = [c_char_p]
@@ -211,14 +216,14 @@ class LibJulia(BaseLibJulia):
         if sys.version_info >= (2, 7, 13) and sys.version_info < (2, 7, 14):
             libjulia_path = libjulia_path.encode("ascii")
 
-        with self._windows_pathhack():
+        with self._pathhack():
             self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
 
         setup_libjulia(self.libjulia)
 
     @contextmanager
-    def _windows_pathhack(self):
-        if not is_windows:
+    def _pathhack(self):
+        if not is_windows and not is_apple:
             yield
             return
         # Using `os.chdir` as a workaround for an error in Windows
@@ -228,6 +233,8 @@ class LibJulia(BaseLibJulia):
         # is reported to work by many users:
         # https://github.com/JuliaPy/pyjulia/issues/67
         # https://github.com/JuliaPy/pyjulia/pull/367
+        # Using this workaround for Julia >= 1.6 in macOS for now:
+        # https://github.com/JuliaLang/julia/issues/40246
         cwd = os.getcwd()
         try:
             os.chdir(os.path.dirname(self.libjulia_path))
@@ -321,7 +328,7 @@ class LibJulia(BaseLibJulia):
                 logger.debug("argv[%d] = %r", i, argv[i])
 
         logger.debug("calling jl_init_with_image(%s, %s)", jl_init_path, sysimage)
-        with self._windows_pathhack():
+        with self._pathhack():
             self.jl_init_with_image(
                 jl_init_path.encode("utf-8"), sysimage.encode("utf-8")
             )
