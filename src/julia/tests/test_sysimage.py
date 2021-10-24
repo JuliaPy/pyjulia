@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 from subprocess import check_call
 
 import pytest
@@ -8,7 +9,7 @@ from julia.sysimage import build_sysimage
 
 from ..tools import build_pycall
 from .test_compatible_exe import runcode
-from .utils import only_in_ci, skip_in_windows
+from .utils import only_in_ci, skip_in_apple, skip_in_windows
 
 
 def skip_early_julia_versions(juliainfo):
@@ -44,6 +45,8 @@ def assert_sample_julia_code_runs(juliainfo, sysimage_path):
 @pytest.mark.julia
 @only_in_ci
 @skip_in_windows
+@skip_in_apple
+@pytest.mark.skipif("sys.version_info >= (3, 9)")
 @pytest.mark.parametrize("with_pycall_cache", [False, True])
 def test_build_and_load(tmpdir, juliainfo, with_pycall_cache):
     skip_early_julia_versions(juliainfo)
@@ -71,6 +74,8 @@ def test_build_and_load(tmpdir, juliainfo, with_pycall_cache):
 @pytest.mark.julia
 @only_in_ci
 @skip_in_windows  # Avoid "LVM ERROR: out of memory"
+@skip_in_apple
+@pytest.mark.skipif("sys.version_info >= (3, 9)")
 def test_build_with_basesysimage_and_load(tmpdir, juliainfo):
     skip_early_julia_versions(juliainfo)
 
