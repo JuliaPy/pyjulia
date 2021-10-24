@@ -33,6 +33,15 @@ jobs:
             julia-version: 'nightly'
           - os: windows-latest
             julia-version: 'nightly'
+        include:
+          - os: ubuntu-latest
+            architecture: x64
+            python-version: '2.7'
+            julia-version: '1'
+          - os: windows-latest
+            architecture: x64
+            python-version: '2.7'
+            julia-version: '1'
       fail-fast: false
     name: Test ${{ matrix.os }} ${{ matrix.architecture }}
       Python ${{ matrix.python-version }}
@@ -57,7 +66,7 @@ jobs:
       - name: Install PyCall
         run: python ci/install_pycall.py
       - name: Run test
-        run: python -m tox -- --cov=julia
+        run: python -m tox -- --verbose --cov=julia
         env:
           CI: 'true'  # run tests marked by @only_in_ci
           TOXENV: py
