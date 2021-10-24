@@ -34,6 +34,9 @@ jobs:
           - os: macos-latest
             julia-version: '1.6'
           - os: windows-latest
+            architecture: x86
+            python-version: '3.10'  # not added yet?
+          - os: windows-latest
             julia-version: '1.6'
           - os: macos-latest
             julia-version: 'nightly'
