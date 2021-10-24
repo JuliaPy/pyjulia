@@ -27,7 +27,7 @@ fullnamestr(m) = join(fullname(m), ".")
 isdefinedstr(parent, member) = isdefined(parent, Symbol(member))
 
 function completions(str, pos)
-    ret, ran, should_complete = REPL.completions(str, pos)
+    ret, ran, should_complete = REPL.completions(str, Int(pos))
     return (
         map(REPL.completion_text, ret),
         (first(ran), last(ran)),
