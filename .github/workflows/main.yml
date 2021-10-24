@@ -18,9 +18,14 @@ jobs:
           - macos-latest
           - windows-latest
         architecture: [x64, x86]
-        python-version: ['3.7', '3.8']
+        python-version:
+          - '2.7'
+          - '3.7'
+          - '3.8'
         julia-version: ['1.0', '1.3', '~1.5.0-rc1', 'nightly']
         exclude:
+          - python-version: '2.7'
+            architecture: x86
           - os: ubuntu-latest
             architecture: x86
           - os: macos-latest
@@ -56,6 +61,16 @@ jobs:
           python -m pip install --upgrade tox
       - name: Install PyCall
         run: python ci/install_pycall.py
+      - name: Set PYJULIA_TEST_INCOMPATIBLE_PYTHONS
+        if: ${{ matrix.python-version != '2.7' }}
+        run: |
+          if which python2; then
+            py2="$(which python2)"
+            echo "PYJULIA_TEST_INCOMPATIBLE_PYTHONS=$py2" >> $GITHUB_ENV
+          fi
+      - name: Check PYJULIA_TEST_INCOMPATIBLE_PYTHONS
+        if: ${{ matrix.python-version != '2.7' }}
+        run: echo "$PYJULIA_TEST_INCOMPATIBLE_PYTHONS"
       - name: Run test
         run: python -m tox -- --cov=julia
         env:
