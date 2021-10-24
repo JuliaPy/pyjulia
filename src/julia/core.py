@@ -32,7 +32,7 @@ from .juliainfo import JuliaInfo
 from .libjulia import UNBOXABLE_TYPES, LibJulia, get_inprocess_libjulia, get_libjulia
 from .options import JuliaOptions, options_docs
 from .release import __version__
-from .utils import IMPORT_PYCALL, is_windows
+from .utils import PYCALL_PKGID, is_windows
 
 try:
     from shutil import which
@@ -500,7 +500,18 @@ class Julia(object):
 
         # Currently, PyJulia assumes that `Main.PyCall` exsits.  Thus, we need
         # to import `PyCall` again here in case `init_julia=False` is passed:
-        self._call(IMPORT_PYCALL)
+        if debug:
+            self._call("""
+            const PyCall = try
+                Base.require({0})
+            catch err
+                @error "Failed to import PyCall" exception = (err, catch_backtrace())
+                rethrow()
+            end
+            """.format(PYCALL_PKGID))
+        else:
+            self._call("const PyCall = Base.require({0})".format(PYCALL_PKGID))
+
         self._call(u"using .PyCall")
 
         # Whether we initialized Julia or not, we MUST create at least one
