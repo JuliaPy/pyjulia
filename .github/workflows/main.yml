@@ -40,6 +40,20 @@ jobs:
           - os: windows-latest
             julia-version: 'nightly'
         include:
+          # Python 3.8 for testing `test_compiled_modules_no`:
+          - os: ubuntu-latest
+            architecture: x64
+            python-version: '3.8'
+            julia-version: '1'
+          - os: macos-latest
+            architecture: x64
+            python-version: '3.8'
+            julia-version: '1'
+          - os: windows-latest
+            architecture: x64
+            python-version: '3.8'
+            julia-version: '1'
+          # Python 2.7 (TODO: drop):
           - os: ubuntu-latest
             architecture: x64
             python-version: '2.7'
