@@ -173,11 +173,11 @@ def test_revise_error():
 
 
 @pytest.mark.skipif(sys.version_info[0] < 3, reason="Python 2 not supported")
-def test_completions():
+def test_completions(julia):
     from IPython.core.completer import provisionalcompleter
     from julia.ipy.monkeypatch_completer import JuliaCompleter
 
-    jc = JuliaCompleter()
+    jc = JuliaCompleter(julia)
     t = "%julia Base.si"
     with provisionalcompleter():
         completions = jc.julia_completions(t, len(t))

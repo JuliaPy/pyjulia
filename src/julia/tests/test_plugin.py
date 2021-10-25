@@ -48,7 +48,7 @@ def test__using_default_setup(testdir, request, monkeypatch):
 @pytest.mark.skipif(
     is_windows, reason="cannot run on Windows; symlink is used inside test"
 )
-def test_undo_no_julia(testdir, request):
+def test_undo_no_julia(testdir, request, julia):
     if request.config.getoption("runpytest") != "subprocess":
         raise ValueError("Need `-p pytester --runpytest=subprocess` options.")
 
