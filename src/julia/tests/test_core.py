@@ -11,6 +11,8 @@ import pytest
 from julia import JuliaError
 from julia.core import jl_name, py_name
 
+from .utils import retry_failing_if_windows
+
 python_version = sys.version_info
 
 
@@ -155,6 +157,11 @@ def test_module_dir(julia):
 @pytest.mark.pyjulia__using_default_setup
 @pytest.mark.julia
 def test_import_without_setup():
+    check_import_without_setup()
+
+
+@retry_failing_if_windows
+def check_import_without_setup():
     command = [sys.executable, "-c", "from julia import Base"]
     print("Executing:", *command)
     subprocess.check_call(command)
