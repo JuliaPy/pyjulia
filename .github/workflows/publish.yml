@@ -29,7 +29,7 @@ jobs:
         if: >-
           (github.ref == 'refs/heads/release/test') ||
           (github.ref == 'refs/heads/release/main')
-        uses: pypa/gh-action-pypi-publish@bce3b74dbf8cc32833ffba9d15f83425c1a736e0  # v1.3.1
+        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29  # v1.4.2
         with:
           password: ${{ secrets.test_pypi_password }}
           repository_url: https://test.pypi.org/legacy/
@@ -70,6 +70,6 @@ jobs:
       - run: ls -lh dist
       - name: Publish distribution 📦 to PyPI
         if: github.ref == 'refs/heads/release/main'
-        uses: pypa/gh-action-pypi-publish@bce3b74dbf8cc32833ffba9d15f83425c1a736e0  # v1.3.1
+        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29  # v1.4.2
         with:
           password: ${{ secrets.pypi_password }}
