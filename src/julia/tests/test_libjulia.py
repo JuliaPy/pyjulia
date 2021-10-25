@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from julia.core import JuliaInfo
@@ -10,7 +8,6 @@ juliainfo = JuliaInfo.load()
 
 
 @pytest.mark.skipif("juliainfo.version_info < (0, 7)")
-@pytest.mark.skipif("sys.version_info >= (3, 9)")
 @pytest.mark.julia
 def test_compiled_modules_no():
     runcode(
