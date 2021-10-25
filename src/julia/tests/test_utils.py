@@ -49,8 +49,12 @@ def test_retry_on_failure():
 
 @pytest.mark.pyjulia__using_default_setup
 @pytest.mark.julia
-@retry_failing_if_windows
 def test_atexit():
+    check_atexit()
+
+
+@retry_failing_if_windows
+def check_atexit():
     proc = runcode(
         '''
         import os
