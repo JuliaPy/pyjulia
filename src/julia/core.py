@@ -564,6 +564,11 @@ class Julia(object):
         actual = self.api.jl_typeof(pointer)
         return actual == desired
 
+    # `_unbox_as` was added for communicating with Julia runtime before
+    # initializing PyCal:
+    # * Fail with a helpful message if separate cache is not supported
+    #   https://github.com/JuliaPy/pyjulia/pull/186
+    # However, this is not used anymore at the moment. Maybe clean this up?
     def _unbox_as(self, pointer, c_type):
         self._check_unboxable(c_type)
         jl_unbox = getattr(self.api, 'jl_unbox_{}'.format(c_type))

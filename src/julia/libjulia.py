@@ -64,8 +64,14 @@ def setup_libjulia(libjulia):
             ),
         )
 
-    libjulia.jl_typeof.argtypes = [c_void_p]
-    libjulia.jl_typeof.restype = c_void_p
+    # This does not exist in Julia 1.8 anymore:
+    try:
+        jl_typeof = libjulia.jl_typeof
+    except AttributeError:
+        pass
+    else:
+        jl_typeof.argtypes = [c_void_p]
+        jl_typeof.restype = c_void_p
 
     libjulia.jl_exception_clear.restype = None
     libjulia.jl_stderr_obj.argtypes = []
