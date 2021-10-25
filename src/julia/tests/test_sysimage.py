@@ -16,6 +16,11 @@ def skip_early_julia_versions(juliainfo):
         pytest.skip("Julia < 1.3.1 is not supported")
 
 
+def skip_julia_nightly(juliainfo):
+    if juliainfo.version_info >= (1, 8):
+        pytest.skip("custom sysimage with Julia >= 1.8 (nightly) is not supported")
+
+
 def assert_sample_julia_code_runs(juliainfo, sysimage_path):
     very_random_string = "4903dc03-950f-4a54-98a3-c57a354b62df"
     proc = runcode(
@@ -48,6 +53,7 @@ def assert_sample_julia_code_runs(juliainfo, sysimage_path):
 @pytest.mark.parametrize("with_pycall_cache", [False, True])
 def test_build_and_load(tmpdir, juliainfo, with_pycall_cache):
     skip_early_julia_versions(juliainfo)
+    skip_julia_nightly(juliainfo)
 
     if with_pycall_cache:
         build_pycall(julia=juliainfo.julia)
@@ -75,6 +81,7 @@ def test_build_and_load(tmpdir, juliainfo, with_pycall_cache):
 @skip_in_apple
 def test_build_with_basesysimage_and_load(tmpdir, juliainfo):
     skip_early_julia_versions(juliainfo)
+    skip_julia_nightly(juliainfo)
 
     sysimage_path = str(tmpdir.join("sys.so"))
     base_sysimage_path = juliainfo.sysimage
