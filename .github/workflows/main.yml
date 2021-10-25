@@ -89,7 +89,7 @@ jobs:
       - name: Install PyCall
         run: python ci/install_pycall.py
       - name: Run test
-        run: python -m tox -- --verbose --cov=julia
+        run: python -m tox -- --verbose --cov=julia -rs
         env:
           CI: 'true'  # run tests marked by @only_in_ci
           TOXENV: py
