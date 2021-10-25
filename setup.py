@@ -69,6 +69,7 @@ setup(name='julia',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Julia',
       ],
       url='http://julialang.org',
       project_urls={
