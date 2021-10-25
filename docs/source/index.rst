@@ -1,7 +1,7 @@
 Welcome to PyJulia’s documentation!
 ===================================
 
-|travis| |appveyor|
+|github-action|
 
 Experimenting with developing a better interface to
 `Julia language <https://julialang.org/>`_ that works with
@@ -31,10 +31,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. |travis| image:: https://travis-ci.org/JuliaPy/pyjulia.svg?branch=master
-   :target: https://travis-ci.org/JuliaPy/pyjulia
-   :alt: Travis Build Status
-
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/JuliaPy/pyjulia?svg=true
-   :target: https://ci.appveyor.com/project/Keno/pyjulia
-   :alt: AppVeyor Build Status
+.. |github-action|
+   image:: https://github.com/JuliaPy/pyjulia/workflows/Main%20workflow/badge.svg
+   :target: https://github.com/JuliaPy/pyjulia/actions?query=workflow%3A%22Main+workflow%22
+   :alt: Main workflow

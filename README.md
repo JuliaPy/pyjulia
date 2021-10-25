@@ -3,8 +3,6 @@ PyJulia
 
 [![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://pyjulia.readthedocs.io/en/stable/)
 [![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://pyjulia.readthedocs.io/en/latest/)
-[![Build Status](https://travis-ci.org/JuliaPy/pyjulia.svg?branch=master)](https://travis-ci.org/JuliaPy/pyjulia)
-[![Build status](https://ci.appveyor.com/api/projects/status/github/JuliaPy/pyjulia?svg=true)](https://ci.appveyor.com/project/Keno/pyjulia)
 [![Main workflow](https://github.com/JuliaPy/pyjulia/workflows/Main%20workflow/badge.svg)](https://github.com/JuliaPy/pyjulia/actions?query=workflow%3A%22Main+workflow%22)
 [![DOI](https://zenodo.org/badge/14576985.svg)](https://zenodo.org/badge/latestdoi/14576985)
 
