@@ -134,7 +134,7 @@ class JuliaOptions(object):
     compile = Choices("compile", yes_no_etc("all", "min"))
     depwarn = Choices("depwarn", yes_no_etc("error"))
     warn_overwrite = Choices("warn_overwrite", yes_no_etc())
-    optimize = Choices("optimize", dict(zip(range(4), range(4))))
+    optimize = Choices("optimize", dict(zip(range(4), map(str, range(4)))))
     inline = Choices("inline", yes_no_etc())
     check_bounds = Choices("check_bounds", yes_no_etc())
 
