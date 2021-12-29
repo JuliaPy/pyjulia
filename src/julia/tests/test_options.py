@@ -1,4 +1,4 @@
-from julia.options import JuliaOptions, options_docs
+from julia.options import JuliaOptions, options_docs, parse_jl_options
 
 
 def parse_options_docs(docs):
@@ -23,3 +23,11 @@ def test_options_docs():
         odef = optdefs.pop(desc.name)
         assert odef["domain"] == desc._domain()
     assert not optdefs
+
+
+def test_parse_jl_options():
+    opts = parse_jl_options(
+        ["--home", "/home", "--sysimage", "/sys/image", "--optimize", "3"]
+    )
+    assert opts.home == "/home"
+    assert opts.sysimage == "/sys/image"
