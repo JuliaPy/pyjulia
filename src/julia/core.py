@@ -478,8 +478,14 @@ class Julia(object):
 
             is_compatible_python = jlinfo.is_compatible_python()
             logger.debug("is_compatible_python = %r", is_compatible_python)
+            use_custom_sysimage = options.sysimage is not None
+            logger.debug("use_custom_sysimage = %r", use_custom_sysimage)
             logger.debug("compiled_modules = %r", options.compiled_modules)
-            if not (options.compiled_modules == "no" or is_compatible_python):
+            if not (
+                options.compiled_modules == "no"
+                or is_compatible_python
+                or use_custom_sysimage
+            ):
                 raise UnsupportedPythonError(jlinfo)
 
             self.api.init_julia(options)
