@@ -169,7 +169,7 @@ class LibJulia(BaseLibJulia):
 
     However, a proper use of the C-API is more involved and presumably
     very challenging without C macros.  See also:
-    https://docs.julialang.org/en/latest/manual/embedding/
+    https://docs.julialang.org/en/v1/manual/embedding/.
 
     Attributes
     ----------
