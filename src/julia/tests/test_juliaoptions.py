@@ -12,6 +12,8 @@ from julia.core import JuliaOptions
     (dict(depwarn="error"), ["--depwarn", "error"]),
     (dict(sysimage="PATH"), ["--sysimage", "PATH"]),
     (dict(optimize=3), ["--optimize", "3"]),
+    (dict(threads=4), ["--threads", "4"]),
+    (dict(min_optlevel=2), ["--min-optlevel", "2"]),
 ])
 # fmt: on
 def test_as_args(kwargs, args):

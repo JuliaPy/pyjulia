@@ -134,9 +134,11 @@ class JuliaOptions(object):
     compile = Choices("compile", yes_no_etc("all", "min"))
     depwarn = Choices("depwarn", yes_no_etc("error"))
     warn_overwrite = Choices("warn_overwrite", yes_no_etc())
+    min_optlevel = Choices("min_optlevel", dict(zip(range(4), map(str, range(4)))))
     optimize = Choices("optimize", dict(zip(range(4), map(str, range(4)))))
     inline = Choices("inline", yes_no_etc())
     check_bounds = Choices("check_bounds", yes_no_etc())
+    threads = Choices("threads", dict(zip(range(12), map(str, range(12)))))
 
     def __init__(self, **kwargs):
         unsupported = []
@@ -168,8 +170,10 @@ class JuliaOptions(object):
     def as_args(self):
         args = []
         for (desc, value) in self.specified():
-            args.append(desc.cli_argument_name())
-            args.append(value)
+            if len(desc.cli_argument_name()) == 1:
+                args.append(desc.cli_argument_name() + str(value))
+            else:
+                args.append(desc.cli_argument_name()+"="+str(value))
         return args
 
     @classmethod
