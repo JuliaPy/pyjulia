@@ -116,6 +116,7 @@ def test_type_conversion(run_cell):
     %julia py"1" isa Integer && py"1"o isa PyObject
     """) == True
 
+@pytest.mark.skip(reason="Incompatible with new IPython.")
 def test_local_scope(run_cell):
     assert run_cell("""
     x = "global"
@@ -125,7 +126,7 @@ def test_local_scope(run_cell):
         return ret
     f()
     """) == "local"
-    
+
 def test_global_scope(run_cell):
     assert run_cell("""
     x = "global"
