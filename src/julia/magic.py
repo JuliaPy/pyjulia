@@ -49,8 +49,7 @@ except ImportError:
 
 @magics_class
 class JuliaMagics(Magics):
-    """A set of magics useful for interactive work with Julia.
-    """
+    """A set of magics useful for interactive work with Julia."""
 
     highlight = Bool(
         True,
@@ -118,10 +117,9 @@ class JuliaMagics(Magics):
         # IPython module. This seems to work with IPython back to ~v5, and
         # is at least somewhat immune to future IPython internals changes,
         # although by no means guaranteed to be perfect.
-        while (
-            caller_frame.f_globals.get("__name__").startswith("IPython")
-            or caller_frame.f_globals.get("__name__").startswith("julia")
-        ):
+        while caller_frame.f_globals.get("__name__").startswith(
+            "IPython"
+        ) or caller_frame.f_globals.get("__name__").startswith("julia"):
             caller_frame = caller_frame.f_back
 
         return_value = "nothing" if src.strip().endswith(";") else ""

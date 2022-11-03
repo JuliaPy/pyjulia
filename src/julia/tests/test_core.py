@@ -37,7 +37,7 @@ def test_call_error(julia):
 
 
 def test_call_julia_function_with_python_args(Main):
-    assert list(Main.map(Main.uppercase, array.array("u", [u"a", u"b", u"c"]))) == [
+    assert list(Main.map(Main.uppercase, array.array("u", ["a", "b", "c"]))) == [
         "A",
         "B",
         "C",
@@ -129,7 +129,7 @@ def test_getattr_submodule(Main):
 def test_star_import_julia_module(julia, tmp_path):
     # Create a Python module __pyjulia_star_import_test
     path = tmp_path / "__pyjulia_star_import_test.py"
-    path.write_text(u"from julia.Base.Enums import *")
+    path.write_text("from julia.Base.Enums import *")
     sys.path.insert(0, str(tmp_path))
 
     import __pyjulia_star_import_test
