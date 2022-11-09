@@ -113,6 +113,9 @@ warn_overwrite: {True, False, 'yes', 'no'}
 
 min_optlevel: {0, 1, 2, 3}
     Lower bound on the optimization level.
+
+threads: int or "auto"
+    How many threads to use.
 """
 
 
