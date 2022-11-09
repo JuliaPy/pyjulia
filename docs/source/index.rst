@@ -5,9 +5,9 @@ Welcome to PyJulia’s documentation!
 
 Experimenting with developing a better interface to
 `Julia language <https://julialang.org/>`_ that works with
-`Python <https://www.python.org/>`_ 2 & 3 and Julia v1.0+.
+`Python <https://www.python.org/>`_ 3 and Julia v1.0+.
 
-PyJulia is tested against Python versions 2.7, 3.5, 3.6, and 3.7.
+PyJulia is tested against Python versions 3.5+
 
 .. toctree::
    :maxdepth: 2

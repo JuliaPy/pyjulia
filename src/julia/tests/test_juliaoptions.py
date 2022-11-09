@@ -20,10 +20,13 @@ def test_as_args(kwargs, args):
     assert JuliaOptions(**kwargs).as_args() == args
 
 
-@pytest.mark.parametrize("kwargs", [
-    dict(compiled_modules="invalid value"),
-    dict(bindir=123456789),
-])
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        dict(compiled_modules="invalid value"),
+        dict(bindir=123456789),
+    ],
+)
 def test_valueerror(kwargs):
     with pytest.raises(ValueError) as excinfo:
         JuliaOptions(**kwargs)
