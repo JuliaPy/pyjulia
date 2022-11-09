@@ -125,7 +125,7 @@ def test_local_scope(run_cell):
         return ret
     f()
     """) == "local"
-    
+
 def test_global_scope(run_cell):
     assert run_cell("""
     x = "global"
