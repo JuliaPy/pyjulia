@@ -169,7 +169,7 @@ class LibJulia(BaseLibJulia):
 
     However, a proper use of the C-API is more involved and presumably
     very challenging without C macros.  See also:
-    https://docs.julialang.org/en/latest/manual/embedding/
+    https://docs.julialang.org/en/v1/manual/embedding/.
 
     Attributes
     ----------
@@ -215,12 +215,6 @@ class LibJulia(BaseLibJulia):
             raise RuntimeError(
                 'Julia library ("libjulia") not found! {}'.format(libjulia_path)
             )
-
-        # fixes a specific issue with python 2.7.13
-        # ctypes.windll.LoadLibrary refuses unicode argument
-        # http://bugs.python.org/issue29294
-        if sys.version_info >= (2, 7, 13) and sys.version_info < (2, 7, 14):
-            libjulia_path = libjulia_path.encode("ascii")
 
         with self._pathhack():
             self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)

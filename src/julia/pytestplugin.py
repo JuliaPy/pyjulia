@@ -125,7 +125,7 @@ def pytest_configure(config):
 
 @pytest.fixture(scope="session")
 def julia(request):
-    """ pytest fixture for providing a `Julia` instance. """
+    """pytest fixture for providing a `Julia` instance."""
     if not request.config.getoption("julia"):
         pytest.skip("--no-julia is given.")
 
@@ -136,7 +136,7 @@ def julia(request):
 
 @pytest.fixture(scope="session")
 def juliainfo(julia):
-    """ pytest fixture for providing `JuliaInfo` instance. """
+    """pytest fixture for providing `JuliaInfo` instance."""
     return _JULIA_INFO
 
 
