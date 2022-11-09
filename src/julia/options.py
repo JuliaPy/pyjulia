@@ -110,6 +110,9 @@ sysimage: str
 
 warn_overwrite: {True, False, 'yes', 'no'}
     Enable or disable method overwrite warnings.
+
+min_optlevel: {0, 1, 2, 3}
+    Lower bound on the optimization level.
 """
 
 
