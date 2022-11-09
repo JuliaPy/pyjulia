@@ -5,7 +5,7 @@ import sysconfig
 
 import pytest
 
-from julia.tools import julia_py_executable
+from julia.tools import _non_default_julia_warning_message, julia_py_executable
 
 fake_user = "fa9a5150-8e17-11ea-3f8d-ff1e5ae4a251"
 posix_user_sample_path = os.path.join(os.sep, "home", fake_user, ".local", "bin")
@@ -81,3 +81,8 @@ def test_find_julia_py_executable_not_found(monkeypatch):
         julia_py_executable()
 
     assert "``julia-py`` executable is not found" in str(excinfo.value)
+
+
+def test_non_default_julia_warning_message():
+    msg = _non_default_julia_warning_message("julia1.5")
+    assert "Julia(runtime='julia1.5')" in msg

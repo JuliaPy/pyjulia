@@ -32,7 +32,7 @@ from .juliainfo import JuliaInfo
 from .libjulia import UNBOXABLE_TYPES, LibJulia, get_inprocess_libjulia, get_libjulia
 from .options import JuliaOptions, options_docs
 from .release import __version__
-from .utils import IMPORT_PYCALL, is_windows
+from .utils import PYCALL_PKGID, is_windows
 
 try:
     from shutil import which
@@ -478,8 +478,14 @@ class Julia(object):
 
             is_compatible_python = jlinfo.is_compatible_python()
             logger.debug("is_compatible_python = %r", is_compatible_python)
+            use_custom_sysimage = options.sysimage is not None
+            logger.debug("use_custom_sysimage = %r", use_custom_sysimage)
             logger.debug("compiled_modules = %r", options.compiled_modules)
-            if not (options.compiled_modules == "no" or is_compatible_python):
+            if not (
+                options.compiled_modules == "no"
+                or is_compatible_python
+                or use_custom_sysimage
+            ):
                 raise UnsupportedPythonError(jlinfo)
 
             self.api.init_julia(options)
@@ -500,7 +506,18 @@ class Julia(object):
 
         # Currently, PyJulia assumes that `Main.PyCall` exsits.  Thus, we need
         # to import `PyCall` again here in case `init_julia=False` is passed:
-        self._call(IMPORT_PYCALL)
+        if debug:
+            self._call("""
+            const PyCall = try
+                Base.require({0})
+            catch err
+                @error "Failed to import PyCall" exception = (err, catch_backtrace())
+                rethrow()
+            end
+            """.format(PYCALL_PKGID))
+        else:
+            self._call("const PyCall = Base.require({0})".format(PYCALL_PKGID))
+
         self._call(u"using .PyCall")
 
         # Whether we initialized Julia or not, we MUST create at least one
@@ -553,6 +570,11 @@ class Julia(object):
         actual = self.api.jl_typeof(pointer)
         return actual == desired
 
+    # `_unbox_as` was added for communicating with Julia runtime before
+    # initializing PyCal:
+    # * Fail with a helpful message if separate cache is not supported
+    #   https://github.com/JuliaPy/pyjulia/pull/186
+    # However, this is not used anymore at the moment. Maybe clean this up?
     def _unbox_as(self, pointer, c_type):
         self._check_unboxable(c_type)
         jl_unbox = getattr(self.api, 'jl_unbox_{}'.format(c_type))

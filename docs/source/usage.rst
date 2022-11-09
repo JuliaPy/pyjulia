@@ -59,7 +59,7 @@ named ``custom_julia``, run:
 .. code-block:: pycon
 
    >>> from julia import Julia
-   >>> jl = julia.Julia(runtime="custom_julia")
+   >>> jl = Julia(runtime="custom_julia")
 
 You can then use, e.g.,
 
