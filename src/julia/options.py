@@ -49,7 +49,7 @@ class IntEtc(OptionDescriptor):
     def __set__(self, instance, value):
         if instance is None:
             raise AttributeError(self.name)
-        elif value in self.default or isinstance(value, int):
+        elif value in {None, *self.default} or isinstance(value, int):
             setattr(instance, self.dataname, value)
         else:
             if self.default:
@@ -205,7 +205,9 @@ class JuliaOptions(object):
     def as_args(self):
         args = []
         for (desc, value) in self.specified():
-            if len(desc.cli_argument_name()) == 1:
+            if value is None:
+                ...
+            elif len(desc.cli_argument_name()) == 1:
                 args.append(desc.cli_argument_name() + str(value))
             else:
                 args.append(desc.cli_argument_name() + "=" + str(value))
