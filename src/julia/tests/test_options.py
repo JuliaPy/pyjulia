@@ -26,6 +26,8 @@ def test_options_docs():
 
 
 def test_parse_jl_options():
-    opts = parse_jl_options(["--home", "/home", "--sysimage", "/sys/image", "--optimize", "3"])
+    opts = parse_jl_options(
+        ["--home", "/home", "--sysimage", "/sys/image", "--optimize", "3"]
+    )
     assert opts.home == "/home"
     assert opts.sysimage == "/sys/image"
