@@ -49,16 +49,25 @@ class IntEtc(OptionDescriptor):
     def __set__(self, instance, value):
         if instance is None:
             raise AttributeError(self.name)
-        elif value in {None, *self.default} or isinstance(value, int):
+        elif value in self.default or isinstance(value, int):
             setattr(instance, self.dataname, value)
         else:
-            part = f" or {self.default}" if self.default else ""
+            if self.default:
+                part = " or " + " ".join(map(str, self.default))
+            else:
+                part = ""
             raise ValueError(
                 f"Option {self.name} only accepts integers{part}. Got: {value}"
             )
 
     def _domain(self):
         return {int, *self.default}
+
+    def cli_argument_spec(self):
+        return dict(
+            super(IntEtc, self).cli_argument_spec(),
+            choices=list(self.default) + ["1", "2", "3", "..."],
+        )
 
 
 class Choices(OptionDescriptor):
