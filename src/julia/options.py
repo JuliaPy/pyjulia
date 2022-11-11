@@ -41,6 +41,26 @@ class String(OptionDescriptor):
         return str
 
 
+class IntEtc(OptionDescriptor):
+    def __init__(self, name, *, etc={}):
+        self.name = name
+        self.default = etc
+
+    def __set__(self, instance, value):
+        if instance is None:
+            raise AttributeError(self.name)
+        elif value in {None, *self.default} or isinstance(value, int):
+            setattr(instance, self.dataname, value)
+        else:
+            part = f" or {self.default}" if self.default else ""
+            raise ValueError(
+                f"Option {self.name} only accepts integers{part}. Got: {value}"
+            )
+
+    def _domain(self):
+        return {int, *self.default}
+
+
 class Choices(OptionDescriptor):
     def __init__(self, name, choicemap, default=None):
         self.name = name
@@ -114,7 +134,7 @@ warn_overwrite: {True, False, 'yes', 'no'}
 min_optlevel: {0, 1, 2, 3}
     Lower bound on the optimization level.
 
-threads: int or "auto"
+threads: {int, 'auto'}
     How many threads to use.
 """
 
@@ -144,7 +164,7 @@ class JuliaOptions(object):
     optimize = Choices("optimize", dict(zip(range(4), map(str, range(4)))))
     inline = Choices("inline", yes_no_etc())
     check_bounds = Choices("check_bounds", yes_no_etc())
-    threads = Choices("threads", dict(zip(range(12), map(str, range(12)))))
+    threads = IntEtc("threads", etc={"auto"})
 
     def __init__(self, **kwargs):
         unsupported = []
@@ -179,7 +199,7 @@ class JuliaOptions(object):
             if len(desc.cli_argument_name()) == 1:
                 args.append(desc.cli_argument_name() + str(value))
             else:
-                args.append(desc.cli_argument_name()+"="+str(value))
+                args.append(desc.cli_argument_name() + "=" + str(value))
         return args
 
     @classmethod
