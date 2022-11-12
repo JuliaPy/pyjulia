@@ -11,6 +11,7 @@ from julia.core import JuliaOptions
     (dict(compiled_modules="no"), ["--compiled-modules", "no"]),
     (dict(depwarn="error"), ["--depwarn", "error"]),
     (dict(sysimage="PATH"), ["--sysimage", "PATH"]),
+    (dict(bindir="PATH"), ["--home", "PATH"]),
     (dict(optimize=3), ["--optimize", "3"]),
 ])
 # fmt: on
