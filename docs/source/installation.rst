@@ -38,7 +38,7 @@ Step 1: Install Julia
 
 Get the Julia installer from https://julialang.org/downloads/.  See
 also the `Platform Specific Instructions
-<https://julialang.org/downloads/platform.html>`_.
+<https://julialang.org/downloads/platform>`_.
 
 Your python installation must be able to call command line program
 ``julia``. If your installer does not add the Julia binary directory to
