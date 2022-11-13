@@ -41,6 +41,35 @@ class String(OptionDescriptor):
         return str
 
 
+class IntEtc(OptionDescriptor):
+    def __init__(self, name, *, etc={}):
+        self.name = name
+        self.default = etc
+
+    def __set__(self, instance, value):
+        if instance is None:
+            raise AttributeError(self.name)
+        elif value in {None, *self.default} or isinstance(value, int):
+            setattr(instance, self.dataname, value)
+        else:
+            if self.default:
+                part = " or " + " ".join(map(str, self.default))
+            else:
+                part = ""
+            raise ValueError(
+                f"Option {self.name} only accepts integers{part}. Got: {value}"
+            )
+
+    def _domain(self):
+        return {int, *self.default}
+
+    def cli_argument_spec(self):
+        return dict(
+            super(IntEtc, self).cli_argument_spec(),
+            choices=list(self.default) + ["1", "2", "3", "..."],
+        )
+
+
 class Choices(OptionDescriptor):
     def __init__(self, name, choicemap, default=None):
         self.name = name
@@ -110,6 +139,12 @@ sysimage: str
 
 warn_overwrite: {True, False, 'yes', 'no'}
     Enable or disable method overwrite warnings.
+
+min_optlevel: {0, 1, 2, 3}
+    Lower bound on the optimization level.
+
+threads: {int, 'auto'}
+    How many threads to use.
 """
 
 
@@ -134,9 +169,11 @@ class JuliaOptions(object):
     compile = Choices("compile", yes_no_etc("all", "min"))
     depwarn = Choices("depwarn", yes_no_etc("error"))
     warn_overwrite = Choices("warn_overwrite", yes_no_etc())
+    min_optlevel = Choices("min_optlevel", dict(zip(range(4), map(str, range(4)))))
     optimize = Choices("optimize", dict(zip(range(4), map(str, range(4)))))
     inline = Choices("inline", yes_no_etc())
     check_bounds = Choices("check_bounds", yes_no_etc())
+    threads = IntEtc("threads", etc={"auto"})
 
     def __init__(self, **kwargs):
         unsupported = []
@@ -168,8 +205,12 @@ class JuliaOptions(object):
     def as_args(self):
         args = []
         for (desc, value) in self.specified():
-            args.append(desc.cli_argument_name())
-            args.append(value)
+            if value is None:
+                ...
+            elif len(desc.cli_argument_name()) == 1:
+                args.append(desc.cli_argument_name() + str(value))
+            else:
+                args.append(desc.cli_argument_name() + "=" + str(value))
         return args
 
     @classmethod
