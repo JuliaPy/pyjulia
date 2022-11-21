@@ -23,7 +23,7 @@ def discover_other_pythons():
         [sys.executable, "--version"], universal_newlines=True, stderr=subprocess.STDOUT
     )
 
-    candidate_names = ["python", "python2", "python2.7", "python3"] + [
+    candidate_names = ["python", "python3"] + [
         "python3.{}".format(i) for i in range(20)
     ]
     found = {}

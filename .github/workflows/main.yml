@@ -24,8 +24,8 @@ jobs:
         julia-version:
           - '1.0'
           - '1.6'
-          - '~1.7.0-rc1'
-          - 'nightly'
+          - '1.7'
+          - '1.8'
         exclude:
           - os: ubuntu-latest
             architecture: x86
@@ -33,9 +33,6 @@ jobs:
             architecture: x86
           - os: macos-latest
             julia-version: '1.6'
-          - os: windows-latest
-            architecture: x86
-            python-version: '3.10'  # not added yet?
           - os: windows-latest
             julia-version: '1.6'
           - os: macos-latest
@@ -56,19 +53,11 @@ jobs:
             architecture: x64
             python-version: '3.8'
             julia-version: '1'
-          # Python 2.7 (TODO: drop):
-          - os: ubuntu-latest
-            architecture: x64
-            python-version: '2.7'
-            julia-version: '1'
-          - os: windows-latest
-            architecture: x64
-            python-version: '2.7'
-            julia-version: '1'
       fail-fast: false
-    name: Test ${{ matrix.os }} ${{ matrix.architecture }}
-      Python ${{ matrix.python-version }}
-      Julia ${{ matrix.julia-version }}
+    name: Test 
+      py${{ matrix.python-version }}
+      jl${{ matrix.julia-version }}
+      ${{ matrix.os }} ${{ matrix.architecture }}
     steps:
       - uses: actions/checkout@v1
       - name: Setup python

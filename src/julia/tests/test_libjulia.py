@@ -1,6 +1,7 @@
 import pytest
 
 from julia.core import JuliaInfo
+from julia.tests.utils import retry_failing_if_windows
 
 from .test_compatible_exe import runcode
 
@@ -10,6 +11,11 @@ juliainfo = JuliaInfo.load()
 @pytest.mark.skipif("juliainfo.version_info < (0, 7)")
 @pytest.mark.julia
 def test_compiled_modules_no():
+    check_compiled_modules_no()
+
+
+@retry_failing_if_windows
+def check_compiled_modules_no():
     runcode(
         """
         from julia.core import Julia

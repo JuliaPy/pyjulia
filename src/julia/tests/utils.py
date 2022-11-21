@@ -1,5 +1,9 @@
+from __future__ import print_function
+
 import os
 import sys
+import traceback
+from functools import wraps
 
 import pytest
 
@@ -30,3 +34,33 @@ skip_in_github_actions_windows = pytest.mark.skipif(
 """
 Tests that are known to fail in Windows in GitHub Actions.
 """
+
+
+def _retry_on_failure(*fargs, **kwargs):
+    f = fargs[0]
+    args = fargs[1:]
+    for i in range(10):
+        try:
+            return f(*args, **kwargs)
+        except Exception:
+            print()
+            print("{}-th try of {} failed".format(i, f))
+            traceback.print_exc()
+    return f(*args, **kwargs)
+
+
+def retry_failing_if_windows(test):
+    """
+    Retry upon test failure if in Windows.
+
+    This is an ugly workaround for occasional STATUS_ACCESS_VIOLATION failures
+    in Windows: https://github.com/JuliaPy/pyjulia/issues/462
+    """
+    if not is_windows:
+        return test
+
+    @wraps(test)
+    def repeater(*args, **kwargs):
+        _retry_on_failure(test, *args, **kwargs)
+
+    return repeater
