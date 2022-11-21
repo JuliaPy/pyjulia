@@ -11,6 +11,8 @@ import pytest
 from julia import JuliaError
 from julia.core import jl_name, py_name
 
+from .utils import retry_failing_if_windows
+
 python_version = sys.version_info
 
 
@@ -35,7 +37,7 @@ def test_call_error(julia):
 
 
 def test_call_julia_function_with_python_args(Main):
-    assert list(Main.map(Main.uppercase, array.array("u", [u"a", u"b", u"c"]))) == [
+    assert list(Main.map(Main.uppercase, array.array("u", ["a", "b", "c"]))) == [
         "A",
         "B",
         "C",
@@ -127,7 +129,7 @@ def test_getattr_submodule(Main):
 def test_star_import_julia_module(julia, tmp_path):
     # Create a Python module __pyjulia_star_import_test
     path = tmp_path / "__pyjulia_star_import_test.py"
-    path.write_text(u"from julia.Base.Enums import *")
+    path.write_text("from julia.Base.Enums import *")
     sys.path.insert(0, str(tmp_path))
 
     import __pyjulia_star_import_test
@@ -155,6 +157,11 @@ def test_module_dir(julia):
 @pytest.mark.pyjulia__using_default_setup
 @pytest.mark.julia
 def test_import_without_setup():
+    check_import_without_setup()
+
+
+@retry_failing_if_windows
+def check_import_without_setup():
     command = [sys.executable, "-c", "from julia import Base"]
     print("Executing:", *command)
     subprocess.check_call(command)
