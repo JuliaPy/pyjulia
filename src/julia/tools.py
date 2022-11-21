@@ -173,6 +173,7 @@ def julia_py_executable():
         *[
             os.path.join(pypath, "bin")
             for pypath in os.environ.get("PYTHONPATH", "").split(os.pathsep)
+            if pypath
         ],
     ]
     scripts_paths.append(sysconfig.get_path("scripts"))
