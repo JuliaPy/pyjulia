@@ -27,7 +27,7 @@ author = 'The Julia and IPython development teams'
 # The short X.Y version
 version = '0.6.0'
 # The full version, including alpha/beta/rc tags
-release = '0.6.0.dev'
+release = '0.6.0'
 
 
 # -- General configuration ---------------------------------------------------
