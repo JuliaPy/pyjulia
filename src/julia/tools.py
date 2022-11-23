@@ -162,10 +162,19 @@ def julia_py_executable():
 
     # try to find installed julia-py script - check scripts folders under different installation schemes
     # we check the alternate schemes first, at most one of which should give us a julia-py script
+    # if the environment variable `PYTHONPATH` is set, we additionally check whether the script is there
     # if no candidate in an alternate scheme, try the standard install location
     # see https://docs.python.org/3/install/index.html#alternate-installation
     scripts_paths = [
-        sysconfig.get_path("scripts", scheme) for scheme in sysconfig.get_scheme_names()
+        *[
+            sysconfig.get_path("scripts", scheme)
+            for scheme in sysconfig.get_scheme_names()
+        ],
+        *[
+            os.path.join(pypath, "bin")
+            for pypath in os.environ.get("PYTHONPATH", "").split(os.pathsep)
+            if pypath
+        ],
     ]
     scripts_paths.append(sysconfig.get_path("scripts"))
 
