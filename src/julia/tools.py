@@ -96,8 +96,8 @@ def install(julia="julia", color="auto", python=None, quiet=False):
 
     OP = "build" if python else "install"
     install_cmd = julia_cmd + [
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "install.jl"),
         "--",
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "install.jl"),
         OP,
         python or sys.executable,
         libpython,
