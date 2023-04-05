@@ -67,6 +67,9 @@ run:
       ...: a
    Out[3]: array([1., 1., 1., 2., 2., 2., 3., 3., 4., 4.])
 
+Multiprocessing
+~~~~~~~~~~~~~~~
+
 While not supported or guaranteed to be stable, PyJulia tends to work
 with the multiprocessing library if the correct `start method
 <https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods>`_ 
