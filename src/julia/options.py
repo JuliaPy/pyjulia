@@ -174,6 +174,7 @@ class JuliaOptions(object):
     inline = Choices("inline", yes_no_etc())
     check_bounds = Choices("check_bounds", yes_no_etc())
     threads = IntEtc("threads", etc={"auto"})
+    trace_compile = String("trace-compile")
 
     def __init__(self, **kwargs):
         unsupported = []
