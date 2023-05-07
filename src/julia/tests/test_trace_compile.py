@@ -5,8 +5,10 @@ from subprocess import check_call
 import pytest
 
 from .test_compatible_exe import runcode
+from .utils import skip_in_windows
 
 
+@skip_in_windows
 def test_trace_file_created(tmpdir):
     trace_compile_path = Path(tmpdir) / "trace_compile.jl"
     runcode(
