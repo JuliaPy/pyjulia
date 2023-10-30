@@ -20,10 +20,9 @@ jobs:
         architecture: [x64, x86]
         python-version:
           - '3.9'
-          - '3.10'
+          - '3.12'
         julia-version:
           - '1.4'
-          - '1.6'
           - '1.7'
           - '1.8'
         exclude:
