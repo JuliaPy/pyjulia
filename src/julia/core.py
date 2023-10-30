@@ -24,6 +24,8 @@ import sys
 import textwrap
 import warnings
 from ctypes import c_char_p, c_void_p
+from importlib.abc import Loader, MetaPathFinder
+from importlib.machinery import ModuleSpec
 from logging import getLogger  # see `.logger`
 from types import ModuleType  # this is python 3.3 specific
 
@@ -220,27 +222,25 @@ class JuliaMainModule(JuliaModule):
 
 
 # add custom import behavior for the julia "module"
-class JuliaImporter(object):
+class JuliaImporter(MetaPathFinder):
 
-    # find_module was deprecated in v3.4
-    def find_module(self, fullname, path=None):
+    def find_spec(self, fullname, path=None, target=None):
         if fullname.startswith("julia."):
             filename = fullname.split(".", 2)[1]
             filepath = os.path.join(os.path.dirname(__file__), filename)
             if os.path.isfile(filepath + ".py") or os.path.isdir(filepath):
                 return
-            return JuliaModuleLoader()
+            return ModuleSpec(fullname, JuliaModuleLoader())
 
 
-class JuliaModuleLoader(object):
-
+class JuliaModuleLoader(Loader):
     @property
     def julia(self):
         self.__class__.julia = julia = Julia()
         return julia
 
-    # load module was deprecated in v3.4
-    def load_module(self, fullname):
+    def exec_module(self, module):
+        fullname = module.__name__
         juliapath = remove_prefix(fullname, "julia.")
         if juliapath == 'Main':
             return sys.modules.setdefault(fullname,
