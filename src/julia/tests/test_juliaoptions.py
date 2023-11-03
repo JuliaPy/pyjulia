@@ -17,7 +17,7 @@ from julia.core import JuliaOptions
     (dict(min_optlevel=2), ["--min-optlevel=2"]),
     (dict(threads="auto", optimize=3), ["--optimize=3", '--threads=auto']),
     (dict(optimize=3, threads="auto"), ["--optimize=3", '--threads=auto']),  # passed order doesn't matter
-    (dict(compiled_modules=None, depwarn="yes"), ["--depwarn=yes"]),
+    (dict(compiled_modules="auto", depwarn="yes"), ["--depwarn=yes"]),
 ])
 # fmt: on
 def test_as_args(kwargs, args):
