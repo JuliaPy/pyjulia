@@ -165,7 +165,7 @@ class JuliaOptions(object):
 
     sysimage = String("sysimage")
     bindir = String("bindir")
-    compiled_modules = Choices("compiled_modules", yes_no_etc())
+    compiled_modules = Choices("compiled_modules", yes_no_etc(), "auto")
     compile = Choices("compile", yes_no_etc("all", "min"))
     depwarn = Choices("depwarn", yes_no_etc("error"))
     warn_overwrite = Choices("warn_overwrite", yes_no_etc())
