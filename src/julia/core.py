@@ -485,7 +485,7 @@ class Julia(object):
                 is_compatible_python
                 or use_custom_sysimage
             ):
-                if options.compiled_modules == "yes":
+                if options.compiled_modules in (True, "yes"):
                     raise UnsupportedPythonError(jlinfo)
                 else:
                     warnings.warn(
