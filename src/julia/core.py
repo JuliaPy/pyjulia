@@ -487,6 +487,8 @@ class Julia(object):
             ):
                 if options.compiled_modules in (True, "yes"):
                     raise UnsupportedPythonError(jlinfo)
+                elif options.compiled_modules in (False, "no"):
+                    pass
                 else:
                     warnings.warn(
                             "Statically linked Python interpreter detected, setting `compiled_modules=False` automatically."
