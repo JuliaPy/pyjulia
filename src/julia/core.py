@@ -482,11 +482,17 @@ class Julia(object):
             logger.debug("use_custom_sysimage = %r", use_custom_sysimage)
             logger.debug("compiled_modules = %r", options.compiled_modules)
             if not (
-                options.compiled_modules == "no"
-                or is_compatible_python
+                is_compatible_python
                 or use_custom_sysimage
             ):
-                raise UnsupportedPythonError(jlinfo)
+                if options.compiled_modules == "yes":
+                    raise UnsupportedPythonError(jlinfo)
+                else:
+                    warnings.warn(
+                            "Statically linked Python interpreter detected, setting `compiled_modules=False` automatically."
+                            )
+                    options.compiled_modules = "no"
+
 
             self.api.init_julia(options)
 
