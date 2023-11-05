@@ -191,7 +191,7 @@ class JuliaModule(ModuleType):
         if self._julia.isamodule(jl_fullname):
             realname = self._julia.fullname(self._julia.eval(jl_fullname))
             if self._julia.isdefined(realname):
-                return self.__loader__.load_module("julia." + realname)
+                return self.__loader__.create_module(_find_spec_from_fullname("julia." + realname))
             # Otherwise, it may be, e.g., "Main.anonymous", created by
             # Module().
 
@@ -225,13 +225,16 @@ class JuliaMainModule(JuliaModule):
 class JuliaImporter(MetaPathFinder):
 
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.startswith("julia."):
-            filename = fullname.split(".", 2)[1]
-            filepath = os.path.join(os.path.dirname(__file__), filename)
-            if os.path.isfile(filepath + ".py") or os.path.isdir(filepath):
-                return
-            return ModuleSpec(fullname, JuliaModuleLoader(), origin=filepath)
+        return _find_spec_from_fullname(fullname)
 
+
+def _find_spec_from_fullname(fullname):
+    if fullname.startswith("julia."):
+        filename = fullname.split(".", 2)[1]
+        filepath = os.path.join(os.path.dirname(__file__), filename)
+        if os.path.isfile(filepath + ".py") or os.path.isdir(filepath):
+            return
+        return ModuleSpec(fullname, JuliaModuleLoader(), origin=filepath)
 
 class JuliaModuleLoader(Loader):
     @property
