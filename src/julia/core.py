@@ -230,7 +230,7 @@ class JuliaImporter(MetaPathFinder):
             filepath = os.path.join(os.path.dirname(__file__), filename)
             if os.path.isfile(filepath + ".py") or os.path.isdir(filepath):
                 return
-            return ModuleSpec(fullname, JuliaModuleLoader())
+            return ModuleSpec(fullname, JuliaModuleLoader(), origin=filepath)
 
 
 class JuliaModuleLoader(Loader):
@@ -240,7 +240,10 @@ class JuliaModuleLoader(Loader):
         return julia
 
     def exec_module(self, module):
-        fullname = module.__name__
+        pass
+
+    def create_module(self, spec):
+        fullname = spec.name
         juliapath = remove_prefix(fullname, "julia.")
         if juliapath == 'Main':
             return sys.modules.setdefault(fullname,
