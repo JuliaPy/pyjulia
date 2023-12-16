@@ -24,6 +24,8 @@ import sys
 import textwrap
 import warnings
 from ctypes import c_char_p, c_void_p
+from importlib.abc import Loader, MetaPathFinder
+from importlib.machinery import ModuleSpec
 from logging import getLogger  # see `.logger`
 from types import ModuleType  # this is python 3.3 specific
 
@@ -189,7 +191,7 @@ class JuliaModule(ModuleType):
         if self._julia.isamodule(jl_fullname):
             realname = self._julia.fullname(self._julia.eval(jl_fullname))
             if self._julia.isdefined(realname):
-                return self.__loader__.load_module("julia." + realname)
+                return self.__loader__.create_module(_find_spec_from_fullname("julia." + realname))
             # Otherwise, it may be, e.g., "Main.anonymous", created by
             # Module().
 
@@ -220,27 +222,31 @@ class JuliaMainModule(JuliaModule):
 
 
 # add custom import behavior for the julia "module"
-class JuliaImporter(object):
+class JuliaImporter(MetaPathFinder):
 
-    # find_module was deprecated in v3.4
-    def find_module(self, fullname, path=None):
-        if fullname.startswith("julia."):
-            filename = fullname.split(".", 2)[1]
-            filepath = os.path.join(os.path.dirname(__file__), filename)
-            if os.path.isfile(filepath + ".py") or os.path.isdir(filepath):
-                return
-            return JuliaModuleLoader()
+    def find_spec(self, fullname, path=None, target=None):
+        return _find_spec_from_fullname(fullname)
 
 
-class JuliaModuleLoader(object):
+def _find_spec_from_fullname(fullname):
+    if fullname.startswith("julia."):
+        filename = fullname.split(".", 2)[1]
+        filepath = os.path.join(os.path.dirname(__file__), filename)
+        if os.path.isfile(filepath + ".py") or os.path.isdir(filepath):
+            return
+        return ModuleSpec(fullname, JuliaModuleLoader(), origin=filepath)
 
+class JuliaModuleLoader(Loader):
     @property
     def julia(self):
         self.__class__.julia = julia = Julia()
         return julia
 
-    # load module was deprecated in v3.4
-    def load_module(self, fullname):
+    def exec_module(self, module):
+        pass
+
+    def create_module(self, spec):
+        fullname = spec.name
         juliapath = remove_prefix(fullname, "julia.")
         if juliapath == 'Main':
             return sys.modules.setdefault(fullname,
