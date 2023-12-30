@@ -20,12 +20,11 @@ jobs:
         architecture: [x64, x86]
         python-version:
           - '3.9'
-          - '3.10'
+          - '3.12'
         julia-version:
-          - '1.4'
           - '1.6'
-          - '1.7'
-          - '1.8'
+          - '1.9'
+          - '1'
         exclude:
           - os: ubuntu-latest
             architecture: x86
@@ -59,9 +58,9 @@ jobs:
       jl${{ matrix.julia-version }}
       ${{ matrix.os }} ${{ matrix.architecture }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Setup python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.architecture }}
@@ -99,9 +98,9 @@ jobs:
       fail-fast: false
     name: Check ${{ matrix.toxenv }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade tox

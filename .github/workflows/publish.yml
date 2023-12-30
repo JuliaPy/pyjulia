@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.9
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: 3.9
       - name: Install setuptools and wheel
@@ -39,9 +39,9 @@ jobs:
     needs: publish-to-testpypi
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Python 3.9
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: 3.9
       - name: Set up Julia
@@ -57,10 +57,10 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:  # using `matrix` to define a constant
-        package: ['julia==0.6.1']
+        package: ['julia==0.6.2']
     steps:
       - name: Set up Python 3.9
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: 3.9
       - name: Download from TestPyPI
