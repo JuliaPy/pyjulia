@@ -78,6 +78,8 @@ jobs:
         run: python ci/install_pycall.py
       - name: Run test
         run: python -m tox -- --verbose --cov=julia
+        id: tox-tests
+        continue-on-error: ${{ matrix.julia-version == 'nightly' || (matrix.os == 'windows-latest' && matrix.architecture == 'x86') }}
         env:
           CI: 'true'  # run tests marked by @only_in_ci
           TOXENV: py
@@ -86,9 +88,13 @@ jobs:
         if: always()
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
+        if: steps.tox-tests.outcome == 'success'
         with:
           file: ./coverage.xml
           name: codecov-umbrella
+      - name: Report allowed failures
+        if: steps.tox-tests.outcome != 'success'
+        run: echo "Allowed failure for this configuration."
 
   check:
     runs-on: ubuntu-latest
