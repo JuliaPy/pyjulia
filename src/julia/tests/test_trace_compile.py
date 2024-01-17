@@ -25,5 +25,9 @@ def test_trace_file_created(tmpdir):
     # check whether the sin precompilation directive is included in the file
     trace_compile_content = Path(trace_compile_path).read_text().strip()
     lines = [x for x in trace_compile_content.split("\n") if len(x) > 0]
-    expected_precompile_line = r"precompile\(Tuple\{typeof\([A-Za-z]+\.sin\), Float64\}\)"
-    assert any([re.match(expected_precompile_line, x) is not None for x in lines])
+    expected_precompile_line = (
+        r"precompile\(Tuple\{typeof\([A-Za-z]+\.sin\), Float64\}\)"
+    )
+    assert any(
+        [re.match(expected_precompile_line, x) is not None for x in lines]
+    )
