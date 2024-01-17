@@ -28,6 +28,4 @@ def test_trace_file_created(tmpdir):
     expected_precompile_line = (
         r"precompile\(Tuple\{typeof\([A-Za-z]+\.sin\), Float64\}\)"
     )
-    assert any(
-        [re.match(expected_precompile_line, x) is not None for x in lines]
-    )
+    assert any([re.match(expected_precompile_line, x) is not None for x in lines])
