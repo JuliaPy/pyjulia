@@ -2,7 +2,7 @@ PyJulia
 =======
 
 > [!CAUTION]
-> Ongoing development of the Python/Julia interface has transitioned to [PythonCall.jl](https://github.com/JuliaPy/PythonCall.jl), please consider using that package instead.
+> Ongoing development of the Python/Julia interface has transitioned to [PythonCall.jl/juliacall](https://github.com/JuliaPy/PythonCall.jl), please consider using that package instead.
 
 [![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://pyjulia.readthedocs.io/en/stable/)
 [![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://pyjulia.readthedocs.io/en/latest/)
