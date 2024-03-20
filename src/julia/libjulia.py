@@ -217,7 +217,7 @@ class LibJulia(BaseLibJulia):
             )
 
         with self._pathhack():
-            self.libjulia = ctypes.PyDLL(libjulia_path, ctypes.RTLD_GLOBAL)
+            self.libjulia = ctypes.CDLL(libjulia_path, ctypes.RTLD_GLOBAL)
 
         setup_libjulia(self.libjulia)
 
