@@ -1,6 +1,9 @@
 PyJulia
 =======
 
+> [!CAUTION]
+> Ongoing development of the Python/Julia interface has transitioned to [PythonCall.jl/juliacall](https://github.com/JuliaPy/PythonCall.jl), please consider using that package instead.
+
 [![Stable documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://pyjulia.readthedocs.io/en/stable/)
 [![Latest documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://pyjulia.readthedocs.io/en/latest/)
 [![Main workflow](https://github.com/JuliaPy/pyjulia/workflows/Main%20workflow/badge.svg)](https://github.com/JuliaPy/pyjulia/actions?query=workflow%3A%22Main+workflow%22)
