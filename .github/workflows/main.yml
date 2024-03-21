@@ -87,7 +87,7 @@ jobs:
       - run: cat .tox/py/log/pytest.log
         if: always()
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: steps.tox-tests.outcome == 'success'
         with:
           file: ./coverage.xml
