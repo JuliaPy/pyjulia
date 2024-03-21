@@ -145,6 +145,9 @@ min_optlevel: {0, 1, 2, 3}
 
 threads: {int, 'auto'}
     How many threads to use.
+
+trace_compile: str
+    Trace precompile statements during execution to the given file.
 """
 
 
@@ -174,6 +177,7 @@ class JuliaOptions(object):
     inline = Choices("inline", yes_no_etc())
     check_bounds = Choices("check_bounds", yes_no_etc())
     threads = IntEtc("threads", etc={"auto"})
+    trace_compile = String("trace_compile")
 
     def __init__(self, **kwargs):
         unsupported = []
