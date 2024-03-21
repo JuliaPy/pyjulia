@@ -126,6 +126,10 @@ depwarn: {True, False, 'yes', 'no', 'error'}
     Enable or disable syntax and method deprecation warnings ("error"
     turns warnings into errors).
 
+bug_report: str
+    Launch a bug report session using BugReporting.jl.
+    Run `julia --bug-report=help` for more information.
+
 inline: {True, False, 'yes', 'no'}
     Control whether inlining is permitted, including overriding
     @inline declarations.
@@ -168,6 +172,7 @@ class JuliaOptions(object):
     compiled_modules = Choices("compiled_modules", yes_no_etc())
     compile = Choices("compile", yes_no_etc("all", "min"))
     depwarn = Choices("depwarn", yes_no_etc("error"))
+    bug_report = String("bug_report")
     warn_overwrite = Choices("warn_overwrite", yes_no_etc())
     min_optlevel = Choices("min_optlevel", dict(zip(range(4), map(str, range(4)))))
     optimize = Choices("optimize", dict(zip(range(4), map(str, range(4)))))
