@@ -67,6 +67,23 @@ run:
       ...: a
    Out[3]: array([1., 1., 1., 2., 2., 2., 3., 3., 4., 4.])
 
+Multiprocessing
+~~~~~~~~~~~~~~~
+
+While not supported or guaranteed to be stable, PyJulia tends to work
+with the multiprocessing library if the correct `start method
+<https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods>`_ 
+is selected: *fork* (default on Unix) segfaults with with `unknown 
+function` errors, while *spawn* (default on Windows and MacOS) generally,
+but not always, runs without memory allocation issues. To select *spawn*, 
+include the line
+
+.. code:: python
+
+   multiprocessing.set_start_method('spawn')
+
+once in your code prior to using the multiprocessing library.
+
 PyJulia does not release GIL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
