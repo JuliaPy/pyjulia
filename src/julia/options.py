@@ -119,7 +119,7 @@ check_bounds: {True, False, 'yes', 'no'}
 compile: {True, False, 'yes', 'no', 'all', 'min'}
     Enable or disable JIT compiler, or request exhaustive compilation.
 
-compiled_modules: {True, False, 'yes', 'no'}
+compiled_modules: {True, False, 'yes', 'no', 'auto'}
     Enable or disable incremental precompilation of modules.
 
 depwarn: {True, False, 'yes', 'no', 'error'}
@@ -165,7 +165,7 @@ class JuliaOptions(object):
 
     sysimage = String("sysimage")
     bindir = String("bindir")
-    compiled_modules = Choices("compiled_modules", yes_no_etc())
+    compiled_modules = Choices("compiled_modules", yes_no_etc("auto"))
     compile = Choices("compile", yes_no_etc("all", "min"))
     depwarn = Choices("depwarn", yes_no_etc("error"))
     warn_overwrite = Choices("warn_overwrite", yes_no_etc())
