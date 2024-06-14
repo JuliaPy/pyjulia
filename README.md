@@ -15,13 +15,15 @@ Quick usage
 -----------
 
 ```console
-$ python3 -m pip install julia    # install PyJulia
-...                               # you may need `--user` after `install`
+$ python3 -m pip install julia           # install PyJulia
+...                                      # you may need `--user` after `install`
 
 $ python3
 >>> import julia
->>> julia.install()               # install PyCall.jl etc.
->>> from julia import Base        # short demo
+>>> julia.install()                      # install PyCall.jl etc. only needed the first time
+>>> from julia import Base               # short demo
+>>> # from julia.api import Julia        # these two lines may be needed:
+>>> # jl = Julia(compiled_modules=False)
 >>> Base.sind(90)
 1.0
 ```
