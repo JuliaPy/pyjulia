@@ -21,6 +21,7 @@ by::
 
 from __future__ import absolute_import, print_function
 
+import os
 import sys
 
 from .pseudo_python_cli import ARGUMENT_HELP, make_parser, parse_args_with
@@ -33,15 +34,7 @@ PYJL_ARGUMENT_HELP = (
 """
 )
 
-script_jl = """
-import PyCall
-
-let code = PyCall.pyimport("julia.pseudo_python_cli")[:main](ARGS)
-    if code isa Integer
-        exit(code)
-    end
-end
-"""
+script_jl = os.path.join(os.path.dirname(os.path.realpath(__file__)), "python_jl.jl")
 
 
 def remove_julia_options(args):
@@ -111,7 +104,7 @@ def main(args=None):
         args = sys.argv[1:]
     ns, unused_args = parse_pyjl_args(args)
     julia = ns.julia
-    execprog([julia, "-e", script_jl, "--"] + unused_args)
+    execprog([julia, script_jl, "--"] + unused_args)
 
 
 if __name__ == "__main__":
